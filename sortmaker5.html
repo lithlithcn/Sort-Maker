@@ -476,11 +476,6 @@
         box-shadow: 0 3px 10px rgba(0,0,0,.12);
     }
 
-    /* Un lecteur audio à l'intérieur : pas de "transform" au survol. Un
-       transform CSS sur un ancêtre crée un nouveau bloc de positionnement
-       pour les popups internes du lecteur natif (volume, notamment), ce
-       qui les fait disparaître ou mal se positionner. On garde juste la
-       bordure/l'ombre pour l'effet visuel. */
     .choice.choice-has-audio:hover {
         transform: none;
     }
@@ -750,7 +745,7 @@
         z-index: 2;
     }
 
-    /* audio : placeholder + barre de lecture superposee sur la miniature */
+    /* audio placeholder de couverture sur la minia */
 
     .audio-thumb-placeholder,
     .link-thumb-placeholder,
@@ -766,27 +761,191 @@
 
     .battle-media-placeholder { font-size: 64px; }
 
+    .card.type-audio,
+    .card.type-audio .card-thumb {
+        overflow: visible;
+    }
+
+    .card.type-audio .audio-cover-img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: auto;
+        width: 100%;
+        height: calc(100% - 42px);
+        object-fit: cover;
+        display: block;
+    }
+
+    .card.type-audio .audio-thumb-placeholder {
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: auto;
+        height: calc(100% - 42px);
+    }
+
+
     .audio-bar {
         position: absolute;
         left: 0;
         right: 0;
         bottom: 0;
-        padding: 3px 5px;
-        background: rgba(0,0,0,.55);
-        z-index: 2;
+        height: 42px;
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 5px;
+        padding: 0 7px;
+        background: #181818;
+        border-radius: 0 0 8px 8px;
+        z-index: 2;
     }
 
-    .audio-bar audio {
+    .audio-bar audio { display: none; }
+
+    .audio-play-btn {
+        flex: 0 0 25px;
+        width: 25px;
+        height: 25px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: #fff;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .audio-play-btn:hover { background: #303030; }
+
+    .audio-time {
+        flex: 0 0 auto;
+        min-width: 55px;
+        color: #999;
+        font-size: 9px;
+        text-align: center;
+        white-space: nowrap;
+        user-select: none;
+    }
+
+    .audio-progress {
         flex: 1;
         min-width: 0;
-        display: block;
-        height: 26px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        touch-action: none;
     }
 
-    /* lien YouTube integre dans la grille d'import */
+    .audio-progress-track {
+        position: relative;
+        width: 100%;
+        height: 4px;
+        background: #414141;
+        border-radius: 10px;
+    }
+
+    .audio-progress-fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 0;
+        height: 100%;
+        background: #fff;
+        border-radius: inherit;
+    }
+
+    .audio-progress-thumb {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 9px;
+        height: 9px;
+        transform: translate(-50%, -50%);
+        background: #fff;
+        border-radius: 50%;
+        opacity: 0;
+        transition: opacity .12s;
+    }
+
+    .audio-progress:hover .audio-progress-thumb { opacity: 1; }
+
+    .audio-volume {
+        position: relative;
+        flex: 0 0 27px;
+        width: 27px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .audio-volume-btn {
+        width: 27px;
+        height: 27px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #fff;
+        font-size: 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .audio-volume-popup {
+        position: absolute;
+        bottom: 37px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 34px;
+        height: 112px;
+        padding: 7px 0;
+        background: #252525;
+        border: 1px solid #3a3a3a;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity .12s ease, visibility .12s ease;
+        z-index: 100;
+    }
+
+    .audio-volume-popup::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -12px;
+        width: 100%;
+        height: 14px;
+    }
+
+    .audio-volume:hover .audio-volume-popup,
+    .audio-volume:focus-within .audio-volume-popup {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .audio-volume-slider {
+        width: 16px;
+        height: 92px;
+        appearance: slider-vertical;
+        -webkit-appearance: slider-vertical;
+        writing-mode: vertical-lr;
+        direction: rtl;
+        cursor: pointer;
+        accent-color: #fff;
+    }
 
     .link-embed-iframe {
         position: absolute;
@@ -795,8 +954,6 @@
         height: 100%;
         border: 0;
     }
-
-    /* vignette YouTube cliquable (grille d'import + ecran de tri) */
     .youtube-thumb-link {
         display: block;
         position: relative;
@@ -812,7 +969,6 @@
         object-fit: cover;
     }
 
-    /* lecteur YouTube incruste (ecran de tri uniquement, apres clic) */
     .youtube-embed {
         display: block;
         width: 100%;
@@ -842,11 +998,6 @@
         overflow: hidden;
     }
 
-    /* Quand le média est un lecteur audio, on autorise le dépassement :
-       "overflow: hidden" ci-dessus coupe l'infobulle native du navigateur
-       qui affiche la position/durée au survol de la barre de lecture
-       (le volume, lui, s'affiche dans une couche différente et n'est pas
-       affecté). Sans ça, seul le survol du volume fonctionnait. */
     .choice-media.choice-media-audio {
         overflow: visible;
     }
@@ -873,7 +1024,7 @@
         background: var(--image-bg);
     }
 
-    .battle-audio-bar, .battle-link-bar {
+    .battle-link-bar {
         position: absolute;
         left: 0;
         right: 0;
@@ -885,8 +1036,6 @@
         justify-content: center;
         gap: 8px;
     }
-
-    .battle-audio-bar audio { flex: 1; min-width: 0; max-width: 300px; }
 
     .battle-play-badge {
         position: absolute;
@@ -902,8 +1051,6 @@
     @media (max-width: 640px) {
         .choice-media { height: 240px; }
     }
-
-    /* resultats : miniature generique */
 
     .result-thumb {
         width: 60px;
@@ -931,45 +1078,12 @@
 
     .result-audio-row {
         grid-column: 2 / -1;
+        position: relative;
         display: flex;
         align-items: center;
-        gap: 6px;
         margin-top: 4px;
+        height: 42px;
     }
-
-    .result-audio {
-        display: block;
-        width: 100%;
-        max-width: 220px;
-        height: 28px;
-        flex: 1;
-        min-width: 0;
-    }
-
-    /* curseur de volume personnalise, toujours visible (remplace le popup
-       natif du navigateur, peu fiable selon le contexte CSS) */
-    .volume-control {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        flex-shrink: 0;
-    }
-
-    .volume-icon {
-        cursor: pointer;
-        font-size: 14px;
-        line-height: 1;
-        user-select: none;
-    }
-
-    .volume-slider {
-        width: 60px;
-        height: 16px;
-        cursor: pointer;
-        accent-color: var(--accent);
-    }
-
-    .battle-audio-bar .volume-slider { width: 80px; }
 
     .result-link {
         display: inline-block;
@@ -992,8 +1106,6 @@
         * { transition: none !important; }
     }
 	
-/* podium*/
-
 /* OR */
 #resultList .result-item:nth-child(1) {
     background: linear-gradient(
@@ -1209,7 +1321,7 @@
 </div>
 
 
-<!-- ajout / edition de lien -->
+<!-- ajout/edition de lien -->
 
 <div id="linkModal" class="modal" hidden>
     <div class="modal-box link-modal-box">
@@ -1349,8 +1461,7 @@ const CROP_STAGE_MAX_H = 440;
 let images = [];               // ordre dimport, source de veriter
 const imagesById = new Map();  // acces rapide par id
 
-// ---- Détection de type de fichier ----
-
+// detection
 function isImageFile(f) {
     return f.type.startsWith("image/") || /\.(png|jpe?g|gif|webp|bmp|avif)$/i.test(f.name);
 }
@@ -1365,7 +1476,7 @@ function isAudioFile(f) {
     return (f.type && f.type.startsWith("audio/")) || /\.(mp3|wav|ogg|oga|m4a|flac|aac|opus|weba)$/i.test(f.name);
 }
 
-// ---- Liens YouTube ----
+// lien yt
 
 function parseYouTubeId(url) {
     try {
@@ -1381,26 +1492,15 @@ function parseYouTubeId(url) {
             if (u.pathname.startsWith("/live/")) return u.pathname.split("/")[2] || null;
         }
     } catch (err) {
-        // URL invalide : pas un lien YouTube exploitable
     }
     return null;
 }
 
-// ---- Vignette YouTube cliquable (remplace l'iframe embed) ----
-// Ouvrir la page HTML en local (file://) empêche presque toujours le
-// lecteur intégré YouTube de fonctionner (erreur 153 : pas d'origine
-// valide à vérifier côté YouTube). Solution fiable : afficher la vraie
-// vignette de la vidéo avec un bouton "lecture", et l'ouvrir dans un
-// nouvel onglet au clic — ça marche à 100%, y compris en local.
 function isValidYoutubeId(id) {
     return typeof id === "string" && /^[A-Za-z0-9_-]{10,12}$/.test(id);
 }
 
-// ---- Vignette YouTube cliquable ----
-// Par défaut : ouvre la vidéo dans un nouvel onglet (utilisé dans la
-// grille d'import et les Results). Si `onEmbed` est fourni (écran de tri
-// uniquement), le clic est intercepté et sert plutôt à incruster un
-// lecteur YouTube directement à la place de la vignette.
+// minia yt
 function buildYoutubeThumbLink(item, badgeClass, onEmbed) {
     const link = document.createElement("a");
     link.className = "youtube-thumb-link";
@@ -1409,7 +1509,7 @@ function buildYoutubeThumbLink(item, badgeClass, onEmbed) {
     link.rel = "noopener noreferrer";
     link.title = "Watch on YouTube";
     link.addEventListener("click", e => {
-        // Empêche toujours le clic de déclencher un choix ("left"/"right").
+        // empeche toujours le clic de declencher un choix (left/right)
         e.stopPropagation();
         if (typeof onEmbed === "function") {
             e.preventDefault();
@@ -1430,12 +1530,6 @@ function buildYoutubeThumbLink(item, badgeClass, onEmbed) {
     return link;
 }
 
-// Remplace la vignette YouTube par un vrai lecteur <iframe>, directement
-// dans le même conteneur .choice-media — utilisé UNIQUEMENT sur l'écran
-// de tri (Pick your favorite). La grille d'import et Results gardent le
-// comportement "ouvrir dans un nouvel onglet" (afficher plusieurs iframes
-// YouTube à la fois en local, hors écran de tri, redonnerait facilement
-// l'erreur 153 et alourdirait la grille pour rien).
 function embedYoutubeInline(mediaEl, item) {
     const videoId = item.youtubeId;
     if (!isValidYoutubeId(videoId)) return;
@@ -1445,9 +1539,6 @@ function embedYoutubeInline(mediaEl, item) {
 
     const iframe = document.createElement("iframe");
     iframe.className = "youtube-embed";
-    // autoplay=1 est acceptable ici : l'iframe n'est créée qu'en réponse
-    // directe au clic de l'utilisateur (geste utilisateur requis par les
-    // navigateurs pour autoriser l'autoplay avec le son).
     iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1`;
     iframe.title = item.name || "YouTube video player";
     iframe.setAttribute("frameborder", "0");
@@ -1457,11 +1548,6 @@ function embedYoutubeInline(mediaEl, item) {
     mediaEl.appendChild(iframe);
 }
 
-
-// Champs communs à TOUS les types : id, type, file, name, crop,
-// naturalWidth, naturalHeight, thumbURL, audioURL, coverFile, coverURL,
-// linkURL, youtubeId. Chaque type n'utilise que le sous-ensemble qui le
-// concerne, les autres champs restent null.
 
 function createBaseItem(overrides) {
     const item = Object.assign({
@@ -1534,9 +1620,6 @@ function removeImageItem(id) {
     if (idx >= 0) images.splice(idx, 1);
 }
 
-// Génère la miniature d'un élément selon son type. Pour les GIF, on
-// n'utilise JAMAIS le canvas (ça figerait l'animation sur une seule
-// image) : on garde directement l'URL du fichier original.
 async function processNewItem(item) {
     if (item.type === "image") {
         await generateThumbnail(item);
@@ -1592,7 +1675,7 @@ inputAudioFiles.addEventListener("change", e => {
     e.target.value = "";
 });
 
-// ---- Image de couverture associée à un fichier audio ----
+// image associer au fichier audio
 
 const inputCoverFile = document.getElementById("inputCoverFile");
 let coverTargetItemId = null;
@@ -1628,7 +1711,7 @@ function removeCoverForItem(id) {
     renderVisibleCards();
 }
 
-// ---- Ajout / édition de liens (YouTube, etc.) ----
+// ajout/edition de liens yt etc...
 
 const linkModal = document.getElementById("linkModal");
 const linkModalTitle = document.getElementById("linkModalTitle");
@@ -1857,10 +1940,6 @@ function renderVisibleCards() {
         if (item) frag.appendChild(buildCard(item));
     }
 
-    // Les cartes actuellement affichées (avec leur <audio>) vont être
-    // remplacées : on coupe le son avant de les jeter, sinon un MP3 en
-    // cours de lecture peut continuer en arrière-plan une fois sa carte
-    // recyclée hors de l'écran.
     gridInner.querySelectorAll("audio").forEach(audioEl => {
         try { audioEl.pause(); } catch (err) { /* ignore */ }
     });
@@ -1871,54 +1950,186 @@ function renderVisibleCards() {
     emptyState.hidden = images.length > 0;
 }
 
-// ---- Curseur de volume personnalisé ----
-// Le popup natif du navigateur (survol du haut-parleur) s'est révélé peu
-// fiable selon l'écran/le contexte CSS (parfois clippé, parfois cassé par
-// un ancêtre avec "transform"). On ajoute donc un vrai curseur toujours
-// visible à côté de chaque lecteur <audio>, qui fonctionne de façon 100%
-// prévisible partout (grille d'import, écran de tri, Results).
-function createVolumeControl(audioEl) {
-    const wrap = document.createElement("div");
-    wrap.className = "volume-control";
+function createAudioPlayerBar(item) {
+    const bar = document.createElement("div");
+    bar.className = "audio-bar";
 
-    const icon = document.createElement("span");
-    icon.className = "volume-icon";
-    icon.textContent = "🔊";
+    const audioEl = document.createElement("audio");
+    audioEl.preload = "metadata";
+    audioEl.src = item.audioURL || (item.file ? URL.createObjectURL(item.file) : "");
+    bar.appendChild(audioEl);
 
-    const slider = document.createElement("input");
-    slider.type = "range";
-    slider.className = "volume-slider";
-    slider.min = "0";
-    slider.max = "1";
-    slider.step = "0.05";
-    slider.value = String(audioEl.volume);
-    slider.title = "Volume";
-    slider.setAttribute("aria-label", "Volume");
+    const playBtn = document.createElement("button");
+    playBtn.type = "button";
+    playBtn.className = "audio-play-btn";
+    playBtn.title = "Lecture";
+    playBtn.setAttribute("aria-label", "Lecture");
+    playBtn.textContent = "▶";
+    bar.appendChild(playBtn);
 
-    function refreshIcon() {
-        icon.textContent = audioEl.volume === 0 || audioEl.muted ? "🔇" : (audioEl.volume < 0.5 ? "🔉" : "🔊");
+    const timeEl = document.createElement("div");
+    timeEl.className = "audio-time";
+    const currentTimeSpan = document.createElement("span");
+    currentTimeSpan.textContent = "0:00";
+    const durationSpan = document.createElement("span");
+    durationSpan.textContent = "0:00";
+    timeEl.appendChild(currentTimeSpan);
+    timeEl.appendChild(document.createTextNode(" / "));
+    timeEl.appendChild(durationSpan);
+    bar.appendChild(timeEl);
+
+    const progress = document.createElement("div");
+    progress.className = "audio-progress";
+    const track = document.createElement("div");
+    track.className = "audio-progress-track";
+    const fill = document.createElement("div");
+    fill.className = "audio-progress-fill";
+    const thumbDot = document.createElement("div");
+    thumbDot.className = "audio-progress-thumb";
+    track.appendChild(fill);
+    track.appendChild(thumbDot);
+    progress.appendChild(track);
+    bar.appendChild(progress);
+
+    const volumeWrap = document.createElement("div");
+    volumeWrap.className = "audio-volume";
+    volumeWrap.tabIndex = -1;
+
+    const volumeBtn = document.createElement("button");
+    volumeBtn.type = "button";
+    volumeBtn.className = "audio-volume-btn";
+    volumeBtn.title = "Mute / Unmute";
+    volumeBtn.setAttribute("aria-label", "Mute / Unmute");
+    volumeBtn.textContent = "▶︎";
+
+    const volumePopup = document.createElement("div");
+    volumePopup.className = "audio-volume-popup";
+
+    const volumeSlider = document.createElement("input");
+    volumeSlider.type = "range";
+    volumeSlider.className = "audio-volume-slider";
+    volumeSlider.min = "0";
+    volumeSlider.max = "1";
+    volumeSlider.step = "0.01";
+    volumeSlider.value = "1";
+    volumeSlider.setAttribute("aria-label", "Volume");
+    volumePopup.appendChild(volumeSlider);
+
+    volumeWrap.appendChild(volumeBtn);
+    volumeWrap.appendChild(volumePopup);
+    bar.appendChild(volumeWrap);
+
+    let previousVolume = 1;
+
+    function formatTime(seconds) {
+        if (!Number.isFinite(seconds)) return "0:00";
+        const minutes = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60).toString().padStart(2, "0");
+        return `${minutes}:${secs}`;
     }
 
-    slider.addEventListener("input", e => {
+    playBtn.addEventListener("click", async e => {
         e.stopPropagation();
-        audioEl.volume = parseFloat(slider.value);
-        audioEl.muted = audioEl.volume === 0;
-        refreshIcon();
-    });
-    // Empêche le clic/drag sur le curseur de déclencher un choix "left"/"right"
-    // sur l'écran de tri, ou toute autre action du conteneur parent.
-    slider.addEventListener("click", e => e.stopPropagation());
-    icon.addEventListener("click", e => {
-        e.stopPropagation();
-        audioEl.muted = !audioEl.muted;
-        refreshIcon();
+        if (!audioEl.src) return;
+
+        if (audioEl.paused) {
+            try {
+                await audioEl.play();
+                playBtn.textContent = "⏸";
+            } catch (err) {
+                console.error("[SORTER] Lecture audio impossible :", err);
+            }
+        } else {
+            audioEl.pause();
+            playBtn.textContent = "▶";
+        }
     });
 
-    refreshIcon();
+    audioEl.addEventListener("loadedmetadata", () => {
+        durationSpan.textContent = formatTime(audioEl.duration);
+    });
 
-    wrap.appendChild(icon);
-    wrap.appendChild(slider);
-    return wrap;
+    audioEl.addEventListener("timeupdate", () => {
+        if (!audioEl.duration) return;
+        const percent = (audioEl.currentTime / audioEl.duration) * 100;
+        fill.style.width = percent + "%";
+        thumbDot.style.left = percent + "%";
+        currentTimeSpan.textContent = formatTime(audioEl.currentTime);
+    });
+
+    audioEl.addEventListener("ended", () => {
+        playBtn.textContent = "▶";
+    });
+
+    function setProgressFromClientX(clientX) {
+        if (!audioEl.duration) return;
+        const rect = progress.getBoundingClientRect();
+        let position = (clientX - rect.left) / rect.width;
+        position = Math.max(0, Math.min(1, position));
+        audioEl.currentTime = position * audioEl.duration;
+    }
+
+    let dragging = false;
+
+    progress.addEventListener("pointerdown", e => {
+        e.stopPropagation();
+        dragging = true;
+        try { progress.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+        setProgressFromClientX(e.clientX);
+    });
+
+    progress.addEventListener("pointermove", e => {
+        if (dragging) setProgressFromClientX(e.clientX);
+    });
+
+    progress.addEventListener("pointerup", e => {
+        dragging = false;
+        try { progress.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    });
+
+    progress.addEventListener("pointercancel", () => { dragging = false; });
+
+    volumeSlider.addEventListener("input", e => {
+        e.stopPropagation();
+        const value = Number(volumeSlider.value);
+        audioEl.volume = value;
+        if (value > 0) {
+            previousVolume = value;
+            audioEl.muted = false;
+        } else {
+            audioEl.muted = true;
+        }
+    });
+
+    volumeBtn.addEventListener("click", e => {
+        e.stopPropagation();
+        if (audioEl.muted || audioEl.volume === 0) {
+            audioEl.muted = false;
+            const restored = previousVolume > 0 ? previousVolume : 1;
+            audioEl.volume = restored;
+            volumeSlider.value = String(restored);
+        } else {
+            previousVolume = audioEl.volume;
+            audioEl.muted = true;
+        }
+    });
+
+    audioEl.addEventListener("volumechange", () => {
+        if (audioEl.muted || audioEl.volume === 0) {
+            volumeBtn.textContent = "🔇";
+        } else if (audioEl.volume < 0.5) {
+            volumeBtn.textContent = "🔉";
+        } else {
+            volumeBtn.textContent = "▶︎";
+        }
+        volumeSlider.value = String(audioEl.volume);
+    });
+
+    bar.addEventListener("click", e => e.stopPropagation());
+    bar.addEventListener("mousedown", e => e.stopPropagation());
+    bar.addEventListener("pointerdown", e => e.stopPropagation());
+
+    return bar;
 }
 
 function buildCard(item) {
@@ -1937,8 +2148,7 @@ function buildCard(item) {
         thumb.appendChild(img);
 
     } else if (item.type === "gif") {
-        // GIF : on utilise directement l'URL du fichier original,
-        // JAMAIS un rendu canvas, pour garder l'animation intacte.
+
         const img = document.createElement("img");
         img.src = item.thumbURL || "";
         img.alt = item.name;
@@ -1947,6 +2157,7 @@ function buildCard(item) {
     } else if (item.type === "audio") {
         if (item.coverURL) {
             const img = document.createElement("img");
+            img.className = "audio-cover-img";
             img.src = item.coverURL;
             img.alt = item.name;
             thumb.appendChild(img);
@@ -1957,21 +2168,12 @@ function buildCard(item) {
             thumb.appendChild(placeholder);
         }
 
-        const bar = document.createElement("div");
-        bar.className = "audio-bar";
-        const audioEl = document.createElement("audio");
-        audioEl.controls = true;
-        audioEl.src = item.audioURL || "";
-        bar.appendChild(audioEl);
-        bar.appendChild(createVolumeControl(audioEl));
+        const bar = createAudioPlayerBar(item);
         thumb.appendChild(bar);
 
     } else if (item.type === "link") {
         if (item.youtubeId) {
-            // Pas d'iframe : ouverte en local (file://), YouTube la
-            // refuse presque toujours avec l'erreur 153 (pas d'origine
-            // valide à vérifier). La vignette + ouverture dans un nouvel
-            // onglet fonctionne, elle, dans 100% des cas.
+
             thumb.appendChild(buildYoutubeThumbLink(item, "card-play-badge"));
         } else {
             const placeholder = document.createElement("div");
@@ -2083,7 +2285,7 @@ function updateCountLabel() {
 
     const canLaunch = n >= 2;
 
-    // Active/desactive les deux boutons de lancement
+    // active/desactive les deux boutons de lancement
     btnLaunchSort.disabled = !canLaunch;
     btnLaunchSortTop.disabled = !canLaunch;
 
@@ -2390,10 +2592,6 @@ function showScreen(name) {
     }
 }
 
-// Coupe TOUS les lecteurs audio actuellement présents dans la page (grille
-// d'import, écran de tri, Results), quel que soit l'écran. Nécessaire car
-// changer d'écran ne fait que masquer (hidden/display:none) l'ancien —
-// ça n'arrête jamais un <audio> déjà en train de jouer.
 function stopAllPlayingAudio() {
     document.querySelectorAll("audio").forEach(audioEl => {
         try {
@@ -2549,9 +2747,6 @@ function nextStep() {
     displayCurrentComparison();
 }
 
-// Nettoie un conteneur média du battle (#leftMedia / #rightMedia) : coupe
-// l'audio s'il jouait, révoque les blob: URLs qu'on a créées pour ce
-// rendu, avant de vider le conteneur.
 function clearMediaContainer(el) {
     const audioEl = el.querySelector("audio");
     if (audioEl) {
@@ -2569,9 +2764,7 @@ function clearMediaContainer(el) {
     if (choiceEl) choiceEl.classList.remove("choice-has-audio");
 }
 
-// Remplit un conteneur #leftMedia/#rightMedia selon le TYPE réel de
-// l'élément (image / gif / audio / lien) : c'est ce que displayCurrentComparison
-// appelle pour chaque côté du duel.
+
 async function renderBattleMedia(mediaEl, item) {
     clearMediaContainer(mediaEl);
     if (!item) return;
@@ -2590,8 +2783,7 @@ async function renderBattleMedia(mediaEl, item) {
         }
 
     } else if (item.type === "gif") {
-        // Le fichier original directement, JAMAIS un rendu canvas, pour
-        // que le GIF reste animé dans l'écran de tri.
+
         const img = document.createElement("img");
         img.className = "battle-media-img";
         img.alt = item.name;
@@ -2615,17 +2807,7 @@ async function renderBattleMedia(mediaEl, item) {
             mediaEl.appendChild(placeholder);
         }
 
-        const bar = document.createElement("div");
-        bar.className = "battle-audio-bar";
-        const audioEl = document.createElement("audio");
-        audioEl.controls = true;
-        audioEl.preload = "metadata";
-        audioEl.src = item.audioURL || (item.file ? URL.createObjectURL(item.file) : "");
-        // Empêche un clic sur le lecteur de déclencher le choix du côté.
-        audioEl.addEventListener("click", e => e.stopPropagation());
-        bar.appendChild(audioEl);
-        bar.appendChild(createVolumeControl(audioEl));
-        mediaEl.appendChild(bar);
+        mediaEl.appendChild(createAudioPlayerBar(item));
 
     } else if (item.type === "link") {
         if (item.youtubeId && isValidYoutubeId(item.youtubeId)) {
@@ -2687,9 +2869,6 @@ async function displayCurrentComparison() {
         renderBattleMedia(rightMedia, rightItem)
     ]);
 
-    // Si une comparaison plus récente (undo, choix rapide) a déjà pris le
-    // relais entre-temps, on ne touche plus à l'affichage : le rendu en
-    // cours est obsolète.
     if (myToken !== battleRenderToken) return;
 
     leftMedia.classList.remove("is-loading");
@@ -2827,7 +3006,7 @@ function buildResultThumb(item, character) {
         }
 
     } else {
-        // image / gif (thumbURL du GIF = fichier original, donc animé)
+        // image / gif (thumburl du gif = fichier original, donc animer)
         const img = document.createElement("img");
         img.src = item ? (item.thumbURL || "") : "";
         img.alt = character.name;
@@ -2880,15 +3059,7 @@ function displayResults(ranking) {
         if (item && item.type === "audio") {
             const row = document.createElement("div");
             row.className = "result-audio-row";
-
-            const audioEl = document.createElement("audio");
-            audioEl.className = "result-audio";
-            audioEl.controls = true;
-            audioEl.preload = "metadata";
-            audioEl.src = item.audioURL || (item.file ? URL.createObjectURL(item.file) : "");
-
-            row.appendChild(audioEl);
-            row.appendChild(createVolumeControl(audioEl));
+            row.appendChild(createAudioPlayerBar(item));
             el.appendChild(row);
 
         } else if (item && item.type === "link" && item.linkURL) {
@@ -3034,12 +3205,7 @@ function drawEllipsizedText(ctx, text, x, y, maxWidth) {
 function loadImageElement(src) {
     return new Promise((resolve, reject) => {
         const img = new Image();
-        // Nécessaire pour les images externes (ex: vignette YouTube,
-        // https://img.youtube.com/...) : sans crossOrigin, drawImage()
-        // "taint" le canvas et toBlob()/toDataURL() sont bloqués, même si
-        // le serveur autorise le CORS. Les blob:/data: URLs (nos propres
-        // images locales) ne sont pas concernées, on peut le mettre dans
-        // tous les cas sans risque.
+
         if (!/^(blob:|data:)/.test(src)) {
             img.crossOrigin = "anonymous";
         }
@@ -3066,6 +3232,14 @@ async function exportResultsAsPng() {
 
     const prevScrollLeft = listEl.scrollLeft;
     const prevScrollTop = listEl.scrollTop;
+
+    const hiddenExtras = [];
+    items.forEach(item => {
+        item.querySelectorAll(".result-audio-row, .result-link").forEach(extra => {
+            hiddenExtras.push({ el: extra, display: extra.style.display });
+            extra.style.display = "none";
+        });
+    });
 
     try {
 
@@ -3097,12 +3271,10 @@ async function exportResultsAsPng() {
             return {
                 rect: relRect(item),
                 style: readComputedBox(item),
+                isAudio: !!item.querySelector(".result-audio-row"),
                 rank: rankEl ? { rect: relRect(rankEl), text: rankEl.textContent, style: readComputedBox(rankEl) } : null,
                 img: imgEl ? { rect: relRect(imgEl), src: imgEl.src, style: readComputedBox(imgEl) } : null,
-                // Cas "pas d'image" (musique sans pochette, lien sans
-                // vignette) : on capture l'emoji affiché (🎵/🔗) pour le
-                // redessiner tel quel dans le PNG plutôt que de laisser un
-                // trou.
+
                 placeholder: (!imgEl && placeholderEl) ? { rect: relRect(placeholderEl), text: placeholderEl.textContent, style: readComputedBox(placeholderEl) } : null,
                 name: nameEl ? { rect: relRect(nameEl), text: nameText, style: readComputedBox(nameEl) } : null,
                 tie: tieEl ? { rect: relRect(tieEl), text: tieEl.textContent, style: readComputedBox(tieEl) } : null
@@ -3205,10 +3377,6 @@ async function exportResultsAsPng() {
                 ctx.restore();
 
             } else {
-                // Pas d'image (musique sans pochette, lien sans vignette,
-                // ou vignette externe qui n'a pas pu être chargée) : on
-                // redessine l'emoji affiché à l'écran (🎵/🔗) plutôt que de
-                // laisser un trou vide.
                 const ph = d.placeholder;
                 if (ph && ph.rect) {
                     const px = originX + ph.rect.x + ph.rect.w / 2;
@@ -3225,6 +3393,36 @@ async function exportResultsAsPng() {
                     ctx.fillText(ph.text || "🎵", px, py);
                     ctx.restore();
                 }
+            }
+
+
+            const audioIconRect = d.isAudio ? (d.img ? d.img.rect : (d.placeholder ? d.placeholder.rect : null)) : null;
+            if (audioIconRect) {
+                const ix = originX + audioIconRect.x;
+                const iy = originY + audioIconRect.y;
+                const iw = audioIconRect.w;
+                const ih = audioIconRect.h;
+                const barH = Math.max(10, Math.min(14, ih * 0.28));
+
+                ctx.save();
+                drawRoundedRectPath(ctx, ix, iy, iw, ih, 4);
+                ctx.clip();
+
+                ctx.fillStyle = "rgba(0,0,0,.55)";
+                ctx.fillRect(ix, iy + ih - barH, iw, barH);
+
+                const triSize = barH * 0.55;
+                const triX = ix + 6;
+                const triY = iy + ih - barH / 2;
+                ctx.fillStyle = "#fff";
+                ctx.beginPath();
+                ctx.moveTo(triX, triY - triSize / 2);
+                ctx.lineTo(triX, triY + triSize / 2);
+                ctx.lineTo(triX + triSize, triY);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.restore();
             }
 
             // numro de classement
@@ -3286,10 +3484,10 @@ async function exportResultsAsPng() {
         alert("Unable to export the Results as a PNG image.\n\nDetail: " + (err && err.message ? err.message : err));
 
     } finally {
-        // Filet de sécurité : si une erreur survient avant la restauration
-        // ci-dessus, on remet quand même le scroll comme il était.
         listEl.scrollLeft = prevScrollLeft;
         listEl.scrollTop = prevScrollTop;
+
+        hiddenExtras.forEach(({ el, display }) => { el.style.display = display; });
 
         btnExportResultsPng.disabled = false;
         btnExportResultsPng.textContent = originalLabel;
@@ -3346,26 +3544,6 @@ function buildSaveFilename() {
     return `sorter-maker-${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}-${pad2(now.getHours())}${pad2(now.getMinutes())}.sorter-save`;
 }
 
-/*
-Format de sauvegarde binaire (v2) — corrige le crash "sauvegarde trop
-lourde" :
-  [4 octets "SMB1"] [4 octets = longueur de l'en-tête JSON (Uint32 LE)]
-  [en-tête JSON] [fichiers bruts concaténés, dans l'ordre du header]
-
-Pourquoi ce format : l'ancien format (v1) encodait CHAQUE fichier en
-base64 et empilait tout dans UNE SEULE chaîne JSON. Avec des fichiers
-lourds (audio, beaucoup d'images), cette chaîne pouvait atteindre des
-centaines de Mo/plusieurs Go : String.fromCharCode/JSON.stringify sur une
-chaîne aussi énorme fait planter l'onglet (RangeError / out-of-memory).
-Ici, l'en-tête JSON ne contient QUE des métadonnées (petit et rapide), et
-les fichiers sont ajoutés tels quels (Blob binaire, sans passer par une
-chaîne JS) via new Blob([...]) — le navigateur les concatène efficacement
-sans jamais dupliquer les données en mémoire sous forme de texte.
-
-Les sauvegardes v1 (JSON + base64) restent lisibles : voir le test du
-"magic" SMB1 dans le gestionnaire de chargement plus bas.
-*/
-
 const SAVE_MAGIC = "SMB1";
 
 async function buildSaveObject() {
@@ -3387,7 +3565,7 @@ async function buildSaveObject() {
             return entry;
         }
 
-        // image / gif / audio : un fichier binaire réel à embarquer.
+        // image/gif/audio un fichier binaire reel à embarquer
         if (item.file) {
             entry.fileName = item.file.name || (item.name + (item.type === "audio" ? ".mp3" : ".jpg"));
             entry.fileType = item.file.type || (item.type === "audio" ? "audio/mpeg" : "image/png");
@@ -3447,9 +3625,6 @@ async function doSaveState() {
         const lengthPrefix = new Uint8Array(4);
         new DataView(lengthPrefix.buffer).setUint32(0, headerBytes.byteLength, true);
 
-        // new Blob() concatène des Blob/File/ArrayBuffer directement, sans
-        // jamais les transformer en une seule chaîne JS géante : c'est ce
-        // qui évite le crash, même avec plusieurs centaines de Mo de médias.
         const blob = new Blob([magicBytes, lengthPrefix, headerBytes, ...fileParts], { type: "application/octet-stream" });
 
         const url = URL.createObjectURL(blob);
@@ -3486,13 +3661,13 @@ inputLoadSave.addEventListener("change", async e => {
 
     try {
         let data;
-        let fileProvider = null; // (id) -> { main: Blob|null, cover: Blob|null }
+        let fileProvider = null;
 
         const magicBytes = new Uint8Array(await file.slice(0, 4).arrayBuffer());
         const magicText = new TextDecoder().decode(magicBytes);
 
         if (magicText === SAVE_MAGIC) {
-            // ---- Format binaire (v2+) ----
+            // format binaire v2
             const lenBytes = new Uint8Array(await file.slice(4, 8).arrayBuffer());
             const headerLength = new DataView(lenBytes.buffer).getUint32(0, true);
 
@@ -3520,7 +3695,6 @@ inputLoadSave.addEventListener("change", async e => {
             fileProvider = id => slices.get(id) || { main: null, cover: null };
 
         } else {
-            // ---- Format JSON hérité (v1, base64 inline) : reste lisible. ----
             const text = await file.text();
             try {
                 data = JSON.parse(text);
@@ -3571,11 +3745,8 @@ async function restoreFromSave(data, fileProvider) {
         let coverFile = null;
 
         if (type === "link") {
-            // rien à charger : pas de fichier binaire pour un lien.
 
         } else if (fileProvider) {
-            // Format binaire : les Blob ont déjà été découpés par tranche
-            // (File.slice), sans jamais charger tout le fichier en mémoire.
             const slice = fileProvider(entry.id);
             if (slice.main) {
                 file = new File([slice.main], entry.fileName || ((entry.name || type) + ".dat"), { type: entry.fileType || "" });
@@ -3585,7 +3756,6 @@ async function restoreFromSave(data, fileProvider) {
             }
 
         } else {
-            // Format hérité v1 (base64 inline) — uniquement des images.
             if (!entry.dataBase64) {
                 throw new Error("A backup image is invalid.");
             }
