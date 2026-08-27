@@ -1,0 +1,3795 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sorter Maker</title>
+
+<style>
+    :root {
+        --bg: #f4f4f1;
+        --surface: #ffffff;
+        --border: #dcdcd6;
+        --ink: #1d1d1f;
+        --muted: #6b6b68;
+        --accent: #9c2b34;
+        --accent-dark: #7c1f27;
+        --gold: #c99a2e;
+        --danger: #b3372c;
+        --radius: 8px;
+		--bg-secondary: #efefe9;
+		--surface-hover: #f7f7f3;
+			--border-strong: #b9b9b2;
+		--input-bg: #ffffff;
+		--image-bg: #eeeeeb;
+    }
+
+	html.dark {
+		--bg: #171716;
+		--surface: #242422;
+		--border: #3a3a37;
+		--ink: #eeeeea;
+		--muted: #a4a49e;
+		--accent: #c94a55;
+		--accent-dark: #a93640;
+		--gold: #d8aa3b;
+		--danger: #e05a4f;
+
+		--bg-secondary: #20201e;
+		--surface-hover: #2d2d2a;
+		--border-strong: #555550;
+		--input-bg: #242422;
+		--image-bg: #30302d;
+	}
+
+	html.dark body {
+		background: var(--bg);
+		color: var(--ink);
+	}
+
+	html.dark button {
+		background: var(--surface);
+		border-color: var(--border-strong);
+		color: var(--ink);
+	}
+
+	html.dark button:hover {
+		background: var(--surface-hover);
+	}
+
+	html.dark button.primary {
+		background: var(--accent);
+		border-color: var(--accent-dark);
+		color: #fff;
+	}
+
+	html.dark button.primary:hover {
+		background: var(--accent-dark);
+	}
+
+	html.dark .import-zone {
+		background: var(--surface);
+		border-color: #555550;
+	}
+
+	html.dark .import-zone.drag-over {
+		border-color: var(--accent);
+		background: #302022;
+	}
+
+	html.dark .grid-viewport {
+		background: var(--bg-secondary);
+		border-color: var(--border);
+	}
+
+	html.dark .card {
+		background: var(--surface);
+		border-color: var(--border);
+	}
+
+	html.dark .card-thumb {
+		background: var(--image-bg);
+	}
+
+	html.dark .card-name {
+		color: var(--ink);
+	}
+
+	html.dark .choice {
+		background: var(--surface);
+		border-color: #555550;
+	}
+
+	html.dark .choice:hover {
+		border-color: var(--accent);
+		box-shadow: 0 3px 10px rgba(0,0,0,.35);
+	}
+
+	html.dark .choice img {
+		background: var(--image-bg);
+	}
+
+	html.dark .result-item {
+		background: var(--surface);
+		border-color: #555550;
+	}
+
+	html.dark .progress {
+		background: #111110;
+		border-color: #666660;
+	}
+
+	html.dark .modal {
+		background: rgba(0,0,0,.72);
+	}
+
+	html.dark .modal-box {
+		background: var(--surface);
+		color: var(--ink);
+	}
+
+	html.dark .crop-stage-outer {
+		background: #111;
+	}
+
+	html.dark #cropPreviewCanvas {
+		background: var(--image-bg);
+	}
+
+	html.dark .btn-danger:hover {
+		background: #3a2220;
+	}
+
+	html.dark .ratio-buttons button.active {
+		background: var(--accent);
+		border-color: var(--accent-dark);
+	}
+
+    * { box-sizing: border-box; }
+
+    html, body {
+        height: 100%;
+    }
+
+    body {
+        margin: 0;
+        font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+    }
+
+    button {
+        font-family: inherit;
+        font-size: 14px;
+        padding: 9px 16px;
+        border: 1px solid #b9b9b2;
+        border-radius: 6px;
+        background: var(--surface);
+        color: var(--ink);
+        cursor: pointer;
+        transition: background .12s, border-color .12s, transform .08s;
+    }
+
+    button:hover { background: #efefe9; }
+    button:active { transform: scale(.97); }
+    button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+    button.primary {
+        background: var(--accent);
+        border-color: var(--accent-dark);
+        color: #fff;
+        font-weight: 600;
+    }
+    button.primary:hover { background: var(--accent-dark); }
+
+    button.btn-mini {
+        padding: 5px 10px;
+        font-size: 12.5px;
+    }
+
+    button.btn-danger:hover {
+        background: #fbeceb;
+        border-color: var(--danger);
+        color: var(--danger);
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    .screen { width: 100%; }
+    .screen[hidden] { display: none; }
+
+    /* ecran import et gestion des images*/
+
+    #screenImport {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 24px 20px 40px;
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+	}
+
+    .topbar {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .topbar h1 {
+        margin: 0;
+        font-size: 26px;
+        letter-spacing: -.02em;
+    }
+
+    .topbar .tagline {
+        color: var(--muted);
+        font-size: 14px;
+    }
+
+    .import-zone {
+        border: 2px dashed #c3c3ba;
+        border-radius: var(--radius);
+        background: var(--surface);
+        padding: 22px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        transition: border-color .15s, background .15s;
+    }
+
+    .import-zone.drag-over {
+        border-color: var(--accent);
+        background: #fbeeee;
+    }
+
+    .import-zone .hint {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13.5px;
+    }
+
+    .import-progress {
+        margin-top: 12px;
+    }
+
+    .progress {
+        width: 100%;
+        height: 16px;
+        border: 1px solid #222;
+        background: white;
+        padding: 2px;
+        border-radius: 4px;
+    }
+
+    .progress-fill {
+        width: 0%;
+        height: 100%;
+        background: var(--gold);
+        transition: width .12s ease;
+        border-radius: 2px;
+    }
+
+    #importProgressLabel {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 4px;
+    }
+
+    .grid-viewport {
+        position: relative;
+        flex: 1;
+        margin-top: 16px;
+        overflow-y: auto;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: #efefe9;
+        min-height: 200px;
+    }
+
+    .grid-sizer {
+        position: relative;
+        width: 100%;
+    }
+
+    .grid-inner {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(var(--cols, 4), 1fr);
+        gap: 14px;
+        padding: 14px;
+        box-sizing: border-box;
+    }
+
+    .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-thumb {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        background: #e2e2db;
+        overflow: hidden;
+    }
+
+    .card-thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		display: block;
+		image-rendering: pixelated;
+		image-rendering: crisp-edges;
+	}
+
+    .card.is-cropped .card-thumb::after {
+        content: "recadrée";
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        background: rgba(0,0,0,.6);
+        color: #fff;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 3px;
+        letter-spacing: .02em;
+    }
+
+    .card-name {
+        border: none;
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid transparent;
+        padding: 7px 8px;
+        font-size: 13px;
+        font-weight: 600;
+        width: 100%;
+        background: transparent;
+        color: var(--ink);
+    }
+
+    .card-name:focus {
+        border-bottom: 1px solid var(--accent);
+        outline: none;
+    }
+
+    .card-actions {
+        display: flex;
+        gap: 6px;
+        padding: 0 8px 8px;
+    }
+
+    .card-actions button { flex: 1; padding: 6px 4px; }
+
+    .empty-state {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        font-size: 14px;
+        pointer-events: none;
+    }
+    .empty-state[hidden] { display: none; }
+
+    .launch-bar {
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    #countLabel { color: var(--muted); font-size: 14px; }
+
+    /* ecran tri */
+
+    #screenSort {
+		width: 100%;
+		max-width: 1200px;
+		min-height: 100vh;
+		margin: 0 auto;
+		padding: 24px 20px 40px;
+		text-align: center;
+	}
+
+	#battleView {
+		width: 100%;
+		margin: 0;
+		padding: 0;
+	}
+
+	.battle {
+		display: grid;
+		grid-template-columns: 1fr 80px 1fr;
+		gap: 15px;
+		align-items: center;
+		width: 100%;
+		max-width: 900px;
+		margin: 0 auto;
+	}
+	
+	#screenSort[hidden] {
+		display: none !important;
+	}
+
+    .sort-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
+		margin-bottom: 6px;
+		flex-wrap: wrap;
+	}
+
+	.sort-header-right {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+
+    #screenSort h1 { margin-bottom: 4px; }
+
+    .subtitle { color: var(--muted); margin-bottom: 20px; }
+
+    .progress-container { width: min(600px, 100%); margin: 0 auto 25px; }
+    .progress-label { margin-bottom: 6px; font-size: 14px; color: var(--muted); }
+
+    .battle {
+		display: grid;
+		grid-template-columns: 1fr 80px 1fr;
+		gap: 15px;
+		align-items: center;
+		width: 100%;
+		max-width: 900px;
+		margin: 0 auto;
+	}
+
+    .choice {
+		background: var(--surface);
+		border: 2px solid #aaa;
+		border-radius: 8px;
+		padding: 12px;
+		cursor: pointer;
+		transition: border-color .15s, transform .15s, box-shadow .15s;
+		min-width: 0;
+	}
+
+    .choice:hover {
+        border-color: var(--accent);
+        transform: scale(1.02);
+        box-shadow: 0 3px 10px rgba(0,0,0,.12);
+    }
+
+    /* Un lecteur audio à l'intérieur : pas de "transform" au survol. Un
+       transform CSS sur un ancêtre crée un nouveau bloc de positionnement
+       pour les popups internes du lecteur natif (volume, notamment), ce
+       qui les fait disparaître ou mal se positionner. On garde juste la
+       bordure/l'ombre pour l'effet visuel. */
+    .choice.choice-has-audio:hover {
+        transform: none;
+    }
+
+    .choice img {
+    display: block;
+    width: 100%;
+    height: 340px;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+    object-position: center;
+    background: #eee;
+    border-radius: 4px;
+    transition: opacity .12s;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+    .choice img.is-loading { opacity: .25; }
+
+    .choice-name {
+		max-width: 100%;
+		overflow: hidden;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		white-space: normal;
+		overflow-wrap: break-word;
+
+		font-family: "Trebuchet MS", Arial, sans-serif;
+		font-weight: 600;
+		line-height: 1.2;
+	}
+
+    .vs { font-size: 20px; font-weight: bold; color: #777; }
+
+    .controls { margin-top: 20px; }
+
+    .keyboard-hint {
+        margin-top: 14px;
+        font-size: 12.5px;
+        color: var(--muted);
+    }
+
+    /* resultat */
+
+    .results { margin: 30px auto 0; width: min(600px, 100%); text-align: left; }
+    .results h2 { text-align: center; margin-bottom: 20px; }
+
+    .results.layout-horizontal { width: 100%; max-width: 100%; }
+
+    .results-toolbar {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 14px;
+    }
+
+    /* horizontal */
+    #resultList.horizontal {
+        display: grid;
+        grid-auto-flow: column;
+        grid-template-rows: repeat(15, auto);
+        grid-auto-columns: 300px;
+        gap: 5px;
+        overflow-x: auto;
+        padding-bottom: 12px;
+    }
+
+    #resultList.horizontal .result-item {
+        margin-bottom: 0;
+        width: 300px;
+    }
+
+    .result-item {
+        display: grid;
+        grid-template-columns: 50px 70px 1fr;
+        align-items: center;
+        min-height: 70px;
+        margin-bottom: 5px;
+        padding: 5px;
+        background: var(--surface);
+        border: 1px solid #aaa;
+        border-radius: 4px;
+    }
+
+    .result-item:nth-child(1) .rank { color: var(--gold); }
+
+    .rank { text-align: center; font-size: 18px; font-weight: bold; }
+    .result-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; image-rendering: pixelated; image-rendering: crisp-edges; }
+    .result-name { padding-left: 12px; font-weight: bold; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	#resultList .result-name {
+		font-size: 14px;
+	}
+
+
+    .tie {
+        display: block;
+        color: #888;
+        font-size: 11.5px;
+        font-weight: normal;
+        margin-top: 2px;
+    }
+
+    .results-actions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 22px;
+    }
+
+    /* recadrage */
+
+    .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(20,20,20,.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        padding: 20px;
+    }
+    .modal[hidden] { display: none; }
+
+    .modal-box {
+        background: var(--surface);
+        border-radius: 10px;
+        max-width: 960px;
+        width: 100%;
+        max-height: 92vh;
+        overflow: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .modal-box h2 { margin: 0; font-size: 18px; }
+
+    .crop-body {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .crop-stage-outer {
+        background: #262626;
+        border-radius: 6px;
+        padding: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 200px;
+    }
+
+    #cropStage {
+        position: relative;
+        overflow: hidden;
+        touch-action: none;
+        line-height: 0;
+    }
+
+    #cropCanvas { display: block; }
+
+    .crop-rect {
+        position: absolute;
+        border: 2px solid var(--gold);
+        box-shadow: 0 0 0 9999px rgba(0,0,0,.55);
+        cursor: move;
+    }
+
+    .crop-handle {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        background: var(--gold);
+        border: 2px solid #fff;
+        border-radius: 50%;
+    }
+    .crop-handle.nw { left: -8px; top: -8px; cursor: nwse-resize; }
+    .crop-handle.ne { right: -8px; top: -8px; cursor: nesw-resize; }
+    .crop-handle.sw { left: -8px; bottom: -8px; cursor: nesw-resize; }
+    .crop-handle.se { right: -8px; bottom: -8px; cursor: nwse-resize; }
+
+    .crop-side-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-width: 190px;
+        flex: 1;
+    }
+
+    .crop-side-panel h3 {
+        margin: 0 0 6px;
+        font-size: 12.5px;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: var(--muted);
+    }
+
+    .ratio-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .ratio-buttons button.active {
+        background: var(--accent);
+        border-color: var(--accent-dark);
+        color: #fff;
+    }
+
+    #cropPreviewCanvas {
+        background: #eee;
+        border-radius: 6px;
+        width: 100%;
+        max-width: 190px;
+        aspect-ratio: 1 / 1;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        border-top: 1px solid var(--border);
+        padding-top: 14px;
+    }
+
+    /* lien (ajout / edition) */
+
+    .link-modal-box { max-width: 480px; }
+
+    .link-form-row {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .link-form-row label {
+        font-size: 12.5px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: .03em;
+    }
+
+    .link-form-row input {
+        font-family: inherit;
+        font-size: 14px;
+        padding: 9px 10px;
+        border: 1px solid var(--border-strong, #b9b9b2);
+        border-radius: 6px;
+        background: var(--input-bg);
+        color: var(--ink);
+    }
+
+    /* GIF : badge sur la miniature */
+
+    .card.type-gif .card-thumb::before {
+        content: "GIF";
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        background: rgba(0,0,0,.6);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 3px;
+        letter-spacing: .04em;
+        z-index: 2;
+    }
+
+    /* audio : placeholder + barre de lecture superposee sur la miniature */
+
+    .audio-thumb-placeholder,
+    .link-thumb-placeholder,
+    .battle-media-placeholder {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        background: var(--image-bg);
+    }
+
+    .battle-media-placeholder { font-size: 64px; }
+
+    .audio-bar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 3px 5px;
+        background: rgba(0,0,0,.55);
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .audio-bar audio {
+        flex: 1;
+        min-width: 0;
+        display: block;
+        height: 26px;
+    }
+
+    /* lien YouTube integre dans la grille d'import */
+
+    .link-embed-iframe {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+
+    /* vignette YouTube cliquable (grille d'import + ecran de tri) */
+    .youtube-thumb-link {
+        display: block;
+        position: relative;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .youtube-thumb-link img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* lecteur YouTube incruste (ecran de tri uniquement, apres clic) */
+    .youtube-embed {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+
+    .card-play-badge {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 26px;
+        color: #fff;
+        text-shadow: 0 2px 8px rgba(0,0,0,.6);
+        pointer-events: none;
+    }
+
+    /* ecran de tri : media generique (image / gif / audio / lien) */
+
+    .choice-media {
+        position: relative;
+        width: 100%;
+        height: 340px;
+        background: #eee;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    /* Quand le média est un lecteur audio, on autorise le dépassement :
+       "overflow: hidden" ci-dessus coupe l'infobulle native du navigateur
+       qui affiche la position/durée au survol de la barre de lecture
+       (le volume, lui, s'affiche dans une couche différente et n'est pas
+       affecté). Sans ça, seul le survol du volume fonctionnait. */
+    .choice-media.choice-media-audio {
+        overflow: visible;
+    }
+
+    .battle-media-img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: center;
+        background: #eee;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        transition: opacity .12s;
+    }
+
+    .battle-media-loading {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        background: var(--image-bg);
+    }
+
+    .battle-audio-bar, .battle-link-bar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 10px;
+        background: rgba(0,0,0,.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .battle-audio-bar audio { flex: 1; min-width: 0; max-width: 300px; }
+
+    .battle-play-badge {
+        position: absolute;
+        top: 45%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 52px;
+        color: #fff;
+        text-shadow: 0 2px 10px rgba(0,0,0,.6);
+        pointer-events: none;
+    }
+
+    @media (max-width: 640px) {
+        .choice-media { height: 240px; }
+    }
+
+    /* resultats : miniature generique */
+
+    .result-thumb {
+        width: 60px;
+        height: 60px;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .result-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 4px;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+    }
+
+    .result-thumb.result-thumb-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        background: var(--image-bg);
+    }
+
+    .result-audio-row {
+        grid-column: 2 / -1;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 4px;
+    }
+
+    .result-audio {
+        display: block;
+        width: 100%;
+        max-width: 220px;
+        height: 28px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* curseur de volume personnalise, toujours visible (remplace le popup
+       natif du navigateur, peu fiable selon le contexte CSS) */
+    .volume-control {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    .volume-icon {
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 1;
+        user-select: none;
+    }
+
+    .volume-slider {
+        width: 60px;
+        height: 16px;
+        cursor: pointer;
+        accent-color: var(--accent);
+    }
+
+    .battle-audio-bar .volume-slider { width: 80px; }
+
+    .result-link {
+        display: inline-block;
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--accent);
+        grid-column: 2 / -1;
+    }
+
+    /* pour les tels */
+
+    @media (max-width: 640px) {
+        .battle { grid-template-columns: 1fr; }
+        .vs { display: none; }
+        .choice img { height: 240px; }
+        .crop-body { flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        * { transition: none !important; }
+    }
+	
+/* podium*/
+
+/* OR */
+#resultList .result-item:nth-child(1) {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 215, 0, 0.5),
+        rgba(184, 134, 11, 0.5)
+    );
+}
+
+/* ARGENT */
+#resultList .result-item:nth-child(2) {
+    background: linear-gradient(
+        135deg,
+        rgba(232, 232, 232, 0.5),
+        rgba(140, 140, 140, 0.5)
+    );
+}
+
+/* BRONZE */
+#resultList .result-item:nth-child(3) {
+    background: linear-gradient(
+        135deg,
+        rgba(205, 127, 50, 0.2),
+        rgba(139, 69, 19, 0.3)
+    );
+}
+
+#resultList .result-item:nth-child(1) .rank,
+#resultList .result-item:nth-child(1) .result-name,
+#resultList .result-item:nth-child(2) .rank,
+#resultList .result-item:nth-child(2) .result-name,
+#resultList .result-item:nth-child(3) .rank,
+#resultList .result-item:nth-child(3) .result-name {
+    color: inherit;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- import et gestion des images -->
+
+<section id="screenImport" class="screen">
+
+    <div class="topbar">
+        <div>
+            <h1>Sorter Maker</h1>
+            <div class="tagline"> </div>
+        </div>
+        <div class="topbar-right">
+			<button id="btnSaveImport" class="btn-mini" type="button">Save</button>
+			<button id="btnLoadImport" class="btn-mini" type="button">Load</button>
+			<button id="btnDarkMode" class="btn-mini" type="button">Dark</button>
+			<button id="btnLaunchSortTop" class="primary" disabled>START!</button>
+		</div>
+    </div>
+
+    <div class="import-zone" id="importZone">
+        <button id="btnImportFiles">Import images</button>
+        <button id="btnImportFolder">Import a folder</button>
+        <button id="btnImportAudio" type="button">Import audio (MP3...)</button>
+        <button id="btnAddLink" type="button">Add a link (YouTube...)</button>
+        <input type="file" id="inputFiles" accept="image/*" multiple hidden>
+        <input type="file" id="inputFolder" webkitdirectory multiple hidden>
+        <input type="file" id="inputAudioFiles" accept="audio/*" multiple hidden>
+        <input type="file" id="inputCoverFile" accept="image/*" hidden>
+        <p class="hint">or drag and drop images / audio files (or an entire folder) here</p>
+    </div>
+
+    <div class="import-progress" id="importProgress" hidden>
+        <div class="progress"><div class="progress-fill" id="importProgressFill"></div></div>
+        <div id="importProgressLabel"></div>
+    </div>
+
+    <div class="grid-viewport" id="gridViewport">
+        <div class="grid-sizer" id="gridSizer">
+            <div class="grid-inner" id="gridInner"></div>
+        </div>
+        <div class="empty-state" id="emptyState">No images have been imported yet.</div>
+    </div>
+
+    <div class="launch-bar">
+        <span id="countLabel">No images imported</span>
+        <button id="btnLaunchSort" class="primary" disabled>START!</button>
+    </div>
+
+</section>
+
+
+<!-- la parti grv chiant-->
+
+<section id="screenSort" class="screen" hidden>
+
+    <div class="sort-header">
+		<button id="btnBackToImport">← Back to Images</button>
+
+		<div class="sort-header-right">
+			<button id="btnSaveSort" class="btn-mini" type="button">Save</button>
+			<button id="btnLoadSort" class="btn-mini" type="button">Load</button>
+			<button id="btnDarkModeSort" class="btn-mini" type="button">
+				Dark
+			</button>
+			<button id="btnExportResultsPng" class="btn-mini" type="button" hidden>Export PNG</button>
+		</div>
+	</div>
+
+    <div id="battleView">
+
+        <h1>Pick your favorite</h1>
+
+        <div class="progress-container">
+            <div id="progressLabel" class="progress-label">0</div>
+            <div class="progress"><div id="progressFill" class="progress-fill"></div></div>
+        </div>
+
+        <div id="battle" class="battle">
+
+            <div id="leftChoice" class="choice">
+                <div id="leftMedia" class="choice-media"></div>
+                <div id="leftName" class="choice-name"></div>
+            </div>
+
+            <div class="vs">VS</div>
+
+            <div id="rightChoice" class="choice">
+                <div id="rightMedia" class="choice-media"></div>
+                <div id="rightName" class="choice-name"></div>
+            </div>
+
+        </div>
+
+        <div class="controls">
+            <button id="tieButton">Tie</button>
+            <button id="undoButton">Undo</button>
+        </div>
+
+    </div>
+
+    <div id="resultsView" hidden>
+
+        <div class="results">
+            <h2>Results !!!</h2>
+            <div class="results-toolbar">
+                <button id="btnToggleResultsLayout" class="btn-mini" type="button">↔ Horizontal display</button>
+            </div>
+            <div id="resultList"></div>
+        </div>
+
+        <div class="results-actions">
+            <button id="restartButton" class="primary">Restart</button>
+            <button id="btnBackToImportFromResults">Go Back</button>
+        </div>
+
+    </div>
+
+</section>
+
+
+<input type="file" id="inputLoadSave" accept=".sorter-save,application/json" hidden>
+
+<!-- recadrage -->
+
+<div id="cropModal" class="modal" hidden>
+    <div class="modal-box">
+
+        <h2 id="cropModalTitle">Crop</h2>
+
+        <div class="crop-body">
+
+            <div class="crop-stage-outer">
+                <div id="cropStage">
+                    <canvas id="cropCanvas"></canvas>
+                    <div id="cropRect" class="crop-rect">
+                        <div class="crop-handle nw" data-handle="nw"></div>
+                        <div class="crop-handle ne" data-handle="ne"></div>
+                        <div class="crop-handle sw" data-handle="sw"></div>
+                        <div class="crop-handle se" data-handle="se"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="crop-side-panel">
+
+                <div>
+                    <h3>Format</h3>
+                    <div class="ratio-buttons" id="ratioButtons">
+                        <button type="button" data-ratio="free" class="active">Free</button>
+                        <button type="button" data-ratio="1:1">1:1</button>
+                        <button type="button" data-ratio="3:4">3:4</button>
+                        <button type="button" data-ratio="4:3">4:3</button>
+                        <button type="button" data-ratio="16:9">16:9</button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3>Preview</h3>
+                    <canvas id="cropPreviewCanvas" width="190" height="190"></canvas>
+                </div>
+
+                <button type="button" id="btnCropReset" class="btn-mini">Reset</button>
+
+            </div>
+
+        </div>
+
+        <div class="modal-footer">
+            <button id="btnCropCancel">Cancel</button>
+            <button id="btnCropValidate" class="primary">Confirm the crop</button>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- ajout / edition de lien -->
+
+<div id="linkModal" class="modal" hidden>
+    <div class="modal-box link-modal-box">
+        <h2 id="linkModalTitle">Add a link</h2>
+
+        <div class="link-form-row">
+            <label for="linkNameInput">Display name</label>
+            <input type="text" id="linkNameInput" placeholder="e.g. My favorite trailer">
+        </div>
+
+        <div class="link-form-row">
+            <label for="linkUrlInput">URL (YouTube or any link)</label>
+            <input type="url" id="linkUrlInput" placeholder="https://www.youtube.com/watch?v=...">
+        </div>
+
+        <div class="modal-footer">
+            <button id="btnLinkCancel">Cancel</button>
+            <button id="btnLinkValidate" class="primary">Save</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+function uid() {
+    return "img_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 9);
+}
+
+function nameFromFilename(filename) {
+    const dot = filename.lastIndexOf(".");
+    return dot > 0 ? filename.slice(0, dot) : filename;
+}
+
+function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+}
+
+function yieldToBrowser() {
+    return new Promise(resolve => {
+        if (window.requestIdleCallback) {
+            requestIdleCallback(() => resolve(), { timeout: 100 });
+        } else {
+            setTimeout(resolve, 0);
+        }
+    });
+}
+
+
+/*#######################################################################*/
+
+
+async function loadDrawable(file) {
+
+    if (window.createImageBitmap) {
+        try {
+            const bitmap = await createImageBitmap(file);
+            return {
+                source: bitmap,
+                width: bitmap.width,
+                height: bitmap.height,
+                close() { bitmap.close(); }
+            };
+        } catch (err) {
+
+        }
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    try {
+        const imgEl = await new Promise((resolve, reject) => {
+            const el = new Image();
+            el.onload = () => resolve(el);
+            el.onerror = reject;
+            el.src = objectUrl;
+        });
+        return {
+            source: imgEl,
+            width: imgEl.naturalWidth,
+            height: imgEl.naturalHeight,
+            close() { URL.revokeObjectURL(objectUrl); }
+        };
+    } catch (err) {
+        URL.revokeObjectURL(objectUrl);
+        throw err;
+    }
+}
+
+function renderToBlobURL(drawable, cropRect, maxDim, quality) {
+
+    const sx = cropRect ? cropRect.x : 0;
+    const sy = cropRect ? cropRect.y : 0;
+    const sw = cropRect ? cropRect.w : drawable.width;
+    const sh = cropRect ? cropRect.h : drawable.height;
+
+    const scale = Math.min(1, maxDim / Math.max(sw, sh));
+    const dw = Math.max(1, Math.round(sw * scale));
+    const dh = Math.max(1, Math.round(sh * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = dw;
+    canvas.height = dh;
+
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+	ctx.drawImage(drawable.source, sx, sy, sw, sh, 0, 0, dw, dh);
+
+    return new Promise(resolve => {
+        canvas.toBlob(blob => {
+            resolve({ blob, url: URL.createObjectURL(blob), width: dw, height: dh });
+        }, "image/png");
+    });
+}
+
+async function renderItemToURL(item, maxDim, quality) {
+    const drawable = await loadDrawable(item.file);
+    try {
+        if (item.naturalWidth === null) {
+            item.naturalWidth = drawable.width;
+            item.naturalHeight = drawable.height;
+        }
+        return await renderToBlobURL(drawable, item.crop, maxDim, quality || 0.85);
+    } finally {
+        drawable.close();
+    }
+}
+
+
+/*#######################################################################*/
+
+
+const THUMB_MAX_DIM = 220;   // miniatures de la grille
+const BATTLE_MAX_DIM = 560;  // images afficher pendant le tri
+const CROP_STAGE_MAX_W = 620;
+const CROP_STAGE_MAX_H = 440;
+
+let images = [];               // ordre dimport, source de veriter
+const imagesById = new Map();  // acces rapide par id
+
+// ---- Détection de type de fichier ----
+
+function isImageFile(f) {
+    return f.type.startsWith("image/") || /\.(png|jpe?g|gif|webp|bmp|avif)$/i.test(f.name);
+}
+
+function isGifFile(file) {
+    if (!file) return false;
+    if (file.type === "image/gif") return true;
+    return /\.gif$/i.test(file.name || "");
+}
+
+function isAudioFile(f) {
+    return (f.type && f.type.startsWith("audio/")) || /\.(mp3|wav|ogg|oga|m4a|flac|aac|opus|weba)$/i.test(f.name);
+}
+
+// ---- Liens YouTube ----
+
+function parseYouTubeId(url) {
+    try {
+        const u = new URL(url);
+        const host = u.hostname.replace(/^www\./, "");
+        if (host === "youtu.be") {
+            return u.pathname.slice(1).split("/")[0] || null;
+        }
+        if (host === "youtube.com" || host === "m.youtube.com" || host === "music.youtube.com") {
+            if (u.pathname === "/watch") return u.searchParams.get("v");
+            if (u.pathname.startsWith("/embed/")) return u.pathname.split("/")[2] || null;
+            if (u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2] || null;
+            if (u.pathname.startsWith("/live/")) return u.pathname.split("/")[2] || null;
+        }
+    } catch (err) {
+        // URL invalide : pas un lien YouTube exploitable
+    }
+    return null;
+}
+
+// ---- Vignette YouTube cliquable (remplace l'iframe embed) ----
+// Ouvrir la page HTML en local (file://) empêche presque toujours le
+// lecteur intégré YouTube de fonctionner (erreur 153 : pas d'origine
+// valide à vérifier côté YouTube). Solution fiable : afficher la vraie
+// vignette de la vidéo avec un bouton "lecture", et l'ouvrir dans un
+// nouvel onglet au clic — ça marche à 100%, y compris en local.
+function isValidYoutubeId(id) {
+    return typeof id === "string" && /^[A-Za-z0-9_-]{10,12}$/.test(id);
+}
+
+// ---- Vignette YouTube cliquable ----
+// Par défaut : ouvre la vidéo dans un nouvel onglet (utilisé dans la
+// grille d'import et les Results). Si `onEmbed` est fourni (écran de tri
+// uniquement), le clic est intercepté et sert plutôt à incruster un
+// lecteur YouTube directement à la place de la vignette.
+function buildYoutubeThumbLink(item, badgeClass, onEmbed) {
+    const link = document.createElement("a");
+    link.className = "youtube-thumb-link";
+    link.href = item.linkURL || `https://www.youtube.com/watch?v=${item.youtubeId}`;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.title = "Watch on YouTube";
+    link.addEventListener("click", e => {
+        // Empêche toujours le clic de déclencher un choix ("left"/"right").
+        e.stopPropagation();
+        if (typeof onEmbed === "function") {
+            e.preventDefault();
+            onEmbed();
+        }
+    });
+
+    const img = document.createElement("img");
+    img.src = item.thumbURL || `https://img.youtube.com/vi/${item.youtubeId}/hqdefault.jpg`;
+    img.alt = item.name;
+    link.appendChild(img);
+
+    const badge = document.createElement("div");
+    badge.className = badgeClass || "card-play-badge";
+    badge.textContent = "▶";
+    link.appendChild(badge);
+
+    return link;
+}
+
+// Remplace la vignette YouTube par un vrai lecteur <iframe>, directement
+// dans le même conteneur .choice-media — utilisé UNIQUEMENT sur l'écran
+// de tri (Pick your favorite). La grille d'import et Results gardent le
+// comportement "ouvrir dans un nouvel onglet" (afficher plusieurs iframes
+// YouTube à la fois en local, hors écran de tri, redonnerait facilement
+// l'erreur 153 et alourdirait la grille pour rien).
+function embedYoutubeInline(mediaEl, item) {
+    const videoId = item.youtubeId;
+    if (!isValidYoutubeId(videoId)) return;
+
+    mediaEl.innerHTML = "";
+    mediaEl.classList.add("choice-media-embedded");
+
+    const iframe = document.createElement("iframe");
+    iframe.className = "youtube-embed";
+    // autoplay=1 est acceptable ici : l'iframe n'est créée qu'en réponse
+    // directe au clic de l'utilisateur (geste utilisateur requis par les
+    // navigateurs pour autoriser l'autoplay avec le son).
+    iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1`;
+    iframe.title = item.name || "YouTube video player";
+    iframe.setAttribute("frameborder", "0");
+    iframe.referrerPolicy = "strict-origin-when-cross-origin";
+    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+    iframe.setAttribute("allowfullscreen", "");
+    mediaEl.appendChild(iframe);
+}
+
+
+// Champs communs à TOUS les types : id, type, file, name, crop,
+// naturalWidth, naturalHeight, thumbURL, audioURL, coverFile, coverURL,
+// linkURL, youtubeId. Chaque type n'utilise que le sous-ensemble qui le
+// concerne, les autres champs restent null.
+
+function createBaseItem(overrides) {
+    const item = Object.assign({
+        id: uid(),
+        type: "image",
+        file: null,
+        name: "",
+        crop: null,           // {x,y,w,h} en pixels de limage ORIGINALE ou null
+        naturalWidth: null,
+        naturalHeight: null,
+        thumbURL: null,
+        audioURL: null,
+        coverFile: null,
+        coverURL: null,
+        linkURL: null,
+        youtubeId: null
+    }, overrides);
+    images.push(item);
+    imagesById.set(item.id, item);
+    return item;
+}
+
+function createImageItem(file) {
+    const gif = isGifFile(file);
+    return createBaseItem({
+        type: gif ? "gif" : "image",
+        file: file,
+        name: nameFromFilename(file.name)
+    });
+}
+
+function createAudioItem(file) {
+    return createBaseItem({
+        type: "audio",
+        file: file,
+        name: nameFromFilename(file.name)
+    });
+}
+
+function createLinkItem(name, url) {
+    const youtubeId = parseYouTubeId(url);
+    return createBaseItem({
+        type: "link",
+        name: name && name.trim() ? name.trim() : (youtubeId ? "Vidéo YouTube" : url),
+        linkURL: url,
+        youtubeId: youtubeId,
+        thumbURL: youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : null
+    });
+}
+
+function createItemForFile(file) {
+    if (isAudioFile(file)) return createAudioItem(file);
+    return createImageItem(file);
+}
+
+function revokeIfBlob(url) {
+    if (url && typeof url === "string" && url.startsWith("blob:")) {
+        URL.revokeObjectURL(url);
+    }
+}
+
+function removeImageItem(id) {
+    const item = imagesById.get(id);
+    if (!item) return;
+    revokeIfBlob(item.thumbURL);
+    revokeIfBlob(item.audioURL);
+    revokeIfBlob(item.coverURL);
+    imagesById.delete(id);
+    const idx = images.findIndex(i => i.id === id);
+    if (idx >= 0) images.splice(idx, 1);
+}
+
+// Génère la miniature d'un élément selon son type. Pour les GIF, on
+// n'utilise JAMAIS le canvas (ça figerait l'animation sur une seule
+// image) : on garde directement l'URL du fichier original.
+async function processNewItem(item) {
+    if (item.type === "image") {
+        await generateThumbnail(item);
+    } else if (item.type === "gif") {
+        item.thumbURL = URL.createObjectURL(item.file);
+    } else if (item.type === "audio") {
+        item.audioURL = URL.createObjectURL(item.file);
+    }
+}
+
+async function generateThumbnail(item) {
+    const drawable = await loadDrawable(item.file);
+    try {
+        item.naturalWidth = drawable.width;
+        item.naturalHeight = drawable.height;
+        const rendered = await renderToBlobURL(drawable, item.crop, THUMB_MAX_DIM, 0.82);
+        if (item.thumbURL) URL.revokeObjectURL(item.thumbURL);
+        item.thumbURL = rendered.url;
+    } finally {
+        drawable.close();
+    }
+}
+
+
+/* import*/
+
+const importZone = document.getElementById("importZone");
+const inputFiles = document.getElementById("inputFiles");
+const inputFolder = document.getElementById("inputFolder");
+const importProgress = document.getElementById("importProgress");
+const importProgressFill = document.getElementById("importProgressFill");
+const importProgressLabel = document.getElementById("importProgressLabel");
+
+document.getElementById("btnImportFiles").addEventListener("click", () => inputFiles.click());
+document.getElementById("btnImportFolder").addEventListener("click", () => inputFolder.click());
+
+inputFiles.addEventListener("change", e => {
+    importFiles(e.target.files);
+    e.target.value = "";
+});
+
+inputFolder.addEventListener("change", e => {
+    importFiles(e.target.files);
+    e.target.value = "";
+});
+
+const inputAudioFiles = document.getElementById("inputAudioFiles");
+
+document.getElementById("btnImportAudio").addEventListener("click", () => inputAudioFiles.click());
+
+inputAudioFiles.addEventListener("change", e => {
+    importFiles(e.target.files);
+    e.target.value = "";
+});
+
+// ---- Image de couverture associée à un fichier audio ----
+
+const inputCoverFile = document.getElementById("inputCoverFile");
+let coverTargetItemId = null;
+
+function requestCoverForItem(id) {
+    coverTargetItemId = id;
+    inputCoverFile.click();
+}
+
+inputCoverFile.addEventListener("change", e => {
+    const file = e.target.files[0];
+    e.target.value = "";
+
+    if (!file || !coverTargetItemId) { coverTargetItemId = null; return; }
+
+    const item = imagesById.get(coverTargetItemId);
+    coverTargetItemId = null;
+    if (!item) return;
+
+    revokeIfBlob(item.coverURL);
+    item.coverFile = file;
+    item.coverURL = URL.createObjectURL(file);
+
+    renderVisibleCards();
+});
+
+function removeCoverForItem(id) {
+    const item = imagesById.get(id);
+    if (!item) return;
+    revokeIfBlob(item.coverURL);
+    item.coverFile = null;
+    item.coverURL = null;
+    renderVisibleCards();
+}
+
+// ---- Ajout / édition de liens (YouTube, etc.) ----
+
+const linkModal = document.getElementById("linkModal");
+const linkModalTitle = document.getElementById("linkModalTitle");
+const linkNameInput = document.getElementById("linkNameInput");
+const linkUrlInput = document.getElementById("linkUrlInput");
+let linkEditingId = null;
+
+function openLinkModal(editItem) {
+    linkEditingId = editItem ? editItem.id : null;
+    linkModalTitle.textContent = editItem ? "Edit link" : "Add a link";
+    linkNameInput.value = editItem ? editItem.name : "";
+    linkUrlInput.value = editItem ? (editItem.linkURL || "") : "";
+    linkModal.hidden = false;
+    linkUrlInput.focus();
+}
+
+function closeLinkModal() {
+    linkModal.hidden = true;
+    linkEditingId = null;
+}
+
+document.getElementById("btnAddLink").addEventListener("click", () => openLinkModal(null));
+document.getElementById("btnLinkCancel").addEventListener("click", closeLinkModal);
+
+document.getElementById("btnLinkValidate").addEventListener("click", () => {
+    const url = linkUrlInput.value.trim();
+
+    if (!url) {
+        alert("Please enter a URL.");
+        return;
+    }
+
+    let parsedUrl;
+    try {
+        parsedUrl = new URL(url);
+        if (!/^https?:$/.test(parsedUrl.protocol)) throw new Error("bad protocol");
+    } catch (err) {
+        alert("This URL doesn't look valid. It must start with http:// or https://");
+        return;
+    }
+
+    const name = linkNameInput.value.trim();
+
+    if (linkEditingId) {
+        const item = imagesById.get(linkEditingId);
+        if (item) {
+            item.linkURL = url;
+            item.youtubeId = parseYouTubeId(url);
+            item.thumbURL = item.youtubeId ? `https://img.youtube.com/vi/${item.youtubeId}/hqdefault.jpg` : null;
+            if (name) item.name = name;
+        }
+    } else {
+        createLinkItem(name, url);
+    }
+
+    closeLinkModal();
+    updateCountLabel();
+    refreshGridTotalHeight();
+    renderVisibleCards();
+});
+
+importZone.addEventListener("dragover", e => {
+    e.preventDefault();
+    importZone.classList.add("drag-over");
+});
+
+importZone.addEventListener("dragleave", () => {
+    importZone.classList.remove("drag-over");
+});
+
+importZone.addEventListener("drop", async e => {
+    e.preventDefault();
+    importZone.classList.remove("drag-over");
+
+    const dtItems = e.dataTransfer.items;
+
+    if (dtItems && dtItems.length && dtItems[0].webkitGetAsEntry) {
+        const entries = Array.from(dtItems).map(it => it.webkitGetAsEntry()).filter(Boolean);
+        const files = await collectFilesFromEntries(entries);
+        importFiles(files);
+    } else {
+        importFiles(e.dataTransfer.files);
+    }
+});
+
+function collectFilesFromEntries(entries) {
+    return new Promise(resolve => {
+        const files = [];
+        let pending = 0;
+        let scanStarted = false;
+
+        function checkDone() {
+            if (scanStarted && pending === 0) resolve(files);
+        }
+
+        function walk(entry) {
+            if (!entry) return;
+
+            if (entry.isFile) {
+                pending++;
+                entry.file(
+                    file => { files.push(file); pending--; checkDone(); },
+                    () => { pending--; checkDone(); }
+                );
+            } else if (entry.isDirectory) {
+                pending++;
+                const reader = entry.createReader();
+                const readBatch = () => {
+                    reader.readEntries(
+                        batch => {
+                            if (batch.length === 0) { pending--; checkDone(); return; }
+                            batch.forEach(walk);
+                            readBatch();
+                        },
+                        () => { pending--; checkDone(); }
+                    );
+                };
+                readBatch();
+            }
+        }
+
+        entries.forEach(walk);
+        scanStarted = true;
+        checkDone();
+    });
+}
+
+function updateImportProgress(done, total) {
+    const pct = total > 0 ? Math.round((done / total) * 100) : 100;
+    importProgressFill.style.width = pct + "%";
+    importProgressLabel.textContent = `Processing… ${done} / ${total}`;
+}
+
+async function importFiles(fileList) {
+
+    const files = Array.from(fileList).filter(f => isImageFile(f) || isAudioFile(f));
+
+    if (files.length === 0) return;
+
+    importProgress.hidden = false;
+
+    let done = 0;
+    const total = files.length;
+    updateImportProgress(done, total);
+
+    const BATCH_SIZE = 15;
+
+    for (let i = 0; i < files.length; i += BATCH_SIZE) {
+        const batch = files.slice(i, i + BATCH_SIZE);
+
+        await Promise.all(batch.map(async file => {
+            const item = createItemForFile(file);
+            try {
+                await processNewItem(item);
+            } catch (err) {
+                console.error("Invalid file format:", file.name, err);
+                removeImageItem(item.id);
+            }
+            done++;
+        }));
+
+        updateImportProgress(done, total);
+        refreshGridTotalHeight();
+        renderVisibleCards();
+        updateCountLabel();
+
+        await yieldToBrowser();
+    }
+
+    importProgress.hidden = true;
+    updateCountLabel();
+    refreshGridTotalHeight();
+    renderVisibleCards();
+}
+
+
+/* la grille*/
+
+const gridViewport = document.getElementById("gridViewport");
+const gridSizer = document.getElementById("gridSizer");
+const gridInner = document.getElementById("gridInner");
+const emptyState = document.getElementById("emptyState");
+const countLabel = document.getElementById("countLabel");
+const btnLaunchSort = document.getElementById("btnLaunchSort");
+const btnLaunchSortTop = document.getElementById("btnLaunchSortTop");
+
+const CARD_MIN_WIDTH = 168;
+const CARD_GAP = 14;
+const CARD_HEIGHT = 232;
+const GRID_ROW_BUFFER = 2; // lignes de marge au dessus/en dessous du viewport
+
+function computeColumns() {
+    const w = gridViewport.clientWidth - (CARD_GAP * 2);
+    const cols = Math.floor((w + CARD_GAP) / (CARD_MIN_WIDTH + CARD_GAP));
+    return Math.max(1, cols);
+}
+
+function refreshGridTotalHeight() {
+    const cols = computeColumns();
+    const rows = Math.ceil(images.length / cols);
+    const totalHeight = rows > 0 ? (rows * (CARD_HEIGHT + CARD_GAP)) + CARD_GAP : 0;
+    gridSizer.style.height = totalHeight + "px";
+}
+
+
+function renderVisibleCards() {
+
+    const cols = computeColumns();
+    const rowHeight = CARD_HEIGHT + CARD_GAP;
+
+    const scrollTop = gridViewport.scrollTop;
+    const viewportHeight = gridViewport.clientHeight;
+
+    const firstRow = Math.max(0, Math.floor(scrollTop / rowHeight) - GRID_ROW_BUFFER);
+    const lastRow = Math.ceil((scrollTop + viewportHeight) / rowHeight) + GRID_ROW_BUFFER;
+
+    const startIndex = firstRow * cols;
+    const endIndex = Math.min(images.length, (lastRow + 1) * cols);
+
+    gridInner.style.setProperty("--cols", cols);
+    gridInner.style.transform = `translateY(${CARD_GAP + firstRow * rowHeight}px)`;
+
+    const frag = document.createDocumentFragment();
+    for (let idx = startIndex; idx < endIndex; idx++) {
+        const item = images[idx];
+        if (item) frag.appendChild(buildCard(item));
+    }
+
+    // Les cartes actuellement affichées (avec leur <audio>) vont être
+    // remplacées : on coupe le son avant de les jeter, sinon un MP3 en
+    // cours de lecture peut continuer en arrière-plan une fois sa carte
+    // recyclée hors de l'écran.
+    gridInner.querySelectorAll("audio").forEach(audioEl => {
+        try { audioEl.pause(); } catch (err) { /* ignore */ }
+    });
+
+    gridInner.innerHTML = "";
+    gridInner.appendChild(frag);
+
+    emptyState.hidden = images.length > 0;
+}
+
+// ---- Curseur de volume personnalisé ----
+// Le popup natif du navigateur (survol du haut-parleur) s'est révélé peu
+// fiable selon l'écran/le contexte CSS (parfois clippé, parfois cassé par
+// un ancêtre avec "transform"). On ajoute donc un vrai curseur toujours
+// visible à côté de chaque lecteur <audio>, qui fonctionne de façon 100%
+// prévisible partout (grille d'import, écran de tri, Results).
+function createVolumeControl(audioEl) {
+    const wrap = document.createElement("div");
+    wrap.className = "volume-control";
+
+    const icon = document.createElement("span");
+    icon.className = "volume-icon";
+    icon.textContent = "🔊";
+
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.className = "volume-slider";
+    slider.min = "0";
+    slider.max = "1";
+    slider.step = "0.05";
+    slider.value = String(audioEl.volume);
+    slider.title = "Volume";
+    slider.setAttribute("aria-label", "Volume");
+
+    function refreshIcon() {
+        icon.textContent = audioEl.volume === 0 || audioEl.muted ? "🔇" : (audioEl.volume < 0.5 ? "🔉" : "🔊");
+    }
+
+    slider.addEventListener("input", e => {
+        e.stopPropagation();
+        audioEl.volume = parseFloat(slider.value);
+        audioEl.muted = audioEl.volume === 0;
+        refreshIcon();
+    });
+    // Empêche le clic/drag sur le curseur de déclencher un choix "left"/"right"
+    // sur l'écran de tri, ou toute autre action du conteneur parent.
+    slider.addEventListener("click", e => e.stopPropagation());
+    icon.addEventListener("click", e => {
+        e.stopPropagation();
+        audioEl.muted = !audioEl.muted;
+        refreshIcon();
+    });
+
+    refreshIcon();
+
+    wrap.appendChild(icon);
+    wrap.appendChild(slider);
+    return wrap;
+}
+
+function buildCard(item) {
+    const card = document.createElement("div");
+    card.className = "card type-" + item.type + (item.crop ? " is-cropped" : "");
+    card.dataset.id = item.id;
+
+    const thumb = document.createElement("div");
+    thumb.className = "card-thumb";
+
+    if (item.type === "image") {
+        const img = document.createElement("img");
+        img.src = item.thumbURL || "";
+        img.alt = item.name;
+        img.loading = "lazy";
+        thumb.appendChild(img);
+
+    } else if (item.type === "gif") {
+        // GIF : on utilise directement l'URL du fichier original,
+        // JAMAIS un rendu canvas, pour garder l'animation intacte.
+        const img = document.createElement("img");
+        img.src = item.thumbURL || "";
+        img.alt = item.name;
+        thumb.appendChild(img);
+
+    } else if (item.type === "audio") {
+        if (item.coverURL) {
+            const img = document.createElement("img");
+            img.src = item.coverURL;
+            img.alt = item.name;
+            thumb.appendChild(img);
+        } else {
+            const placeholder = document.createElement("div");
+            placeholder.className = "audio-thumb-placeholder";
+            placeholder.textContent = "🎵";
+            thumb.appendChild(placeholder);
+        }
+
+        const bar = document.createElement("div");
+        bar.className = "audio-bar";
+        const audioEl = document.createElement("audio");
+        audioEl.controls = true;
+        audioEl.src = item.audioURL || "";
+        bar.appendChild(audioEl);
+        bar.appendChild(createVolumeControl(audioEl));
+        thumb.appendChild(bar);
+
+    } else if (item.type === "link") {
+        if (item.youtubeId) {
+            // Pas d'iframe : ouverte en local (file://), YouTube la
+            // refuse presque toujours avec l'erreur 153 (pas d'origine
+            // valide à vérifier). La vignette + ouverture dans un nouvel
+            // onglet fonctionne, elle, dans 100% des cas.
+            thumb.appendChild(buildYoutubeThumbLink(item, "card-play-badge"));
+        } else {
+            const placeholder = document.createElement("div");
+            placeholder.className = "link-thumb-placeholder";
+            placeholder.textContent = "🔗";
+            thumb.appendChild(placeholder);
+        }
+    }
+
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.className = "card-name";
+    nameInput.value = item.name;
+    nameInput.spellcheck = false;
+    nameInput.dataset.action = "rename";
+
+    const actions = document.createElement("div");
+    actions.className = "card-actions";
+
+    if (item.type === "image") {
+        const btnCrop = document.createElement("button");
+        btnCrop.type = "button";
+        btnCrop.className = "btn-mini";
+        btnCrop.textContent = "Crop";
+        btnCrop.dataset.action = "crop";
+        actions.appendChild(btnCrop);
+
+    } else if (item.type === "audio") {
+        const btnCover = document.createElement("button");
+        btnCover.type = "button";
+        btnCover.className = "btn-mini";
+        btnCover.textContent = item.coverURL ? "Change image" : "Add image";
+        btnCover.dataset.action = "set-cover";
+        actions.appendChild(btnCover);
+
+        if (item.coverURL) {
+            const btnRemoveCover = document.createElement("button");
+            btnRemoveCover.type = "button";
+            btnRemoveCover.className = "btn-mini";
+            btnRemoveCover.textContent = "Remove image";
+            btnRemoveCover.dataset.action = "remove-cover";
+            actions.appendChild(btnRemoveCover);
+        }
+
+    } else if (item.type === "link") {
+        const btnEditLink = document.createElement("button");
+        btnEditLink.type = "button";
+        btnEditLink.className = "btn-mini";
+        btnEditLink.textContent = "Edit link";
+        btnEditLink.dataset.action = "edit-link";
+        actions.appendChild(btnEditLink);
+    }
+
+    const btnDelete = document.createElement("button");
+    btnDelete.type = "button";
+    btnDelete.className = "btn-mini btn-danger";
+    btnDelete.textContent = "Delete";
+    btnDelete.dataset.action = "delete";
+    actions.appendChild(btnDelete);
+
+    card.appendChild(thumb);
+    card.appendChild(nameInput);
+    card.appendChild(actions);
+
+    return card;
+}
+
+gridInner.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+    const card = btn.closest(".card");
+    const id = card.dataset.id;
+
+    if (btn.dataset.action === "crop") openCropEditor(id);
+    else if (btn.dataset.action === "delete") handleDeleteImage(id);
+    else if (btn.dataset.action === "set-cover") requestCoverForItem(id);
+    else if (btn.dataset.action === "remove-cover") removeCoverForItem(id);
+    else if (btn.dataset.action === "edit-link") {
+        const item = imagesById.get(id);
+        if (item) openLinkModal(item);
+    }
+});
+
+gridInner.addEventListener("input", e => {
+    const input = e.target.closest('input[data-action="rename"]');
+    if (!input) return;
+    const card = input.closest(".card");
+    const item = imagesById.get(card.dataset.id);
+    if (item) item.name = input.value;
+});
+
+function handleDeleteImage(id) {
+    const item = imagesById.get(id);
+    if (!item) return;
+    if (!confirm(`Delete « ${item.name} » ?`)) return;
+
+    removeImageItem(id);
+    updateCountLabel();
+    refreshGridTotalHeight();
+    renderVisibleCards();
+}
+
+function updateCountLabel() {
+    const n = images.length;
+
+    countLabel.textContent = n === 0
+        ? "No images imported"
+        : `${n} image${n > 1 ? "s" : ""} imported${n > 1 ? "" : ""}`;
+
+    const canLaunch = n >= 2;
+
+    // Active/desactive les deux boutons de lancement
+    btnLaunchSort.disabled = !canLaunch;
+    btnLaunchSortTop.disabled = !canLaunch;
+
+    console.log("[SORTER] Images :", n, "| Active buttons :", canLaunch);
+}
+
+let gridScrollTicking = false;
+gridViewport.addEventListener("scroll", () => {
+    if (gridScrollTicking) return;
+    gridScrollTicking = true;
+    requestAnimationFrame(() => {
+        renderVisibleCards();
+        gridScrollTicking = false;
+    });
+});
+
+let gridResizeTicking = false;
+window.addEventListener("resize", () => {
+    if (gridResizeTicking) return;
+    gridResizeTicking = true;
+    requestAnimationFrame(() => {
+        refreshGridTotalHeight();
+        renderVisibleCards();
+        gridResizeTicking = false;
+    });
+});
+
+
+/* crop */
+
+const cropModal = document.getElementById("cropModal");
+const cropModalTitle = document.getElementById("cropModalTitle");
+const cropStage = document.getElementById("cropStage");
+const cropCanvas = document.getElementById("cropCanvas");
+const cropRectEl = document.getElementById("cropRect");
+const cropPreviewCanvas = document.getElementById("cropPreviewCanvas");
+const ratioButtons = document.getElementById("ratioButtons");
+
+let cropState = null; // { itemId, drawable, scale, dispW, dispH, rect, ratioLock }
+
+async function openCropEditor(id) {
+    const item = imagesById.get(id);
+    if (!item || item.type !== "image") return;
+
+    cropModalTitle.textContent = `Recadrer « ${item.name} »`;
+    cropModal.hidden = false;
+
+    const drawable = await loadDrawable(item.file);
+
+    const scale = Math.min(
+        CROP_STAGE_MAX_W / drawable.width,
+        CROP_STAGE_MAX_H / drawable.height,
+        1
+    );
+    const dispW = Math.round(drawable.width * scale);
+    const dispH = Math.round(drawable.height * scale);
+
+    cropStage.style.width = dispW + "px";
+    cropStage.style.height = dispH + "px";
+    cropCanvas.width = dispW;
+    cropCanvas.height = dispH;
+    cropCanvas.getContext("2d").drawImage(drawable.source, 0, 0, dispW, dispH);
+
+    const rect = item.crop
+        ? {
+            x: item.crop.x * scale,
+            y: item.crop.y * scale,
+            w: item.crop.w * scale,
+            h: item.crop.h * scale
+        }
+        : { x: 0, y: 0, w: dispW, h: dispH };
+
+    cropState = { itemId: id, drawable, scale, dispW, dispH, rect, ratioLock: null };
+
+    ratioButtons.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.ratio === "free"));
+
+    updateCropRectStyle();
+    updateCropPreview();
+}
+
+function closeCropEditor() {
+    if (cropState) {
+        cropState.drawable.close();
+        cropState = null;
+    }
+    cropModal.hidden = true;
+}
+
+document.getElementById("btnCropCancel").addEventListener("click", closeCropEditor);
+
+document.getElementById("btnCropReset").addEventListener("click", () => {
+    if (!cropState) return;
+    cropState.rect = { x: 0, y: 0, w: cropState.dispW, h: cropState.dispH };
+    cropState.ratioLock = null;
+    ratioButtons.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.ratio === "free"));
+    updateCropRectStyle();
+    updateCropPreview();
+});
+
+ratioButtons.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-ratio]");
+    if (!btn || !cropState) return;
+
+    ratioButtons.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    if (btn.dataset.ratio === "free") {
+        cropState.ratioLock = null;
+        return;
+    }
+
+    const [rw, rh] = btn.dataset.ratio.split(":").map(Number);
+    cropState.ratioLock = rw / rh;
+
+    const r = cropState.rect;
+    let newW = r.w;
+    let newH = newW / cropState.ratioLock;
+    if (newH > cropState.dispH) {
+        newH = cropState.dispH;
+        newW = newH * cropState.ratioLock;
+    }
+    const cx = r.x + r.w / 2;
+    const cy = r.y + r.h / 2;
+
+    r.w = newW;
+    r.h = newH;
+    r.x = clamp(cx - newW / 2, 0, cropState.dispW - newW);
+    r.y = clamp(cy - newH / 2, 0, cropState.dispH - newH);
+
+    updateCropRectStyle();
+    updateCropPreview();
+});
+
+function updateCropRectStyle() {
+    const r = cropState.rect;
+    cropRectEl.style.left = r.x + "px";
+    cropRectEl.style.top = r.y + "px";
+    cropRectEl.style.width = r.w + "px";
+    cropRectEl.style.height = r.h + "px";
+}
+
+function updateCropPreview() {
+    if (!cropState) return;
+    const { rect, scale, drawable } = cropState;
+
+    const sx = rect.x / scale;
+    const sy = rect.y / scale;
+    const sw = rect.w / scale;
+    const sh = rect.h / scale;
+
+    const ctx = cropPreviewCanvas.getContext("2d");
+    const pw = cropPreviewCanvas.width;
+    const ph = cropPreviewCanvas.height;
+
+    ctx.fillStyle = "#e5e5e0";
+    ctx.fillRect(0, 0, pw, ph);
+
+    if (sw <= 0 || sh <= 0) return;
+
+    const fit = Math.min(pw / sw, ph / sh);
+    const dw = sw * fit;
+    const dh = sh * fit;
+    const dx = (pw - dw) / 2;
+    const dy = (ph - dh) / 2;
+
+    ctx.drawImage(drawable.source, sx, sy, sw, sh, dx, dy, dw, dh);
+}
+
+let cropDrag = null; // { mode: 'move'|'resize', handle, startX, startY, startRect }
+
+cropRectEl.addEventListener("pointerdown", e => {
+    if (!cropState) return;
+    const handle = e.target.dataset.handle;
+    e.preventDefault();
+    e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId);
+
+    cropDrag = {
+        mode: handle ? "resize" : "move",
+        handle: handle,
+        startX: e.clientX,
+        startY: e.clientY,
+        startRect: { ...cropState.rect }
+    };
+});
+
+document.addEventListener("pointermove", e => {
+    if (!cropDrag || !cropState) return;
+
+    const dx = e.clientX - cropDrag.startX;
+    const dy = e.clientY - cropDrag.startY;
+    const stageW = cropState.dispW;
+    const stageH = cropState.dispH;
+    const start = cropDrag.startRect;
+    let r = { ...start };
+
+    if (cropDrag.mode === "move") {
+        r.x = clamp(start.x + dx, 0, stageW - start.w);
+        r.y = clamp(start.y + dy, 0, stageH - start.h);
+
+    } else {
+        const MIN_SIZE = 24;
+        let left = start.x, top = start.y, right = start.x + start.w, bottom = start.y + start.h;
+
+        if (cropDrag.handle.includes("w")) left = clamp(start.x + dx, 0, right - MIN_SIZE);
+        if (cropDrag.handle.includes("e")) right = clamp(start.x + start.w + dx, left + MIN_SIZE, stageW);
+        if (cropDrag.handle.includes("n")) top = clamp(start.y + dy, 0, bottom - MIN_SIZE);
+        if (cropDrag.handle.includes("s")) bottom = clamp(start.y + start.h + dy, top + MIN_SIZE, stageH);
+
+        if (cropState.ratioLock) {
+
+            let w = right - left;
+            let h = w / cropState.ratioLock;
+
+            if (cropDrag.handle.includes("n")) top = bottom - h;
+            else bottom = top + h;
+
+            if (top < 0) { top = 0; h = bottom - top; w = h * cropState.ratioLock; if (cropDrag.handle.includes("w")) left = right - w; else right = left + w; }
+            if (bottom > stageH) { bottom = stageH; h = bottom - top; w = h * cropState.ratioLock; if (cropDrag.handle.includes("w")) left = right - w; else right = left + w; }
+        }
+
+        r = { x: left, y: top, w: right - left, h: bottom - top };
+    }
+
+    cropState.rect = r;
+    updateCropRectStyle();
+    updateCropPreview();
+});
+
+document.addEventListener("pointerup", () => { cropDrag = null; });
+
+document.getElementById("btnCropValidate").addEventListener("click", async () => {
+    if (!cropState) return;
+
+    const { itemId, drawable, scale, rect } = cropState;
+    const item = imagesById.get(itemId);
+    if (!item) { closeCropEditor(); return; }
+
+    const sx = Math.round(rect.x / scale);
+    const sy = Math.round(rect.y / scale);
+    const sw = Math.round(rect.w / scale);
+    const sh = Math.round(rect.h / scale);
+
+    const isFullImage = sx <= 0 && sy <= 0 && sw >= drawable.width - 1 && sh >= drawable.height - 1;
+
+    item.crop = isFullImage ? null : {
+        x: Math.max(0, sx),
+        y: Math.max(0, sy),
+        w: Math.min(sw, drawable.width - Math.max(0, sx)),
+        h: Math.min(sh, drawable.height - Math.max(0, sy))
+    };
+
+    const rendered = await renderToBlobURL(drawable, item.crop, THUMB_MAX_DIM, 0.82);
+    if (item.thumbURL) URL.revokeObjectURL(item.thumbURL);
+    item.thumbURL = rendered.url;
+
+    closeCropEditor();
+    renderVisibleCards();
+});
+
+
+/* les differnets ecrans*/
+
+const screenImport = document.getElementById("screenImport");
+const screenSort = document.getElementById("screenSort");
+const battleView = document.getElementById("battleView");
+const resultsView = document.getElementById("resultsView");
+
+let currentScreenName = "import";
+
+function showScreen(name) {
+    stopAllPlayingAudio();
+
+    currentScreenName = name;
+
+    if (name === "sort") {
+        screenImport.hidden = true;
+        screenImport.style.display = "none";
+
+        screenSort.hidden = false;
+        screenSort.style.display = "block";
+
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: "instant"
+        });
+
+        requestAnimationFrame(() => {
+            window.scrollTo(0, 0);
+        });
+
+    } else {
+        screenSort.hidden = true;
+        screenSort.style.display = "none";
+
+        screenImport.hidden = false;
+        screenImport.style.display = "flex";
+
+        requestAnimationFrame(() => {
+            refreshGridTotalHeight();
+            renderVisibleCards();
+            window.scrollTo(0, 0);
+        });
+    }
+}
+
+// Coupe TOUS les lecteurs audio actuellement présents dans la page (grille
+// d'import, écran de tri, Results), quel que soit l'écran. Nécessaire car
+// changer d'écran ne fait que masquer (hidden/display:none) l'ancien —
+// ça n'arrête jamais un <audio> déjà en train de jouer.
+function stopAllPlayingAudio() {
+    document.querySelectorAll("audio").forEach(audioEl => {
+        try {
+            audioEl.pause();
+        } catch (err) {
+            // ignore
+        }
+    });
+}
+
+function goBackToImport() {
+    if (currentMerge && resultsView.hidden) {
+        if (!confirm("Go back? Your current sorting progress will be lost.")) return;
+    }
+
+    clearMediaContainer(leftMedia);
+    clearMediaContainer(rightMedia);
+    stopAllPlayingAudio();
+
+    showScreen("import");
+}
+
+document.getElementById("btnBackToImport").addEventListener("click", goBackToImport);
+document.getElementById("btnBackToImportFromResults").addEventListener("click", goBackToImport);
+
+function launchSorter() {
+    console.log("[SORTER] starting");
+    console.log("[SORTER] number of images:", images.length);
+
+    if (images.length < 2) {
+        alert("You need at least 2 images to start.");
+        return;
+    }
+
+    startSorter();
+}
+
+btnLaunchSort.addEventListener("click", launchSorter);
+btnLaunchSortTop.addEventListener("click", launchSorter);
+
+
+/* merge sort interactif*/
+
+let characters = [];
+let groups = [];
+let currentMerge = null;
+let totalComparisons = 0;
+let comparisonsDone = 0;
+let history = [];
+let tiedWithNext = new Set();
+
+let isRenderingBattle = false;
+let battleRenderToken = 0;
+
+const leftChoice = document.getElementById("leftChoice");
+const rightChoice = document.getElementById("rightChoice");
+const leftMedia = document.getElementById("leftMedia");
+const rightMedia = document.getElementById("rightMedia");
+const leftName = document.getElementById("leftName");
+const rightName = document.getElementById("rightName");
+const tieButton = document.getElementById("tieButton");
+const undoButton = document.getElementById("undoButton");
+const progressFill = document.getElementById("progressFill");
+const progressLabel = document.getElementById("progressLabel");
+const battleEl = document.getElementById("battle");
+const resultList = document.getElementById("resultList");
+const restartButton = document.getElementById("restartButton");
+
+function startSorter() {
+    console.log("[SORTER] start");
+
+    stopAllPlayingAudio();
+
+    characters = images.map(item => ({
+        id: item.id,
+        name: item.name
+    }));
+
+    if (characters.length < 2) {
+        alert("You need at least 2 images to start.");
+        return;
+    }
+
+    groups = characters.map(character => [character]);
+    currentMerge = null;
+    comparisonsDone = 0;
+    history = [];
+    tiedWithNext = new Set();
+
+    totalComparisons = calculateMaximumComparisons(characters.length);
+
+    shuffle(groups);
+
+    resultsView.hidden = true;
+    battleView.hidden = false;
+
+    tieButton.style.display = "inline-block";
+    undoButton.style.display = "inline-block";
+    battleEl.style.display = "grid";
+
+    showScreen("sort");
+
+    console.log("[SORTER] sort?");
+    console.log("[SORTER] planned comparaisons :", totalComparisons);
+
+    nextStep();
+}
+
+
+function calculateMaximumComparisons(n) {
+    if (n <= 1) return 0;
+
+    const queue = new Array(n).fill(1);
+    let head = 0;
+    let total = 0;
+
+    while (queue.length - head > 1) {
+        const a = queue[head++];
+        const b = queue[head++];
+        total += a + b - 1;
+        queue.push(a + b);
+    }
+
+    return total;
+}
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function nextStep() {
+    if (groups.length === 1) {
+        finishSorter();
+        return;
+    }
+
+    if (currentMerge === null) {
+        const left = groups.shift();
+        const right = groups.shift();
+
+        currentMerge = {
+            left: left,
+            right: right,
+            leftIndex: 0,
+            rightIndex: 0,
+            result: []
+        };
+    }
+
+    displayCurrentComparison();
+}
+
+// Nettoie un conteneur média du battle (#leftMedia / #rightMedia) : coupe
+// l'audio s'il jouait, révoque les blob: URLs qu'on a créées pour ce
+// rendu, avant de vider le conteneur.
+function clearMediaContainer(el) {
+    const audioEl = el.querySelector("audio");
+    if (audioEl) {
+        audioEl.pause();
+        audioEl.removeAttribute("src");
+        audioEl.load();
+    }
+    el.querySelectorAll("img[data-blob-url]").forEach(img => {
+        URL.revokeObjectURL(img.dataset.blobUrl);
+    });
+    el.innerHTML = "";
+    el.classList.remove("choice-media-audio");
+
+    const choiceEl = el.closest(".choice");
+    if (choiceEl) choiceEl.classList.remove("choice-has-audio");
+}
+
+// Remplit un conteneur #leftMedia/#rightMedia selon le TYPE réel de
+// l'élément (image / gif / audio / lien) : c'est ce que displayCurrentComparison
+// appelle pour chaque côté du duel.
+async function renderBattleMedia(mediaEl, item) {
+    clearMediaContainer(mediaEl);
+    if (!item) return;
+
+    if (item.type === "image") {
+        const img = document.createElement("img");
+        img.className = "battle-media-img";
+        img.alt = item.name;
+        mediaEl.appendChild(img);
+        try {
+            const rendered = await renderItemToURL(item, BATTLE_MAX_DIM, 0.9);
+            img.src = rendered.url;
+            img.dataset.blobUrl = rendered.url;
+        } catch (err) {
+            console.error("[SORTER] Impossible d'afficher l'image :", item.name, err);
+        }
+
+    } else if (item.type === "gif") {
+        // Le fichier original directement, JAMAIS un rendu canvas, pour
+        // que le GIF reste animé dans l'écran de tri.
+        const img = document.createElement("img");
+        img.className = "battle-media-img";
+        img.alt = item.name;
+        img.src = item.thumbURL || (item.file ? URL.createObjectURL(item.file) : "");
+        mediaEl.appendChild(img);
+
+    } else if (item.type === "audio") {
+        mediaEl.classList.add("choice-media-audio");
+        const choiceEl = mediaEl.closest(".choice");
+        if (choiceEl) choiceEl.classList.add("choice-has-audio");
+        if (item.coverURL) {
+            const img = document.createElement("img");
+            img.className = "battle-media-img";
+            img.alt = item.name;
+            img.src = item.coverURL;
+            mediaEl.appendChild(img);
+        } else {
+            const placeholder = document.createElement("div");
+            placeholder.className = "battle-media-placeholder";
+            placeholder.textContent = "🎵";
+            mediaEl.appendChild(placeholder);
+        }
+
+        const bar = document.createElement("div");
+        bar.className = "battle-audio-bar";
+        const audioEl = document.createElement("audio");
+        audioEl.controls = true;
+        audioEl.preload = "metadata";
+        audioEl.src = item.audioURL || (item.file ? URL.createObjectURL(item.file) : "");
+        // Empêche un clic sur le lecteur de déclencher le choix du côté.
+        audioEl.addEventListener("click", e => e.stopPropagation());
+        bar.appendChild(audioEl);
+        bar.appendChild(createVolumeControl(audioEl));
+        mediaEl.appendChild(bar);
+
+    } else if (item.type === "link") {
+        if (item.youtubeId && isValidYoutubeId(item.youtubeId)) {
+            mediaEl.appendChild(buildYoutubeThumbLink(item, "battle-play-badge", () => {
+                embedYoutubeInline(mediaEl, item);
+            }));
+        } else {
+            const link = document.createElement("a");
+            link.className = "battle-media-placeholder";
+            link.href = item.linkURL || "#";
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.textContent = "🔗";
+            link.title = item.linkURL || "";
+            link.addEventListener("click", e => e.stopPropagation());
+            mediaEl.appendChild(link);
+        }
+    }
+}
+
+async function displayCurrentComparison() {
+    const merge = currentMerge;
+
+    if (merge.leftIndex >= merge.left.length) {
+        while (merge.rightIndex < merge.right.length) {
+            merge.result.push(merge.right[merge.rightIndex++]);
+        }
+        finishMerge();
+        return;
+    }
+
+    if (merge.rightIndex >= merge.right.length) {
+        while (merge.leftIndex < merge.left.length) {
+            merge.result.push(merge.left[merge.leftIndex++]);
+        }
+        finishMerge();
+        return;
+    }
+
+    const leftChar = merge.left[merge.leftIndex];
+    const rightChar = merge.right[merge.rightIndex];
+
+    leftName.textContent = leftChar.name;
+    rightName.textContent = rightChar.name;
+
+    updateProgress();
+
+    const leftItem = imagesById.get(leftChar.id);
+    const rightItem = imagesById.get(rightChar.id);
+
+    const myToken = ++battleRenderToken;
+    isRenderingBattle = true;
+
+    leftMedia.classList.add("is-loading");
+    rightMedia.classList.add("is-loading");
+
+    await Promise.all([
+        renderBattleMedia(leftMedia, leftItem),
+        renderBattleMedia(rightMedia, rightItem)
+    ]);
+
+    // Si une comparaison plus récente (undo, choix rapide) a déjà pris le
+    // relais entre-temps, on ne touche plus à l'affichage : le rendu en
+    // cours est obsolète.
+    if (myToken !== battleRenderToken) return;
+
+    leftMedia.classList.remove("is-loading");
+    rightMedia.classList.remove("is-loading");
+
+    isRenderingBattle = false;
+}
+
+leftChoice.addEventListener("click", () => choose("left"));
+rightChoice.addEventListener("click", () => choose("right"));
+tieButton.addEventListener("click", () => choose("tie"));
+
+function choose(choice) {
+    if (!currentMerge || isRenderingBattle) return;
+
+    history.push(createStateSnapshot());
+
+    const merge = currentMerge;
+    const left = merge.left[merge.leftIndex];
+    const right = merge.right[merge.rightIndex];
+
+    if (choice === "left") {
+        merge.result.push(left);
+        merge.leftIndex++;
+
+    } else if (choice === "right") {
+        merge.result.push(right);
+        merge.rightIndex++;
+
+    } else if (choice === "tie") {
+        merge.result.push(left);
+        merge.result.push(right);
+        tiedWithNext.add(left.id);
+        merge.leftIndex++;
+        merge.rightIndex++;
+    }
+
+    comparisonsDone++;
+    displayCurrentComparison();
+}
+
+function finishMerge() {
+    groups.push(currentMerge.result);
+    currentMerge = null;
+    nextStep();
+}
+
+function createStateSnapshot() {
+    return {
+        groups: groups.map(group => [...group]),
+        currentMerge: currentMerge ? {
+            left: [...currentMerge.left],
+            right: [...currentMerge.right],
+            leftIndex: currentMerge.leftIndex,
+            rightIndex: currentMerge.rightIndex,
+            result: [...currentMerge.result]
+        } : null,
+        comparisonsDone: comparisonsDone,
+        tiedWithNext: new Set(tiedWithNext)
+    };
+}
+
+undoButton.addEventListener("click", undo);
+
+function undo() {
+    if (history.length === 0 || isRenderingBattle) return;
+
+    const state = history.pop();
+
+    groups = state.groups.map(group => [...group]);
+    currentMerge = state.currentMerge ? {
+        left: [...state.currentMerge.left],
+        right: [...state.currentMerge.right],
+        leftIndex: state.currentMerge.leftIndex,
+        rightIndex: state.currentMerge.rightIndex,
+        result: [...state.currentMerge.result]
+    } : null;
+    comparisonsDone = state.comparisonsDone;
+    tiedWithNext = new Set(state.tiedWithNext);
+
+    if (currentMerge === null) {
+        nextStep();
+    } else {
+        displayCurrentComparison();
+    }
+}
+
+function updateProgress() {
+    if (totalComparisons <= 0) {
+        progressFill.style.width = "100%";
+        return;
+    }
+
+    const percentage = Math.min(100, (comparisonsDone / totalComparisons) * 100);
+    progressFill.style.width = percentage + "%";
+    progressLabel.textContent = `Comparaison ${comparisonsDone} / ${totalComparisons}`;
+}
+
+function finishSorter() {
+    const finalRanking = groups[0];
+
+    battleView.hidden = true;
+
+    clearMediaContainer(leftMedia);
+    clearMediaContainer(rightMedia);
+
+    displayResults(finalRanking);
+    resultsView.hidden = false;
+}
+
+function buildResultThumb(item, character) {
+    const wrap = document.createElement("div");
+    wrap.className = "result-thumb";
+
+    if (item && item.type === "audio") {
+        if (item.coverURL) {
+            const img = document.createElement("img");
+            img.src = item.coverURL;
+            img.alt = character.name;
+            wrap.appendChild(img);
+        } else {
+            wrap.classList.add("result-thumb-placeholder");
+            wrap.textContent = "🎵";
+        }
+
+    } else if (item && item.type === "link") {
+        if (item.thumbURL) {
+            const img = document.createElement("img");
+            img.src = item.thumbURL;
+            img.alt = character.name;
+            wrap.appendChild(img);
+        } else {
+            wrap.classList.add("result-thumb-placeholder");
+            wrap.textContent = "🔗";
+        }
+
+    } else {
+        // image / gif (thumbURL du GIF = fichier original, donc animé)
+        const img = document.createElement("img");
+        img.src = item ? (item.thumbURL || "") : "";
+        img.alt = character.name;
+        wrap.appendChild(img);
+    }
+
+    return wrap;
+}
+
+function displayResults(ranking) {
+    stopAllPlayingAudio();
+    resultList.innerHTML = "";
+
+    let rank = 1;
+
+    ranking.forEach((character, index) => {
+        if (index > 0 && !tiedWithNext.has(ranking[index - 1].id)) {
+            rank = index + 1;
+        }
+
+        const item = imagesById.get(character.id);
+
+        const el = document.createElement("div");
+        el.className = "result-item";
+
+        const rankEl = document.createElement("div");
+        rankEl.className = "rank";
+        rankEl.textContent = rank;
+
+        const thumbEl = buildResultThumb(item, character);
+
+        const nameEl = document.createElement("div");
+        nameEl.className = "result-name";
+        nameEl.textContent = character.name;
+		nameEl.title = character.name;
+
+        if (tiedWithNext.has(character.id)) {
+            const tieEl = document.createElement("span");
+            tieEl.className = "tie";
+            tieEl.textContent = "tied with the next one";
+            nameEl.appendChild(tieEl);
+        }
+
+        el.appendChild(rankEl);
+        el.appendChild(thumbEl);
+        el.appendChild(nameEl);
+
+        // Lecteur audio fonctionnel (play/pause, avance/recule, durée)
+        // pour les pistes audio, lien cliquable pour les vidéos/liens.
+        if (item && item.type === "audio") {
+            const row = document.createElement("div");
+            row.className = "result-audio-row";
+
+            const audioEl = document.createElement("audio");
+            audioEl.className = "result-audio";
+            audioEl.controls = true;
+            audioEl.preload = "metadata";
+            audioEl.src = item.audioURL || (item.file ? URL.createObjectURL(item.file) : "");
+
+            row.appendChild(audioEl);
+            row.appendChild(createVolumeControl(audioEl));
+            el.appendChild(row);
+
+        } else if (item && item.type === "link" && item.linkURL) {
+            const linkEl = document.createElement("a");
+            linkEl.className = "result-link";
+            linkEl.href = item.linkURL;
+            linkEl.target = "_blank";
+            linkEl.rel = "noopener noreferrer";
+            linkEl.textContent = item.youtubeId ? "▶ Watch on YouTube" : "🔗 Open link";
+            el.appendChild(linkEl);
+        }
+
+        resultList.appendChild(el);
+    });
+	
+	function fitResultNames() {
+		const names = document.querySelectorAll("#resultList .result-name");
+
+		names.forEach(nameEl => {
+			let size = 14;
+
+			nameEl.style.fontSize = size + "px";
+
+			while (nameEl.scrollWidth > nameEl.clientWidth && size > 7) {
+				size -= 0.25;
+				nameEl.style.fontSize = size + "px";
+			}
+		});
+	}
+	
+    applyResultsLayoutMode();
+	fitResultNames();
+}
+
+restartButton.addEventListener("click", startSorter);
+
+
+/* laffichage des resultats*/
+
+const btnToggleResultsLayout = document.getElementById("btnToggleResultsLayout");
+const resultsPanel = document.querySelector(".results");
+
+let resultsLayoutMode = "vertical"; 
+
+function applyResultsLayoutMode() {
+    const horizontal = resultsLayoutMode === "horizontal";
+
+    resultList.classList.toggle("horizontal", horizontal);
+    if (resultsPanel) resultsPanel.classList.toggle("layout-horizontal", horizontal);
+
+    if (btnToggleResultsLayout) {
+        btnToggleResultsLayout.textContent = horizontal
+            ? "↕ Vertical display"
+            : "↔ Horizontal display";
+    }
+}
+
+function toggleResultsLayout() {
+    resultsLayoutMode = resultsLayoutMode === "horizontal" ? "vertical" : "horizontal";
+    applyResultsLayoutMode();
+    fitResultNames();
+}
+
+if (btnToggleResultsLayout) {
+    btnToggleResultsLayout.addEventListener("click", toggleResultsLayout);
+}
+
+
+/* export png des Results  */
+
+const btnExportResultsPng = document.getElementById("btnExportResultsPng");
+
+function syncExportResultsButtonVisibility() {
+    if (btnExportResultsPng) btnExportResultsPng.hidden = resultsView.hidden;
+}
+
+if (btnExportResultsPng && window.MutationObserver) {
+    new MutationObserver(syncExportResultsButtonVisibility)
+        .observe(resultsView, { attributes: true, attributeFilter: ["hidden"] });
+}
+
+syncExportResultsButtonVisibility();
+
+function pad2ForExport(n) {
+    return String(n).padStart(2, "0");
+}
+
+function buildResultsPngFilename() {
+    const now = new Date();
+    return `results-${now.getFullYear()}${pad2ForExport(now.getMonth() + 1)}${pad2ForExport(now.getDate())}-${pad2ForExport(now.getHours())}${pad2ForExport(now.getMinutes())}.png`;
+}
+
+// "#resultList .result-item:nth-child(1/2/3)" plus haut dans ce fichier
+const RESULTS_PODIUM_GRADIENTS = {
+    1: ["rgba(255, 215, 0, 0.5)", "rgba(184, 134, 11, 0.5)"],
+    2: ["rgba(232, 232, 232, 0.5)", "rgba(140, 140, 140, 0.5)"],
+    3: ["rgba(205, 127, 50, 0.2)", "rgba(139, 69, 19, 0.3)"]
+};
+
+function readComputedBox(el) {
+    const cs = getComputedStyle(el);
+    return {
+        color: cs.color,
+        backgroundColor: cs.backgroundColor,
+        backgroundImage: cs.backgroundImage,
+        borderColor: cs.borderTopColor,
+        borderWidth: parseFloat(cs.borderTopWidth) || 0,
+        borderRadius: parseFloat(cs.borderTopLeftRadius) || 0,
+        fontSize: parseFloat(cs.fontSize) || 14,
+        fontWeight: cs.fontWeight,
+        fontFamily: cs.fontFamily,
+        imageRendering: cs.imageRendering
+    };
+}
+
+function drawRoundedRectPath(ctx, x, y, w, h, radius) {
+    const r = Math.max(0, Math.min(radius, w / 2, h / 2));
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
+
+function drawEllipsizedText(ctx, text, x, y, maxWidth) {
+    if (!text) return;
+    if (ctx.measureText(text).width <= maxWidth) {
+        ctx.fillText(text, x, y);
+        return;
+    }
+    const ellipsis = "…";
+    let lo = 0, hi = text.length;
+    while (lo < hi) {
+        const mid = Math.ceil((lo + hi) / 2);
+        if (ctx.measureText(text.slice(0, mid) + ellipsis).width <= maxWidth) lo = mid;
+        else hi = mid - 1;
+    }
+    ctx.fillText(text.slice(0, lo) + ellipsis, x, y);
+}
+
+function loadImageElement(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        // Nécessaire pour les images externes (ex: vignette YouTube,
+        // https://img.youtube.com/...) : sans crossOrigin, drawImage()
+        // "taint" le canvas et toBlob()/toDataURL() sont bloqués, même si
+        // le serveur autorise le CORS. Les blob:/data: URLs (nos propres
+        // images locales) ne sont pas concernées, on peut le mettre dans
+        // tous les cas sans risque.
+        if (!/^(blob:|data:)/.test(src)) {
+            img.crossOrigin = "anonymous";
+        }
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("Failed to load an image for export: " + src));
+        img.src = src;
+    });
+}
+
+async function exportResultsAsPng() {
+    const resultsPanelEl = document.querySelector("#resultsView .results");
+    const listEl = document.getElementById("resultList");
+    if (!resultsPanelEl || !listEl || !btnExportResultsPng) return;
+
+    const items = Array.from(listEl.querySelectorAll(".result-item"));
+    if (items.length === 0) {
+        alert("There are no results to export yet.");
+        return;
+    }
+
+    const originalLabel = btnExportResultsPng.textContent;
+    btnExportResultsPng.disabled = true;
+    btnExportResultsPng.textContent = "Exporting…";
+
+    const prevScrollLeft = listEl.scrollLeft;
+    const prevScrollTop = listEl.scrollTop;
+
+    try {
+
+        listEl.scrollLeft = 0;
+        listEl.scrollTop = 0;
+
+        const listRect = listEl.getBoundingClientRect();
+
+        function relRect(el) {
+            const r = el.getBoundingClientRect();
+            return { x: r.left - listRect.left, y: r.top - listRect.top, w: r.width, h: r.height };
+        }
+
+        const itemData = items.map(item => {
+            const rankEl = item.querySelector(".rank");
+            const imgEl = item.querySelector(".result-thumb img");
+            const placeholderEl = item.querySelector(".result-thumb-placeholder");
+            const nameEl = item.querySelector(".result-name");
+            const tieEl = nameEl ? nameEl.querySelector(".tie") : null;
+
+            const nameText = nameEl
+                ? Array.from(nameEl.childNodes)
+                    .filter(n => n.nodeType === Node.TEXT_NODE)
+                    .map(n => n.textContent)
+                    .join("")
+                    .trim()
+                : "";
+
+            return {
+                rect: relRect(item),
+                style: readComputedBox(item),
+                rank: rankEl ? { rect: relRect(rankEl), text: rankEl.textContent, style: readComputedBox(rankEl) } : null,
+                img: imgEl ? { rect: relRect(imgEl), src: imgEl.src, style: readComputedBox(imgEl) } : null,
+                // Cas "pas d'image" (musique sans pochette, lien sans
+                // vignette) : on capture l'emoji affiché (🎵/🔗) pour le
+                // redessiner tel quel dans le PNG plutôt que de laisser un
+                // trou.
+                placeholder: (!imgEl && placeholderEl) ? { rect: relRect(placeholderEl), text: placeholderEl.textContent, style: readComputedBox(placeholderEl) } : null,
+                name: nameEl ? { rect: relRect(nameEl), text: nameText, style: readComputedBox(nameEl) } : null,
+                tie: tieEl ? { rect: relRect(tieEl), text: tieEl.textContent, style: readComputedBox(tieEl) } : null
+            };
+        });
+
+        const titleEl = resultsPanelEl.querySelector("h2");
+        const titleText = titleEl ? titleEl.textContent.trim() : "";
+        const titleStyle = titleEl ? readComputedBox(titleEl) : null;
+        const titleBlockHeight = titleEl ? Math.round(titleStyle.fontSize * 1.3) + 20 : 0;
+
+        const contentWidth = Math.ceil(Math.max(listRect.width, ...itemData.map(d => d.rect.x + d.rect.w)));
+        const contentHeight = Math.ceil(Math.max(listRect.height, ...itemData.map(d => d.rect.y + d.rect.h)));
+
+        listEl.scrollLeft = prevScrollLeft;
+        listEl.scrollTop = prevScrollTop;
+
+        const PADDING = 20;
+        const totalWidth = contentWidth + PADDING * 2;
+        const totalHeight = titleBlockHeight + contentHeight + PADDING * 2;
+
+        const decodedImages = await Promise.all(itemData.map(d => {
+            if (!d.img || !d.img.src) return Promise.resolve(null);
+            return loadImageElement(d.img.src).catch(() => null);
+        }));
+
+        const scaleFactor = Math.max(2, window.devicePixelRatio || 1);
+
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(totalWidth * scaleFactor);
+        canvas.height = Math.round(totalHeight * scaleFactor);
+
+        const ctx = canvas.getContext("2d");
+        ctx.scale(scaleFactor, scaleFactor);
+
+        ctx.fillStyle = getComputedStyle(document.body).backgroundColor;
+        ctx.fillRect(0, 0, totalWidth, totalHeight);
+
+        if (titleEl) {
+            ctx.fillStyle = titleStyle.color;
+            ctx.font = `${titleStyle.fontWeight} ${titleStyle.fontSize}px ${titleStyle.fontFamily}`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(titleText, totalWidth / 2, PADDING + titleStyle.fontSize * 0.75);
+        }
+
+        const originX = PADDING;
+        const originY = PADDING + titleBlockHeight;
+
+        itemData.forEach((d, index) => {
+            const x = originX + d.rect.x;
+            const y = originY + d.rect.y;
+            const w = d.rect.w;
+            const h = d.rect.h;
+
+            drawRoundedRectPath(ctx, x, y, w, h, d.style.borderRadius);
+
+            if (index < 3) {
+                const stops = RESULTS_PODIUM_GRADIENTS[index + 1];
+                const gradient = ctx.createLinearGradient(x, y, x + w, y + h);
+                gradient.addColorStop(0, stops[0]);
+                gradient.addColorStop(1, stops[1]);
+                ctx.fillStyle = gradient;
+            } else {
+                let bg = d.style.backgroundColor;
+                if (!bg || bg === "rgba(0, 0, 0, 0)" || bg === "transparent") {
+                    bg = getComputedStyle(document.documentElement).getPropertyValue("--surface").trim() || "#ffffff";
+                }
+                ctx.fillStyle = bg;
+            }
+            ctx.fill();
+
+            if (d.style.borderWidth > 0) {
+                ctx.lineWidth = d.style.borderWidth;
+                ctx.strokeStyle = d.style.borderColor;
+                ctx.stroke();
+            }
+
+            const img = decodedImages[index];
+            if (img && d.img) {
+                const ix = originX + d.img.rect.x;
+                const iy = originY + d.img.rect.y;
+                const iw = d.img.rect.w;
+                const ih = d.img.rect.h;
+
+                ctx.save();
+                drawRoundedRectPath(ctx, ix, iy, iw, ih, d.img.style.borderRadius);
+                ctx.clip();
+
+                const pixelated = d.img.style.imageRendering === "pixelated" || d.img.style.imageRendering === "crisp-edges";
+                ctx.imageSmoothingEnabled = !pixelated;
+                ctx.imageSmoothingQuality = "high";
+
+                const coverScale = Math.max(iw / img.naturalWidth, ih / img.naturalHeight);
+                const dw = img.naturalWidth * coverScale;
+                const dh = img.naturalHeight * coverScale;
+                const dx = ix + (iw - dw) / 2;
+                const dy = iy + (ih - dh) / 2;
+                ctx.drawImage(img, dx, dy, dw, dh);
+                ctx.restore();
+
+            } else {
+                // Pas d'image (musique sans pochette, lien sans vignette,
+                // ou vignette externe qui n'a pas pu être chargée) : on
+                // redessine l'emoji affiché à l'écran (🎵/🔗) plutôt que de
+                // laisser un trou vide.
+                const ph = d.placeholder;
+                if (ph && ph.rect) {
+                    const px = originX + ph.rect.x + ph.rect.w / 2;
+                    const py = originY + ph.rect.y + ph.rect.h / 2;
+                    ctx.save();
+                    ctx.fillStyle = ph.style.backgroundColor && ph.style.backgroundColor !== "rgba(0, 0, 0, 0)"
+                        ? ph.style.backgroundColor
+                        : (getComputedStyle(document.documentElement).getPropertyValue("--image-bg").trim() || "#eeeeee");
+                    drawRoundedRectPath(ctx, originX + ph.rect.x, originY + ph.rect.y, ph.rect.w, ph.rect.h, 4);
+                    ctx.fill();
+                    ctx.font = `${ph.style.fontSize}px ${ph.style.fontFamily}`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(ph.text || "🎵", px, py);
+                    ctx.restore();
+                }
+            }
+
+            // numro de classement
+            if (d.rank && d.rank.rect) {
+                ctx.fillStyle = d.rank.style.color;
+                ctx.font = `${d.rank.style.fontWeight} ${d.rank.style.fontSize}px ${d.rank.style.fontFamily}`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(
+                    d.rank.text,
+                    originX + d.rank.rect.x + d.rank.rect.w / 2,
+                    originY + d.rank.rect.y + d.rank.rect.h / 2
+                );
+            }
+
+            // nom (+ mention degalite eventuelle en dessous)
+            if (d.name && d.name.rect) {
+                ctx.fillStyle = d.name.style.color;
+                ctx.font = `${d.name.style.fontWeight} ${d.name.style.fontSize}px ${d.name.style.fontFamily}`;
+                ctx.textAlign = "left";
+                ctx.textBaseline = "middle";
+
+                const nameY = d.tie
+                    ? originY + d.name.rect.y + d.name.rect.h * 0.35
+                    : originY + d.name.rect.y + d.name.rect.h / 2;
+
+                drawEllipsizedText(ctx, d.name.text, originX + d.name.rect.x, nameY, d.name.rect.w);
+
+                if (d.tie && d.tie.rect) {
+                    ctx.fillStyle = d.tie.style.color;
+                    ctx.font = `${d.tie.style.fontWeight} ${d.tie.style.fontSize}px ${d.tie.style.fontFamily}`;
+                    ctx.textAlign = "left";
+                    ctx.textBaseline = "middle";
+                    drawEllipsizedText(
+                        ctx,
+                        d.tie.text,
+                        originX + d.tie.rect.x,
+                        originY + d.tie.rect.y + d.tie.rect.h / 2,
+                        d.tie.rect.w
+                    );
+                }
+            }
+        });
+
+        const pngBlob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+        if (!pngBlob) throw new Error("PNG generation failed.");
+
+        const downloadUrl = URL.createObjectURL(pngBlob);
+        const a = document.createElement("a");
+        a.href = downloadUrl;
+        a.download = buildResultsPngFilename();
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 2000);
+
+    } catch (err) {
+        console.error("[SORTER] Erreur lors de l'export PNG des résultats :", err);
+        alert("Unable to export the Results as a PNG image.\n\nDetail: " + (err && err.message ? err.message : err));
+
+    } finally {
+        // Filet de sécurité : si une erreur survient avant la restauration
+        // ci-dessus, on remet quand même le scroll comme il était.
+        listEl.scrollLeft = prevScrollLeft;
+        listEl.scrollTop = prevScrollTop;
+
+        btnExportResultsPng.disabled = false;
+        btnExportResultsPng.textContent = originalLabel;
+    }
+}
+
+if (btnExportResultsPng) {
+    btnExportResultsPng.addEventListener("click", exportResultsAsPng);
+}
+
+
+/* save et chargement*/
+
+const SAVE_FORMAT = "sorter-maker-save";
+const SAVE_VERSION = 2;
+
+const btnSaveImport = document.getElementById("btnSaveImport");
+const btnLoadImport = document.getElementById("btnLoadImport");
+const btnSaveSort = document.getElementById("btnSaveSort");
+const btnLoadSort = document.getElementById("btnLoadSort");
+const inputLoadSave = document.getElementById("inputLoadSave");
+
+function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    const chunkSize = 0x8000;
+
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, chunk);
+    }
+
+    return btoa(binary);
+}
+
+function base64ToArrayBuffer(base64) {
+    const binary = atob(base64);
+    const len = binary.length;
+    const bytes = new Uint8Array(len);
+
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+
+    return bytes.buffer;
+}
+
+function pad2(n) {
+    return String(n).padStart(2, "0");
+}
+
+function buildSaveFilename() {
+    const now = new Date();
+    return `sorter-maker-${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}-${pad2(now.getHours())}${pad2(now.getMinutes())}.sorter-save`;
+}
+
+/*
+Format de sauvegarde binaire (v2) — corrige le crash "sauvegarde trop
+lourde" :
+  [4 octets "SMB1"] [4 octets = longueur de l'en-tête JSON (Uint32 LE)]
+  [en-tête JSON] [fichiers bruts concaténés, dans l'ordre du header]
+
+Pourquoi ce format : l'ancien format (v1) encodait CHAQUE fichier en
+base64 et empilait tout dans UNE SEULE chaîne JSON. Avec des fichiers
+lourds (audio, beaucoup d'images), cette chaîne pouvait atteindre des
+centaines de Mo/plusieurs Go : String.fromCharCode/JSON.stringify sur une
+chaîne aussi énorme fait planter l'onglet (RangeError / out-of-memory).
+Ici, l'en-tête JSON ne contient QUE des métadonnées (petit et rapide), et
+les fichiers sont ajoutés tels quels (Blob binaire, sans passer par une
+chaîne JS) via new Blob([...]) — le navigateur les concatène efficacement
+sans jamais dupliquer les données en mémoire sous forme de texte.
+
+Les sauvegardes v1 (JSON + base64) restent lisibles : voir le test du
+"magic" SMB1 dans le gestionnaire de chargement plus bas.
+*/
+
+const SAVE_MAGIC = "SMB1";
+
+async function buildSaveObject() {
+    const fileParts = [];
+
+    const imagesData = images.map(item => {
+        const entry = {
+            id: item.id,
+            type: item.type || "image",
+            name: item.name,
+            crop: item.crop || null,
+            naturalWidth: item.naturalWidth,
+            naturalHeight: item.naturalHeight
+        };
+
+        if (item.type === "link") {
+            entry.linkURL = item.linkURL;
+            entry.youtubeId = item.youtubeId || null;
+            return entry;
+        }
+
+        // image / gif / audio : un fichier binaire réel à embarquer.
+        if (item.file) {
+            entry.fileName = item.file.name || (item.name + (item.type === "audio" ? ".mp3" : ".jpg"));
+            entry.fileType = item.file.type || (item.type === "audio" ? "audio/mpeg" : "image/png");
+            entry.fileByteLength = item.file.size;
+            fileParts.push(item.file);
+        }
+
+        if (item.type === "audio" && item.coverFile) {
+            entry.hasCover = true;
+            entry.coverFileName = item.coverFile.name || (item.name + "-cover.jpg");
+            entry.coverFileType = item.coverFile.type || "image/jpeg";
+            entry.coverByteLength = item.coverFile.size;
+            fileParts.push(item.coverFile);
+        } else {
+            entry.hasCover = false;
+        }
+
+        return entry;
+    });
+
+    const historyData = history.map(snap => ({
+        groups: snap.groups,
+        currentMerge: snap.currentMerge,
+        comparisonsDone: snap.comparisonsDone,
+        tiedWithNext: Array.from(snap.tiedWithNext)
+    }));
+
+    const header = {
+        format: SAVE_FORMAT,
+        version: SAVE_VERSION,
+        savedAt: new Date().toISOString(),
+        resultsLayoutMode: resultsLayoutMode,
+        screen: currentScreenName,
+        images: imagesData,
+        sort: {
+            resultsVisible: currentScreenName === "sort" && resultsView.hidden === false,
+            characters: characters,
+            groups: groups,
+            currentMerge: currentMerge,
+            totalComparisons: totalComparisons,
+            comparisonsDone: comparisonsDone,
+            tiedWithNext: Array.from(tiedWithNext),
+            history: historyData
+        }
+    };
+
+    return { header, fileParts };
+}
+
+async function doSaveState() {
+    try {
+        const { header, fileParts } = await buildSaveObject();
+
+        const headerBytes = new TextEncoder().encode(JSON.stringify(header));
+        const magicBytes = new TextEncoder().encode(SAVE_MAGIC);
+
+        const lengthPrefix = new Uint8Array(4);
+        new DataView(lengthPrefix.buffer).setUint32(0, headerBytes.byteLength, true);
+
+        // new Blob() concatène des Blob/File/ArrayBuffer directement, sans
+        // jamais les transformer en une seule chaîne JS géante : c'est ce
+        // qui évite le crash, même avec plusieurs centaines de Mo de médias.
+        const blob = new Blob([magicBytes, lengthPrefix, headerBytes, ...fileParts], { type: "application/octet-stream" });
+
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = buildSaveFilename();
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+    } catch (err) {
+        console.error("[SORTER] Erreur lors de la sauvegarde :", err);
+        alert("Saving failed. The current state of the app has not been changed.\n\nDetail: " + (err && err.message ? err.message : err));
+    }
+}
+
+function triggerLoadFile() {
+    inputLoadSave.click();
+}
+
+if (btnSaveImport) btnSaveImport.addEventListener("click", doSaveState);
+if (btnSaveSort) btnSaveSort.addEventListener("click", doSaveState);
+if (btnLoadImport) btnLoadImport.addEventListener("click", triggerLoadFile);
+if (btnLoadSort) btnLoadSort.addEventListener("click", triggerLoadFile);
+
+inputLoadSave.addEventListener("change", async e => {
+    const file = e.target.files[0];
+    e.target.value = ""; // permet de recharger deux fois le meme fichier daffiler
+
+    if (!file) return;
+
+    try {
+        let data;
+        let fileProvider = null; // (id) -> { main: Blob|null, cover: Blob|null }
+
+        const magicBytes = new Uint8Array(await file.slice(0, 4).arrayBuffer());
+        const magicText = new TextDecoder().decode(magicBytes);
+
+        if (magicText === SAVE_MAGIC) {
+            // ---- Format binaire (v2+) ----
+            const lenBytes = new Uint8Array(await file.slice(4, 8).arrayBuffer());
+            const headerLength = new DataView(lenBytes.buffer).getUint32(0, true);
+
+            const headerText = await file.slice(8, 8 + headerLength).text();
+            data = JSON.parse(headerText);
+
+            let cursor = 8 + headerLength;
+            const slices = new Map();
+
+            (data.images || []).forEach(entry => {
+                let main = null, cover = null;
+
+                if (entry.type !== "link" && typeof entry.fileByteLength === "number") {
+                    main = file.slice(cursor, cursor + entry.fileByteLength, entry.fileType);
+                    cursor += entry.fileByteLength;
+                }
+                if (entry.hasCover && typeof entry.coverByteLength === "number") {
+                    cover = file.slice(cursor, cursor + entry.coverByteLength, entry.coverFileType);
+                    cursor += entry.coverByteLength;
+                }
+
+                slices.set(entry.id, { main, cover });
+            });
+
+            fileProvider = id => slices.get(id) || { main: null, cover: null };
+
+        } else {
+            // ---- Format JSON hérité (v1, base64 inline) : reste lisible. ----
+            const text = await file.text();
+            try {
+                data = JSON.parse(text);
+            } catch (parseErr) {
+                throw new Error("The selected file is not a readable backup file (invalid JSON).");
+            }
+        }
+
+        if (!data || typeof data !== "object") {
+            throw new Error("The backup file is empty or corrupted.");
+        }
+        if (data.format !== SAVE_FORMAT) {
+            throw new Error("This file is not a Sorter Maker backup.");
+        }
+        if (typeof data.version !== "number") {
+            throw new Error("The backup format is invalid.");
+        }
+        if (data.version > SAVE_VERSION) {
+            throw new Error("This backup was created using a newer version of Sorter Maker.");
+        }
+        if (!Array.isArray(data.images)) {
+            throw new Error("The backup file is corrupted (image list is missing).");
+        }
+        if (!data.sort || typeof data.sort !== "object") {
+            throw new Error("The backup file is corrupted (sort status missing).");
+        }
+
+        await restoreFromSave(data, fileProvider);
+
+    } catch (err) {
+        console.error("[SORTER] Erreur lors du chargement de la sauvegarde :", err);
+        alert("Unable to load this file.\n\n" + (err && err.message ? err.message : "Invalid or corrupted file.") + "\n\nThe current status of the application has not changed.");
+    }
+});
+
+async function restoreFromSave(data, fileProvider) {
+
+    const newImages = [];
+    const newImagesById = new Map();
+
+    for (const entry of data.images) {
+        if (!entry || !entry.id) {
+            throw new Error("A backup item is invalid.");
+        }
+
+        const type = entry.type || "image";
+        let file = null;
+        let coverFile = null;
+
+        if (type === "link") {
+            // rien à charger : pas de fichier binaire pour un lien.
+
+        } else if (fileProvider) {
+            // Format binaire : les Blob ont déjà été découpés par tranche
+            // (File.slice), sans jamais charger tout le fichier en mémoire.
+            const slice = fileProvider(entry.id);
+            if (slice.main) {
+                file = new File([slice.main], entry.fileName || ((entry.name || type) + ".dat"), { type: entry.fileType || "" });
+            }
+            if (slice.cover) {
+                coverFile = new File([slice.cover], entry.coverFileName || "cover.jpg", { type: entry.coverFileType || "image/jpeg" });
+            }
+
+        } else {
+            // Format hérité v1 (base64 inline) — uniquement des images.
+            if (!entry.dataBase64) {
+                throw new Error("A backup image is invalid.");
+            }
+            const buffer = base64ToArrayBuffer(entry.dataBase64);
+            file = new File(
+                [buffer],
+                entry.fileName || ((entry.name || "image") + ".jpg"),
+                { type: entry.fileType || "image/png" }
+            );
+        }
+
+        const item = {
+            id: entry.id,
+            type: type,
+            file: file,
+            name: typeof entry.name === "string" ? entry.name : (file ? nameFromFilename(file.name) : "Untitled"),
+            crop: entry.crop || null,
+            naturalWidth: typeof entry.naturalWidth === "number" ? entry.naturalWidth : null,
+            naturalHeight: typeof entry.naturalHeight === "number" ? entry.naturalHeight : null,
+            thumbURL: null,
+            audioURL: null,
+            coverFile: coverFile,
+            coverURL: null,
+            linkURL: entry.linkURL || null,
+            youtubeId: entry.youtubeId || null
+        };
+
+        newImages.push(item);
+        newImagesById.set(item.id, item);
+    }
+
+    for (const item of newImages) {
+        if (item.type === "image") {
+            await generateThumbnail(item);
+        } else if (item.type === "gif") {
+            item.thumbURL = item.file ? URL.createObjectURL(item.file) : null;
+        } else if (item.type === "audio") {
+            item.audioURL = item.file ? URL.createObjectURL(item.file) : null;
+            if (item.coverFile) item.coverURL = URL.createObjectURL(item.coverFile);
+        } else if (item.type === "link") {
+            item.thumbURL = item.youtubeId ? `https://img.youtube.com/vi/${item.youtubeId}/hqdefault.jpg` : null;
+        }
+    }
+
+    images.forEach(item => {
+        revokeIfBlob(item.thumbURL);
+        revokeIfBlob(item.audioURL);
+        revokeIfBlob(item.coverURL);
+    });
+    clearMediaContainer(leftMedia);
+    clearMediaContainer(rightMedia);
+
+    images = newImages;
+    imagesById.clear();
+    newImagesById.forEach((value, key) => imagesById.set(key, value));
+
+    const sort = data.sort || {};
+
+    characters = Array.isArray(sort.characters) ? sort.characters : [];
+    groups = Array.isArray(sort.groups) ? sort.groups.map(g => [...g]) : [];
+    currentMerge = sort.currentMerge ? {
+        left: [...sort.currentMerge.left],
+        right: [...sort.currentMerge.right],
+        leftIndex: sort.currentMerge.leftIndex || 0,
+        rightIndex: sort.currentMerge.rightIndex || 0,
+        result: Array.isArray(sort.currentMerge.result) ? [...sort.currentMerge.result] : []
+    } : null;
+    totalComparisons = typeof sort.totalComparisons === "number" ? sort.totalComparisons : 0;
+    comparisonsDone = typeof sort.comparisonsDone === "number" ? sort.comparisonsDone : 0;
+    tiedWithNext = new Set(Array.isArray(sort.tiedWithNext) ? sort.tiedWithNext : []);
+    history = Array.isArray(sort.history) ? sort.history.map(h => ({
+        groups: Array.isArray(h.groups) ? h.groups.map(g => [...g]) : [],
+        currentMerge: h.currentMerge ? {
+            left: [...h.currentMerge.left],
+            right: [...h.currentMerge.right],
+            leftIndex: h.currentMerge.leftIndex || 0,
+            rightIndex: h.currentMerge.rightIndex || 0,
+            result: Array.isArray(h.currentMerge.result) ? [...h.currentMerge.result] : []
+        } : null,
+        comparisonsDone: h.comparisonsDone || 0,
+        tiedWithNext: new Set(Array.isArray(h.tiedWithNext) ? h.tiedWithNext : [])
+    })) : [];
+
+    resultsLayoutMode = data.resultsLayoutMode === "horizontal" ? "horizontal" : "vertical";
+
+    updateCountLabel();
+    refreshGridTotalHeight();
+    renderVisibleCards();
+
+    const targetScreen = (data.screen === "sort" && characters.length >= 2) ? "sort" : "import";
+
+    if (targetScreen === "sort") {
+        tieButton.style.display = "inline-block";
+        undoButton.style.display = "inline-block";
+        battleEl.style.display = "grid";
+
+        showScreen("sort");
+
+        if (sort.resultsVisible && groups.length === 1) {
+            battleView.hidden = true;
+            displayResults(groups[0]);
+            resultsView.hidden = false;
+
+        } else if (currentMerge) {
+            resultsView.hidden = true;
+            battleView.hidden = false;
+            await displayCurrentComparison();
+
+        } else {
+
+            resultsView.hidden = true;
+            battleView.hidden = false;
+            nextStep();
+        }
+
+    } else {
+        showScreen("import");
+    }
+}
+
+/* les raccourcis clavier*/
+
+document.addEventListener("keydown", e => {
+    if (currentScreenName !== "sort" || resultsView.hidden === false) return;
+
+    if (e.key === "ArrowLeft") { e.preventDefault(); choose("left"); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); choose("right"); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); choose("tie"); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); undo(); }
+});
+
+/* dark mode*/
+
+const btnDarkMode = document.getElementById("btnDarkMode");
+const btnDarkModeSort = document.getElementById("btnDarkModeSort");
+
+function updateDarkModeButtons(enabled) {
+
+    const text = enabled
+        ? "Light"
+        : "Dark";
+
+    if (btnDarkMode) {
+        btnDarkMode.textContent = text;
+    }
+
+    if (btnDarkModeSort) {
+        btnDarkModeSort.textContent = text;
+    }
+}
+
+function applyDarkMode(enabled) {
+
+    document.documentElement.classList.toggle("dark", enabled);
+
+    updateDarkModeButtons(enabled);
+
+    localStorage.setItem(
+        "sorter-dark-mode",
+        enabled ? "1" : "0"
+    );
+}
+
+function toggleDarkMode() {
+
+    const enabled =
+        !document.documentElement.classList.contains("dark");
+
+    applyDarkMode(enabled);
+}
+
+if (btnDarkMode) {
+    btnDarkMode.addEventListener("click", toggleDarkMode);
+}
+
+if (btnDarkModeSort) {
+    btnDarkModeSort.addEventListener("click", toggleDarkMode);
+}
+
+function initDarkMode() {
+
+    const saved = localStorage.getItem("sorter-dark-mode");
+
+    if (saved === "1") {
+        applyDarkMode(true);
+    } else {
+        applyDarkMode(false);
+    }
+}
+
+initDarkMode();
+
+
+/* init*/
+
+updateCountLabel();
+refreshGridTotalHeight();
+renderVisibleCards();
+applyResultsLayoutMode();
+showScreen("import");
+
+</script>
+
+</body>
+</html>
+
+
