@@ -336,8 +336,13 @@
 		image-rendering: crisp-edges;
 	}
 
+    .remote-media-wrap {
+        width: 100%;
+        height: 100%;
+    }
+
     .card.is-cropped .card-thumb::after {
-        content: "recadrée";
+        content: "cropped";
         position: absolute;
         bottom: 4px;
         right: 4px;
@@ -705,6 +710,61 @@
 
     .link-modal-box { max-width: 480px; }
 
+    .save-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 13px;
+        background: var(--image-bg);
+        border-radius: 6px;
+        padding: 10px 12px;
+    }
+
+    .save-compress-toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13.5px;
+        cursor: pointer;
+    }
+
+    .save-slider-label {
+        display: block;
+        font-size: 12.5px;
+        color: var(--muted);
+        margin-bottom: 6px;
+    }
+
+    #saveQualitySlider {
+        width: 100%;
+        accent-color: var(--accent);
+    }
+
+    .save-size-preview {
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .save-size-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13.5px;
+    }
+
+    .save-size-note {
+        font-size: 11.5px;
+        color: var(--muted);
+        line-height: 1.4;
+    }
+
+    .save-size-computing {
+        font-size: 12.5px;
+        color: var(--muted);
+        font-style: italic;
+    }
+
     .link-form-row {
         display: flex;
         flex-direction: column;
@@ -728,8 +788,6 @@
         color: var(--ink);
     }
 
-    /* GIF : badge sur la miniature */
-
     .card.type-gif .card-thumb::before {
         content: "GIF";
         position: absolute;
@@ -745,7 +803,7 @@
         z-index: 2;
     }
 
-    /* audio placeholder de couverture sur la minia */
+    /* audio: placeholder de couverture sur la minia */
 
     .audio-thumb-placeholder,
     .link-thumb-placeholder,
@@ -753,13 +811,48 @@
         position: absolute;
         inset: 0;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
+        gap: 6px;
         font-size: 40px;
         background: var(--image-bg);
+        text-align: center;
+        padding: 6px;
+        box-sizing: border-box;
     }
 
     .battle-media-placeholder { font-size: 64px; }
+
+    .media-probing {
+        font-size: 22px;
+        opacity: .7;
+    }
+
+    .media-unavailable-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+    }
+
+    .media-retry-btn {
+        font-size: 11px;
+        padding: 3px 7px;
+        border: 1px solid #999;
+        border-radius: 4px;
+        background: var(--surface);
+        color: var(--ink);
+        cursor: pointer;
+    }
+    .media-retry-btn:hover { background: #eee; }
+
+    .media-open-link {
+        font-size: 11px;
+        color: var(--accent);
+        text-decoration: underline;
+        cursor: pointer;
+    }
 
     .card.type-audio,
     .card.type-audio .card-thumb {
@@ -785,7 +878,6 @@
         bottom: auto;
         height: calc(100% - 42px);
     }
-
 
     .audio-bar {
         position: absolute;
@@ -920,6 +1012,7 @@
         z-index: 100;
     }
 
+    /* zone invisible pour passer du bouton au popup sans le perdre */
     .audio-volume-popup::after {
         content: "";
         position: absolute;
@@ -954,6 +1047,7 @@
         height: 100%;
         border: 0;
     }
+
     .youtube-thumb-link {
         display: block;
         position: relative;
@@ -987,7 +1081,6 @@
         pointer-events: none;
     }
 
-    /* ecran de tri : media generique (image / gif / audio / lien) */
 
     .choice-media {
         position: relative;
@@ -1052,6 +1145,8 @@
         .choice-media { height: 240px; }
     }
 
+    /* resultats miniature generique */
+
     .result-thumb {
         width: 60px;
         height: 60px;
@@ -1106,6 +1201,8 @@
         * { transition: none !important; }
     }
 	
+/* podium*/
+
 /* OR */
 #resultList .result-item:nth-child(1) {
     background: linear-gradient(
@@ -1169,10 +1266,13 @@
         <button id="btnImportFolder">Import a folder</button>
         <button id="btnImportAudio" type="button">Import audio (MP3...)</button>
         <button id="btnAddLink" type="button">Add a link (YouTube...)</button>
+        <button id="btnExportLinkFile" type="button">Export Link File (.txt)</button>
+        <button id="btnImportLinkFile" type="button">Import Link File (.txt)</button>
         <input type="file" id="inputFiles" accept="image/*" multiple hidden>
         <input type="file" id="inputFolder" webkitdirectory multiple hidden>
         <input type="file" id="inputAudioFiles" accept="audio/*" multiple hidden>
         <input type="file" id="inputCoverFile" accept="image/*" hidden>
+        <input type="file" id="inputLinkFile" accept=".txt,text/plain" hidden>
         <p class="hint">or drag and drop images / audio files (or an entire folder) here</p>
     </div>
 
@@ -1321,7 +1421,7 @@
 </div>
 
 
-<!-- ajout/edition de lien -->
+<!-- ajout slash edition de lien -->
 
 <div id="linkModal" class="modal" hidden>
     <div class="modal-box link-modal-box">
@@ -1340,6 +1440,33 @@
         <div class="modal-footer">
             <button id="btnLinkCancel">Cancel</button>
             <button id="btnLinkValidate" class="primary">Save</button>
+        </div>
+    </div>
+</div>
+
+
+<div id="saveModal" class="modal" hidden>
+    <div class="modal-box link-modal-box">
+        <h2>Save Sorter</h2>
+
+        <div id="saveModalStats" class="save-stats"></div>
+
+        <label class="save-compress-toggle-row">
+            <input type="checkbox" id="saveCompressToggle">
+            Compress local files (images, SVG, single-frame GIFs — reduces file size; audio and animated GIFs can't be compressed here)
+        </label>
+
+        <div id="saveQualityRow" hidden>
+            <label for="saveQualitySlider" class="save-slider-label">
+                Compression level
+            </label>
+            <input type="range" id="saveQualitySlider" min="0" max="100" value="60" step="1">
+            <div id="saveSizePreview" class="save-size-preview"></div>
+        </div>
+
+        <div class="modal-footer">
+            <button id="btnSaveModalCancel">Cancel</button>
+            <button id="btnSaveModalConfirm" class="primary">Export</button>
         </div>
     </div>
 </div>
@@ -1368,6 +1495,24 @@ function yieldToBrowser() {
             setTimeout(resolve, 0);
         }
     });
+}
+
+async function runWithConcurrency(items, limit, worker) {
+    let cursor = 0;
+    const effectiveLimit = Math.max(1, Math.min(limit, items.length));
+
+    async function runOne() {
+        while (cursor < items.length) {
+            const index = cursor++;
+            try {
+                await worker(items[index], index);
+            } catch (err) {
+                console.error("[SORTER] Task failed:", err);
+            }
+        }
+    }
+
+    await Promise.all(new Array(effectiveLimit).fill(0).map(runOne));
 }
 
 
@@ -1450,9 +1595,6 @@ async function renderItemToURL(item, maxDim, quality) {
 }
 
 
-/*#######################################################################*/
-
-
 const THUMB_MAX_DIM = 220;   // miniatures de la grille
 const BATTLE_MAX_DIM = 560;  // images afficher pendant le tri
 const CROP_STAGE_MAX_W = 620;
@@ -1461,7 +1603,8 @@ const CROP_STAGE_MAX_H = 440;
 let images = [];               // ordre dimport, source de veriter
 const imagesById = new Map();  // acces rapide par id
 
-// detection
+// detection de type de fichier ----
+
 function isImageFile(f) {
     return f.type.startsWith("image/") || /\.(png|jpe?g|gif|webp|bmp|avif)$/i.test(f.name);
 }
@@ -1476,7 +1619,221 @@ function isAudioFile(f) {
     return (f.type && f.type.startsWith("audio/")) || /\.(mp3|wav|ogg|oga|m4a|flac|aac|opus|weba)$/i.test(f.name);
 }
 
-// lien yt
+const REMOTE_PROBE_TIMEOUT_MS = 6000;
+const OG_IMAGE_FETCH_TIMEOUT_MS = 6000;
+const remoteMediaProbeCache = new Map(); // url -> Promise<{kind, resolvedUrl}|null>
+
+const REMOTE_PROBE_CONCURRENCY_PER_HOST = 4;
+const probeHostState = new Map(); // host -> { active, queue: [] }
+
+function hostKeyFor(url) {
+    try {
+        return new URL(url).host || "unknown";
+    } catch (err) {
+        return "unknown";
+    }
+}
+
+function acquireProbeSlot(url) {
+    const host = hostKeyFor(url);
+    let state = probeHostState.get(host);
+    if (!state) { state = { active: 0, queue: [] }; probeHostState.set(host, state); }
+
+    return new Promise(resolve => {
+        const tryNow = () => {
+            if (state.active < REMOTE_PROBE_CONCURRENCY_PER_HOST) {
+                state.active++;
+                resolve(host);
+            } else {
+                state.queue.push(tryNow);
+            }
+        };
+        tryNow();
+    });
+}
+
+function releaseProbeSlot(host) {
+    const state = probeHostState.get(host);
+    if (!state) return;
+    state.active--;
+    const next = state.queue.shift();
+    if (next) next();
+}
+
+async function probeAsImage(url) {
+    const host = await acquireProbeSlot(url);
+    try {
+        return await new Promise(resolve => {
+            let done = false;
+            const img = new Image();
+            const timer = setTimeout(() => { if (!done) { done = true; resolve(false); } }, REMOTE_PROBE_TIMEOUT_MS);
+            img.onload = () => { if (!done) { done = true; clearTimeout(timer); resolve(true); } };
+            img.onerror = () => { if (!done) { done = true; clearTimeout(timer); resolve(false); } };
+            img.src = url;
+        });
+    } finally {
+        releaseProbeSlot(host);
+    }
+}
+
+async function probeAsAudio(url) {
+    const host = await acquireProbeSlot(url);
+    try {
+        return await new Promise(resolve => {
+            let done = false;
+            const audio = document.createElement("audio");
+            audio.preload = "metadata";
+            const timer = setTimeout(() => { if (!done) { done = true; resolve(false); } }, REMOTE_PROBE_TIMEOUT_MS);
+            audio.addEventListener("loadedmetadata", () => { if (!done) { done = true; clearTimeout(timer); resolve(true); } }, { once: true });
+            audio.addEventListener("error", () => { if (!done) { done = true; clearTimeout(timer); resolve(false); } }, { once: true });
+            audio.src = url;
+        });
+    } finally {
+        releaseProbeSlot(host);
+    }
+}
+
+const OG_IMAGE_PROXIES = [
+    u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
+    u => "https://api.codetabs.com/v1/proxy/?quest=" + encodeURIComponent(u)
+];
+
+async function fetchViaProxy(proxyUrl) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), OG_IMAGE_FETCH_TIMEOUT_MS);
+    try {
+        const res = await fetch(proxyUrl, { signal: controller.signal });
+        if (!res.ok) return null;
+        return await res.text();
+    } catch (err) {
+        return null;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+async function tryExtractOgImage(pageUrl) {
+    const host = await acquireProbeSlot(pageUrl);
+    try {
+        let html = null;
+        for (const buildProxyUrl of OG_IMAGE_PROXIES) {
+            html = await fetchViaProxy(buildProxyUrl(pageUrl));
+            if (html) break;
+        }
+        if (!html) return null;
+
+        const match =
+            html.match(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i) ||
+            html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image(?::secure_url)?["']/i) ||
+            html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i);
+        if (!match || !match[1]) return null;
+        try {
+            return new URL(match[1], pageUrl).href; // resout les url relatives
+        } catch (err) {
+            return null;
+        }
+    } finally {
+        releaseProbeSlot(host);
+    }
+}
+
+function probeRemoteMediaType(url, extensionHint) {
+    if (remoteMediaProbeCache.has(url)) return remoteMediaProbeCache.get(url);
+
+    const promise = (async () => {
+        const [imageOk, audioOk] = await Promise.all([probeAsImage(url), probeAsAudio(url)]);
+
+        const preferAudio = extensionHint === "audio";
+        if (preferAudio && audioOk) return { kind: "audio", resolvedUrl: url };
+        if (imageOk) return { kind: "image", resolvedUrl: url };
+        if (audioOk) return { kind: "audio", resolvedUrl: url };
+
+        const ogImage = await tryExtractOgImage(url);
+        if (ogImage) {
+            const ok = await probeAsImage(ogImage);
+            if (ok) return { kind: "image", resolvedUrl: ogImage };
+        }
+
+        return null;
+    })();
+
+    remoteMediaProbeCache.set(url, promise);
+    return promise;
+}
+
+function clearRemoteMediaProbeCache(url) {
+    remoteMediaProbeCache.delete(url);
+
+}
+
+function ensureLinkMediaResolved(item) {
+    if (item.mediaProbeState === "image" || item.mediaProbeState === "audio" || item.mediaProbeState === "unavailable") {
+        return Promise.resolve(item.mediaProbeState);
+    }
+    return probeRemoteMediaType(item.linkURL, item.directMediaType).then(result => {
+        if (result && result.kind === "image") {
+            item.mediaProbeState = "image";
+            item.thumbURL = result.resolvedUrl;
+        } else if (result && result.kind === "audio") {
+            item.mediaProbeState = "audio";
+            item.audioURL = result.resolvedUrl;
+        } else {
+            item.mediaProbeState = "unavailable";
+        }
+        return item.mediaProbeState;
+    });
+}
+
+function buildUnavailablePlaceholder(item, className, onRetry) {
+    const wrap = document.createElement("div");
+    wrap.className = className;
+    wrap.title = "Media unavailable" + (item.linkURL ? " — " + item.linkURL : "");
+
+    const icon = document.createElement("span");
+    icon.textContent = "🔗";
+    wrap.appendChild(icon);
+
+    const row = document.createElement("div");
+    row.className = "media-unavailable-actions";
+
+    const retryBtn = document.createElement("button");
+    retryBtn.type = "button";
+    retryBtn.className = "media-retry-btn";
+    retryBtn.textContent = "⟳ Retry";
+    retryBtn.addEventListener("click", e => {
+        e.stopPropagation();
+        onRetry();
+    });
+    row.appendChild(retryBtn);
+
+    if (item.linkURL) {
+        const openLink = document.createElement("a");
+        openLink.className = "media-open-link";
+        openLink.href = item.linkURL;
+        openLink.target = "_blank";
+        openLink.rel = "noopener noreferrer";
+        openLink.textContent = "Open ↗";
+        openLink.addEventListener("click", e => e.stopPropagation());
+        row.appendChild(openLink);
+    }
+
+    wrap.appendChild(row);
+    return wrap;
+}
+
+function detectDirectMediaType(url) {
+    let pathname;
+    try {
+        pathname = new URL(url).pathname;
+    } catch (err) {
+        return null;
+    }
+    if (/\.(png|jpe?g|gif|webp|bmp|avif|svg)$/i.test(pathname)) return "image";
+    if (/\.(mp3|wav|ogg|oga|m4a|flac|aac|opus|weba)$/i.test(pathname)) return "audio";
+    return null;
+}
+
+// yt links
 
 function parseYouTubeId(url) {
     try {
@@ -1500,7 +1857,6 @@ function isValidYoutubeId(id) {
     return typeof id === "string" && /^[A-Za-z0-9_-]{10,12}$/.test(id);
 }
 
-// minia yt
 function buildYoutubeThumbLink(item, badgeClass, onEmbed) {
     const link = document.createElement("a");
     link.className = "youtube-thumb-link";
@@ -1509,7 +1865,6 @@ function buildYoutubeThumbLink(item, badgeClass, onEmbed) {
     link.rel = "noopener noreferrer";
     link.title = "Watch on YouTube";
     link.addEventListener("click", e => {
-        // empeche toujours le clic de declencher un choix (left/right)
         e.stopPropagation();
         if (typeof onEmbed === "function") {
             e.preventDefault();
@@ -1539,6 +1894,7 @@ function embedYoutubeInline(mediaEl, item) {
 
     const iframe = document.createElement("iframe");
     iframe.className = "youtube-embed";
+
     iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1`;
     iframe.title = item.name || "YouTube video player";
     iframe.setAttribute("frameborder", "0");
@@ -1547,7 +1903,6 @@ function embedYoutubeInline(mediaEl, item) {
     iframe.setAttribute("allowfullscreen", "");
     mediaEl.appendChild(iframe);
 }
-
 
 function createBaseItem(overrides) {
     const item = Object.assign({
@@ -1563,7 +1918,10 @@ function createBaseItem(overrides) {
         coverFile: null,
         coverURL: null,
         linkURL: null,
-        youtubeId: null
+        youtubeId: null,
+        directMediaType: null,
+        // "image" | "audio" | "unavailable" | null (pas encore sondé)
+        mediaProbeState: null
     }, overrides);
     images.push(item);
     imagesById.set(item.id, item);
@@ -1589,14 +1947,157 @@ function createAudioItem(file) {
 
 function createLinkItem(name, url) {
     const youtubeId = parseYouTubeId(url);
+    const directMediaType = youtubeId ? null : detectDirectMediaType(url);
+
     return createBaseItem({
         type: "link",
-        name: name && name.trim() ? name.trim() : (youtubeId ? "Vidéo YouTube" : url),
+        name: name && name.trim() ? name.trim() : (youtubeId ? "Vidéo YouTube" : nameFromUrl(url)),
         linkURL: url,
         youtubeId: youtubeId,
-        thumbURL: youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : null
+        directMediaType: directMediaType,
+        thumbURL: youtubeId
+            ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`
+            : (directMediaType === "image" ? url : null),
+        audioURL: directMediaType === "audio" ? url : null
     });
 }
+
+function nameFromUrl(url) {
+    try {
+        const u = new URL(url);
+        const last = u.pathname.split("/").filter(Boolean).pop();
+        if (!last) return url;
+        const withoutExt = nameFromFilename(decodeURIComponent(last));
+        const spaced = withoutExt.replace(/[_-]+/g, " ").trim();
+        if (!spaced) return url;
+        return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+    } catch (err) {
+        return url;
+    }
+}
+
+function buildRemoteImageEl(item) {
+    const wrap = document.createElement("div");
+    wrap.className = "remote-media-wrap";
+
+    const img = document.createElement("img");
+    img.src = item.thumbURL || item.linkURL;
+    img.alt = item.name;
+    img.loading = "lazy";
+    img.addEventListener("error", () => {
+        wrap.innerHTML = "";
+        item.mediaProbeState = "unavailable";
+        wrap.appendChild(buildUnavailablePlaceholder(item, "link-thumb-placeholder", () => {
+            item.mediaProbeState = null;
+            item.thumbURL = item.youtubeId ? item.thumbURL : null;
+            clearRemoteMediaProbeCache(item.linkURL);
+            wrap.innerHTML = "";
+            wrap.replaceWith(buildRemoteImageEl(item));
+        }));
+    }, { once: true });
+
+    wrap.appendChild(img);
+    return wrap;
+}
+const LINK_FILE_HEADER = "SORTER-MAKER-LINKS|1";
+const LINK_FILE_OPEN = "{#€@(";
+const LINK_FILE_CLOSE = ")@€#}";
+
+function pad2LinkFile(n) {
+    return String(n).padStart(2, "0");
+}
+
+function buildLinkFileFilename() {
+    const now = new Date();
+    return `sorter-maker-links-${now.getFullYear()}${pad2LinkFile(now.getMonth() + 1)}${pad2LinkFile(now.getDate())}-${pad2LinkFile(now.getHours())}${pad2LinkFile(now.getMinutes())}.txt`;
+}
+
+function exportLinkFile() {
+    const entries = images.filter(item => item.type === "link" && item.linkURL);
+
+    if (entries.length === 0) {
+        alert("No link-based media to export yet. Add a link first (or import media whose source is a remote URL).");
+        return;
+    }
+
+    const lines = [LINK_FILE_HEADER, ""];
+    entries.forEach(item => {
+        const safeName = (item.name || "Untitled").split(LINK_FILE_OPEN).join("").split(LINK_FILE_CLOSE).join("");
+        lines.push(`${safeName}${LINK_FILE_OPEN}${item.linkURL}${LINK_FILE_CLOSE}`);
+    });
+
+    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = buildLinkFileFilename();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function parseLinkFileText(text) {
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (lines.length === 0) return [];
+
+    let startIndex = 0;
+    if (lines[0].startsWith("SORTER-MAKER-LINKS")) {
+        startIndex = 1; // ligne den tete/version reconnue et ignorer
+    }
+
+    const results = [];
+    for (let i = startIndex; i < lines.length; i++) {
+        const line = lines[i];
+        const openIdx = line.indexOf(LINK_FILE_OPEN);
+        const closeIdx = line.lastIndexOf(LINK_FILE_CLOSE);
+
+        if (openIdx !== -1 && closeIdx !== -1 && closeIdx > openIdx) {
+            const name = line.slice(0, openIdx).trim();
+            const url = line.slice(openIdx + LINK_FILE_OPEN.length, closeIdx).trim();
+            if (url) results.push({ name: name || null, url });
+
+        } else if (/^https?:\/\//i.test(line)) {
+            results.push({ name: null, url: line });
+        }
+
+    }
+    return results;
+}
+
+async function importLinkFile(file) {
+    let text;
+    try {
+        text = await file.text();
+    } catch (err) {
+        alert("Unable to read this file.");
+        return;
+    }
+
+    const entries = parseLinkFileText(text);
+    if (entries.length === 0) {
+        alert("No links found in this file. Expected format: SORTER-MAKER-LINKS|1 header followed by \"Name{#€@(URL)@€#}\" lines (or a plain list of URLs).");
+        return;
+    }
+
+    entries.forEach(entry => {
+        createLinkItem(entry.name || nameFromUrl(entry.url), entry.url);
+    });
+
+    updateCountLabel();
+    refreshGridTotalHeight();
+    renderVisibleCards();
+}
+
+document.getElementById("btnExportLinkFile").addEventListener("click", exportLinkFile);
+
+const inputLinkFile = document.getElementById("inputLinkFile");
+document.getElementById("btnImportLinkFile").addEventListener("click", () => inputLinkFile.click());
+inputLinkFile.addEventListener("change", e => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (file) importLinkFile(file);
+});
 
 function createItemForFile(file) {
     if (isAudioFile(file)) return createAudioItem(file);
@@ -1675,7 +2176,7 @@ inputAudioFiles.addEventListener("change", e => {
     e.target.value = "";
 });
 
-// image associer au fichier audio
+// image de couverture associee a un fichier audio
 
 const inputCoverFile = document.getElementById("inputCoverFile");
 let coverTargetItemId = null;
@@ -1710,8 +2211,6 @@ function removeCoverForItem(id) {
     item.coverURL = null;
     renderVisibleCards();
 }
-
-// ajout/edition de liens yt etc...
 
 const linkModal = document.getElementById("linkModal");
 const linkModalTitle = document.getElementById("linkModalTitle");
@@ -1940,6 +2439,7 @@ function renderVisibleCards() {
         if (item) frag.appendChild(buildCard(item));
     }
 
+
     gridInner.querySelectorAll("audio").forEach(audioEl => {
         try { audioEl.pause(); } catch (err) { /* ignore */ }
     });
@@ -2000,7 +2500,7 @@ function createAudioPlayerBar(item) {
     volumeBtn.className = "audio-volume-btn";
     volumeBtn.title = "Mute / Unmute";
     volumeBtn.setAttribute("aria-label", "Mute / Unmute");
-    volumeBtn.textContent = "▶︎";
+    volumeBtn.textContent = "🔊";
 
     const volumePopup = document.createElement("div");
     volumePopup.className = "audio-volume-popup";
@@ -2018,6 +2518,8 @@ function createAudioPlayerBar(item) {
     volumeWrap.appendChild(volumeBtn);
     volumeWrap.appendChild(volumePopup);
     bar.appendChild(volumeWrap);
+
+    // logique
 
     let previousVolume = 1;
 
@@ -2059,6 +2561,12 @@ function createAudioPlayerBar(item) {
 
     audioEl.addEventListener("ended", () => {
         playBtn.textContent = "▶";
+    });
+
+    audioEl.addEventListener("error", () => {
+        playBtn.textContent = "⚠";
+        playBtn.title = "Media unavailable";
+        playBtn.disabled = true;
     });
 
     function setProgressFromClientX(clientX) {
@@ -2120,7 +2628,7 @@ function createAudioPlayerBar(item) {
         } else if (audioEl.volume < 0.5) {
             volumeBtn.textContent = "🔉";
         } else {
-            volumeBtn.textContent = "▶︎";
+            volumeBtn.textContent = "🔊";
         }
         volumeSlider.value = String(audioEl.volume);
     });
@@ -2130,6 +2638,42 @@ function createAudioPlayerBar(item) {
     bar.addEventListener("pointerdown", e => e.stopPropagation());
 
     return bar;
+}
+
+function renderLinkThumbAsync(item, container) {
+    if (item.mediaProbeState === "image") {
+        container.appendChild(buildRemoteImageEl(item));
+        return;
+    }
+    if (item.mediaProbeState === "audio") {
+        const placeholder = document.createElement("div");
+        placeholder.className = "audio-thumb-placeholder";
+        placeholder.textContent = "🎵";
+        container.appendChild(placeholder);
+        container.appendChild(createAudioPlayerBar(item));
+        return;
+    }
+    if (item.mediaProbeState === "unavailable") {
+        container.appendChild(buildUnavailablePlaceholder(item, "link-thumb-placeholder", () => {
+            item.mediaProbeState = null;
+            clearRemoteMediaProbeCache(item.linkURL);
+            container.innerHTML = "";
+            renderLinkThumbAsync(item, container);
+        }));
+        return;
+    }
+
+    const loading = document.createElement("div");
+    loading.className = "link-thumb-placeholder media-probing";
+    loading.textContent = "⏳";
+    container.appendChild(loading);
+
+    ensureLinkMediaResolved(item).then(() => {
+
+        if (!container.isConnected || !container.contains(loading)) return;
+        container.innerHTML = "";
+        renderLinkThumbAsync(item, container);
+    });
 }
 
 function buildCard(item) {
@@ -2176,10 +2720,7 @@ function buildCard(item) {
 
             thumb.appendChild(buildYoutubeThumbLink(item, "card-play-badge"));
         } else {
-            const placeholder = document.createElement("div");
-            placeholder.className = "link-thumb-placeholder";
-            placeholder.textContent = "🔗";
-            thumb.appendChild(placeholder);
+            renderLinkThumbAsync(item, thumb);
         }
     }
 
@@ -2285,7 +2826,6 @@ function updateCountLabel() {
 
     const canLaunch = n >= 2;
 
-    // active/desactive les deux boutons de lancement
     btnLaunchSort.disabled = !canLaunch;
     btnLaunchSortTop.disabled = !canLaunch;
 
@@ -2643,6 +3183,9 @@ let comparisonsDone = 0;
 let history = [];
 let tiedWithNext = new Set();
 
+let initialShuffledOrder = [];
+let choiceLog = [];
+
 let isRenderingBattle = false;
 let battleRenderToken = 0;
 
@@ -2679,11 +3222,13 @@ function startSorter() {
     currentMerge = null;
     comparisonsDone = 0;
     history = [];
+    choiceLog = [];
     tiedWithNext = new Set();
 
     totalComparisons = calculateMaximumComparisons(characters.length);
 
     shuffle(groups);
+    initialShuffledOrder = groups.map(group => group[0].id);
 
     resultsView.hidden = true;
     battleView.hidden = false;
@@ -2764,7 +3309,6 @@ function clearMediaContainer(el) {
     if (choiceEl) choiceEl.classList.remove("choice-has-audio");
 }
 
-
 async function renderBattleMedia(mediaEl, item) {
     clearMediaContainer(mediaEl);
     if (!item) return;
@@ -2815,17 +3359,59 @@ async function renderBattleMedia(mediaEl, item) {
                 embedYoutubeInline(mediaEl, item);
             }));
         } else {
-            const link = document.createElement("a");
-            link.className = "battle-media-placeholder";
-            link.href = item.linkURL || "#";
-            link.target = "_blank";
-            link.rel = "noopener noreferrer";
-            link.textContent = "🔗";
-            link.title = item.linkURL || "";
-            link.addEventListener("click", e => e.stopPropagation());
-            mediaEl.appendChild(link);
+            renderBattleLinkMedia(item, mediaEl);
         }
     }
+}
+
+function renderBattleLinkMedia(item, mediaEl) {
+    if (item.mediaProbeState === "image") {
+        const img = document.createElement("img");
+        img.className = "battle-media-img";
+        img.alt = item.name;
+        img.src = item.thumbURL || item.linkURL;
+        img.addEventListener("error", () => {
+            item.mediaProbeState = "unavailable";
+            mediaEl.innerHTML = "";
+            renderBattleLinkMedia(item, mediaEl);
+        }, { once: true });
+        mediaEl.appendChild(img);
+        return;
+    }
+
+    if (item.mediaProbeState === "audio") {
+        mediaEl.classList.add("choice-media-audio");
+        const choiceEl = mediaEl.closest(".choice");
+        if (choiceEl) choiceEl.classList.add("choice-has-audio");
+        const placeholder = document.createElement("div");
+        placeholder.className = "battle-media-placeholder";
+        placeholder.textContent = "🎵";
+        mediaEl.appendChild(placeholder);
+        mediaEl.appendChild(createAudioPlayerBar(item));
+        return;
+    }
+
+    if (item.mediaProbeState === "unavailable") {
+        mediaEl.appendChild(buildUnavailablePlaceholder(item, "battle-media-placeholder", () => {
+            item.mediaProbeState = null;
+            clearRemoteMediaProbeCache(item.linkURL);
+            mediaEl.innerHTML = "";
+            renderBattleLinkMedia(item, mediaEl);
+        }));
+        return;
+    }
+
+    const loading = document.createElement("div");
+    loading.className = "battle-media-placeholder media-probing";
+    loading.textContent = "⏳";
+    mediaEl.appendChild(loading);
+
+    ensureLinkMediaResolved(item).then(() => {
+
+        if (!mediaEl.isConnected || !mediaEl.contains(loading)) return;
+        mediaEl.innerHTML = "";
+        renderBattleLinkMedia(item, mediaEl);
+    });
 }
 
 async function displayCurrentComparison() {
@@ -2881,24 +3467,24 @@ leftChoice.addEventListener("click", () => choose("left"));
 rightChoice.addEventListener("click", () => choose("right"));
 tieButton.addEventListener("click", () => choose("tie"));
 
-function choose(choice) {
-    if (!currentMerge || isRenderingBattle) return;
+function choiceCodeFor(choice) {
+    return choice === "left" ? "L" : (choice === "right" ? "R" : "T");
+}
 
-    history.push(createStateSnapshot());
-
+function applyChoiceCode(code) {
     const merge = currentMerge;
     const left = merge.left[merge.leftIndex];
     const right = merge.right[merge.rightIndex];
 
-    if (choice === "left") {
+    if (code === "L") {
         merge.result.push(left);
         merge.leftIndex++;
 
-    } else if (choice === "right") {
+    } else if (code === "R") {
         merge.result.push(right);
         merge.rightIndex++;
 
-    } else if (choice === "tie") {
+    } else if (code === "T") {
         merge.result.push(left);
         merge.result.push(right);
         tiedWithNext.add(left.id);
@@ -2907,6 +3493,16 @@ function choose(choice) {
     }
 
     comparisonsDone++;
+}
+
+function choose(choice) {
+    if (!currentMerge || isRenderingBattle) return;
+
+    history.push(createStateSnapshot());
+    choiceLog.push(choiceCodeFor(choice));
+
+    applyChoiceCode(choiceCodeFor(choice));
+
     displayCurrentComparison();
 }
 
@@ -2931,12 +3527,71 @@ function createStateSnapshot() {
     };
 }
 
+function headlessAdvance() {
+    while (true) {
+        if (currentMerge === null) {
+            if (groups.length <= 1) return; // tri terminé (ou pas commencé)
+            const left = groups.shift();
+            const right = groups.shift();
+            currentMerge = { left, right, leftIndex: 0, rightIndex: 0, result: [] };
+        }
+
+        const merge = currentMerge;
+
+        if (merge.leftIndex >= merge.left.length) {
+            while (merge.rightIndex < merge.right.length) {
+                merge.result.push(merge.right[merge.rightIndex++]);
+            }
+            groups.push(merge.result);
+            currentMerge = null;
+            continue;
+        }
+
+        if (merge.rightIndex >= merge.right.length) {
+            while (merge.leftIndex < merge.left.length) {
+                merge.result.push(merge.left[merge.leftIndex++]);
+            }
+            groups.push(merge.result);
+            currentMerge = null;
+            continue;
+        }
+
+        return;
+    }
+}
+
+function replaySortFromLog(orderIds, logString, charactersById) {
+    groups = orderIds
+        .map(id => charactersById.get(id))
+        .filter(Boolean)
+        .map(character => [character]);
+
+    currentMerge = null;
+    history = [];
+    tiedWithNext = new Set();
+    comparisonsDone = 0;
+
+    headlessAdvance();
+
+    const codes = (logString || "").split("");
+
+    for (const code of codes) {
+        if (!currentMerge) break;
+        history.push(createStateSnapshot());
+        applyChoiceCode(code);
+        headlessAdvance();
+    }
+
+    choiceLog = codes.slice(0, comparisonsDone);
+}
+
 undoButton.addEventListener("click", undo);
 
 function undo() {
     if (history.length === 0 || isRenderingBattle) return;
 
     const state = history.pop();
+    choiceLog.pop();
 
     groups = state.groups.map(group => [...group]);
     currentMerge = state.currentMerge ? {
@@ -2995,18 +3650,9 @@ function buildResultThumb(item, character) {
         }
 
     } else if (item && item.type === "link") {
-        if (item.thumbURL) {
-            const img = document.createElement("img");
-            img.src = item.thumbURL;
-            img.alt = character.name;
-            wrap.appendChild(img);
-        } else {
-            wrap.classList.add("result-thumb-placeholder");
-            wrap.textContent = "🔗";
-        }
+        renderResultLinkThumb(item, wrap);
 
     } else {
-        // image / gif (thumburl du gif = fichier original, donc animer)
         const img = document.createElement("img");
         img.src = item ? (item.thumbURL || "") : "";
         img.alt = character.name;
@@ -3014,6 +3660,88 @@ function buildResultThumb(item, character) {
     }
 
     return wrap;
+}
+
+function renderResultLinkThumb(item, wrap) {
+    if (item.thumbURL) {
+
+        const img = document.createElement("img");
+        img.src = item.thumbURL;
+        img.alt = item.name;
+        img.addEventListener("error", () => {
+            item.mediaProbeState = "unavailable";
+            item.thumbURL = item.youtubeId ? item.thumbURL : null;
+            wrap.innerHTML = "";
+            wrap.className = "result-thumb";
+            renderResultLinkThumb(item, wrap);
+        }, { once: true });
+        wrap.appendChild(img);
+        return;
+    }
+
+    if (item.mediaProbeState === "audio") {
+        wrap.classList.add("result-thumb-placeholder");
+        wrap.textContent = "🎵";
+        return;
+    }
+
+    if (item.mediaProbeState === "unavailable") {
+        wrap.classList.add("result-thumb-placeholder");
+        wrap.textContent = "🔗";
+        return;
+    }
+
+    wrap.classList.add("result-thumb-placeholder", "media-probing");
+    wrap.textContent = "⏳";
+
+    ensureLinkMediaResolved(item).then(() => {
+        if (!wrap.isConnected) return;
+        wrap.innerHTML = "";
+        wrap.className = "result-thumb";
+        renderResultLinkThumb(item, wrap);
+    });
+}
+
+function appendResultControlsRow(item, el) {
+    if (!item) return;
+
+    if (item.type === "audio") {
+        const row = document.createElement("div");
+        row.className = "result-audio-row";
+        row.appendChild(createAudioPlayerBar(item));
+        el.appendChild(row);
+        return;
+    }
+
+    if (item.type !== "link") return;
+
+    if (item.mediaProbeState === "audio") {
+        const row = document.createElement("div");
+        row.className = "result-audio-row";
+        row.appendChild(createAudioPlayerBar(item));
+        el.appendChild(row);
+        return;
+    }
+
+    if (item.mediaProbeState === "unavailable" || (item.youtubeId && item.linkURL)) {
+        if (item.linkURL) {
+            const linkEl = document.createElement("a");
+            linkEl.className = "result-link";
+            linkEl.href = item.linkURL;
+            linkEl.target = "_blank";
+            linkEl.rel = "noopener noreferrer";
+            linkEl.textContent = item.youtubeId ? "▶ Watch on YouTube" : "🔗 Open link";
+            el.appendChild(linkEl);
+        }
+        return;
+    }
+
+    if (item.mediaProbeState === "image") return; // yes
+
+    ensureLinkMediaResolved(item).then(() => {
+        if (!el.isConnected) return;
+        appendResultControlsRow(item, el);
+    });
 }
 
 function displayResults(ranking) {
@@ -3054,23 +3782,7 @@ function displayResults(ranking) {
         el.appendChild(thumbEl);
         el.appendChild(nameEl);
 
-        // Lecteur audio fonctionnel (play/pause, avance/recule, durée)
-        // pour les pistes audio, lien cliquable pour les vidéos/liens.
-        if (item && item.type === "audio") {
-            const row = document.createElement("div");
-            row.className = "result-audio-row";
-            row.appendChild(createAudioPlayerBar(item));
-            el.appendChild(row);
-
-        } else if (item && item.type === "link" && item.linkURL) {
-            const linkEl = document.createElement("a");
-            linkEl.className = "result-link";
-            linkEl.href = item.linkURL;
-            linkEl.target = "_blank";
-            linkEl.rel = "noopener noreferrer";
-            linkEl.textContent = item.youtubeId ? "▶ Watch on YouTube" : "🔗 Open link";
-            el.appendChild(linkEl);
-        }
+        appendResultControlsRow(item, el);
 
         resultList.appendChild(el);
     });
@@ -3128,7 +3840,7 @@ if (btnToggleResultsLayout) {
 }
 
 
-/* export png des Results  */
+/* export png des results  */
 
 const btnExportResultsPng = document.getElementById("btnExportResultsPng");
 
@@ -3377,6 +4089,7 @@ async function exportResultsAsPng() {
                 ctx.restore();
 
             } else {
+
                 const ph = d.placeholder;
                 if (ph && ph.rect) {
                     const px = originX + ph.rect.x + ph.rect.w / 2;
@@ -3484,6 +4197,7 @@ async function exportResultsAsPng() {
         alert("Unable to export the Results as a PNG image.\n\nDetail: " + (err && err.message ? err.message : err));
 
     } finally {
+
         listEl.scrollLeft = prevScrollLeft;
         listEl.scrollTop = prevScrollTop;
 
@@ -3502,7 +4216,7 @@ if (btnExportResultsPng) {
 /* save et chargement*/
 
 const SAVE_FORMAT = "sorter-maker-save";
-const SAVE_VERSION = 2;
+const SAVE_VERSION = 3;
 
 const btnSaveImport = document.getElementById("btnSaveImport");
 const btnLoadImport = document.getElementById("btnLoadImport");
@@ -3546,7 +4260,175 @@ function buildSaveFilename() {
 
 const SAVE_MAGIC = "SMB1";
 
-async function buildSaveObject() {
+async function isAnimatedGif(file) {
+    try {
+        const buffer = await file.arrayBuffer();
+        const b = new Uint8Array(buffer);
+        if (b.length < 13) return true;
+
+        const packed = b[10];
+        const gctFlag = (packed & 0x80) !== 0;
+        const gctSize = gctFlag ? 3 * Math.pow(2, (packed & 0x07) + 1) : 0;
+        let pos = 13 + gctSize;
+        let frames = 0;
+
+        function skipSubBlocks(p) {
+            while (p < b.length) {
+                const size = b[p];
+                p += 1;
+                if (size === 0) break;
+                p += size;
+            }
+            return p;
+        }
+
+        while (pos < b.length) {
+            const marker = b[pos];
+            if (marker === 0x21) {
+                pos += 2;
+                pos = skipSubBlocks(pos);
+            } else if (marker === 0x2C) {
+                frames++;
+                if (frames > 1) return true;
+                const packedByte = b[pos + 9];
+                const lctFlag = (packedByte & 0x80) !== 0;
+                const lctSize = lctFlag ? 3 * Math.pow(2, (packedByte & 0x07) + 1) : 0;
+                pos = pos + 10 + lctSize + 1; // + LZW min code size
+                pos = skipSubBlocks(pos);
+            } else {
+                break; // trailer (0x3B) ou fin
+            }
+        }
+        return frames > 1;
+    } catch (err) {
+        return true; // prudence
+    }
+}
+
+async function getCompressionStrategy(item) {
+    if (item._compressionStrategy !== undefined) return item._compressionStrategy;
+
+    let strategy = null;
+    if (item.type === "image" && item.file) {
+        strategy = item.file.type === "image/svg+xml" ? "svg" : "raster";
+    } else if (item.type === "gif" && item.file) {
+        const animated = await isAnimatedGif(item.file);
+        strategy = animated ? null : "raster";
+    }
+
+    item._compressionStrategy = strategy;
+    return strategy;
+}
+
+async function getCompressibleItems() {
+    const candidates = images.filter(it => it.file && (it.type === "image" || it.type === "gif"));
+    const results = [];
+    await runWithConcurrency(candidates, 8, async item => {
+        const strategy = await getCompressionStrategy(item);
+        if (strategy) results.push({ item, strategy });
+    });
+    return results;
+}
+
+async function compressImageBlob(file, quality) {
+    return Promise.race([
+        compressImageBlobInner(file, quality),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Compression timed out")), 20000))
+    ]);
+}
+
+async function compressImageBlobInner(file, quality) {
+    const drawable = await loadDrawable(file);
+    try {
+        const canvas = document.createElement("canvas");
+        canvas.width = drawable.width;
+        canvas.height = drawable.height;
+        canvas.getContext("2d").drawImage(drawable.source, 0, 0);
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/webp", quality));
+        if (!blob || blob.size >= file.size) return null;
+        return blob;
+    } finally {
+        drawable.close();
+    }
+}
+
+function minifySvgText(text) {
+    return text
+        .replace(/<!--[\s\S]*?-->/g, "")
+        .replace(/>\s+</g, "><")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+}
+
+async function compressSvgBlob(file) {
+    const text = await file.text();
+    const minified = minifySvgText(text);
+    if (!minified) return null;
+    const blob = new Blob([minified], { type: "image/svg+xml" });
+    if (blob.size >= file.size) return null;
+    return blob;
+}
+
+async function compressItemForExport(item, strategy, quality) {
+    if (strategy === "svg") return compressSvgBlob(item.file);
+    if (strategy === "raster") return compressImageBlob(item.file, quality);
+    return null;
+}
+
+async function estimateCompressedSize(quality, requestToken, isStaleFn) {
+    const compressible = await getCompressibleItems();
+    const compressibleIds = new Set(compressible.map(c => c.item.id));
+
+    const fixedBytes = images.reduce((sum, item) => {
+        if (!item.file || compressibleIds.has(item.id)) return sum;
+        return sum + item.file.size;
+    }, 0);
+
+    if (compressible.length === 0) {
+        return { fixedBytes, compressibleOriginalBytes: 0, compressibleEstimatedBytes: 0, sampleCount: 0, totalCompressible: 0 };
+    }
+
+    const SAMPLE_SIZE = 12;
+    const step = Math.max(1, Math.floor(compressible.length / SAMPLE_SIZE));
+    const sample = [];
+    for (let i = 0; i < compressible.length && sample.length < SAMPLE_SIZE; i += step) {
+        sample.push(compressible[i]);
+    }
+
+    let sampleOriginal = 0;
+    let sampleCompressed = 0;
+
+    for (const { item, strategy } of sample) {
+        if (isStaleFn(requestToken)) return null; // un reglage plus recent a pris le relais
+        try {
+            const compressed = await compressItemForExport(item, strategy, quality);
+            sampleOriginal += item.file.size;
+            sampleCompressed += compressed ? compressed.size : item.file.size;
+        } catch (err) {
+            sampleOriginal += item.file.size;
+            sampleCompressed += item.file.size;
+        }
+    }
+
+    const ratio = sampleOriginal > 0 ? (sampleCompressed / sampleOriginal) : 1;
+    const compressibleOriginalBytes = compressible.reduce((s, c) => s + c.item.file.size, 0);
+
+    return {
+        fixedBytes,
+        compressibleOriginalBytes,
+        compressibleEstimatedBytes: Math.round(compressibleOriginalBytes * ratio),
+        sampleCount: sample.length,
+        totalCompressible: compressible.length
+    };
+}
+
+function formatBytesHuman(bytes) {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+
+async function buildSaveObject(compressionOverrides) {
     const fileParts = [];
 
     const imagesData = images.map(item => {
@@ -3565,8 +4447,16 @@ async function buildSaveObject() {
             return entry;
         }
 
-        // image/gif/audio un fichier binaire reel à embarquer
-        if (item.file) {
+        const override = compressionOverrides ? compressionOverrides.get(item.id) : null;
+
+        if (override) {
+            const isSvg = override.type === "image/svg+xml";
+            const baseName = item.file && item.file.name ? item.file.name.replace(/\.[^.]+$/, "") : item.name;
+            entry.fileName = baseName + (isSvg ? ".svg" : ".webp");
+            entry.fileType = isSvg ? "image/svg+xml" : "image/webp";
+            entry.fileByteLength = override.size;
+            fileParts.push(override);
+        } else if (item.file) {
             entry.fileName = item.file.name || (item.name + (item.type === "audio" ? ".mp3" : ".jpg"));
             entry.fileType = item.file.type || (item.type === "audio" ? "audio/mpeg" : "image/png");
             entry.fileByteLength = item.file.size;
@@ -3586,13 +4476,6 @@ async function buildSaveObject() {
         return entry;
     });
 
-    const historyData = history.map(snap => ({
-        groups: snap.groups,
-        currentMerge: snap.currentMerge,
-        comparisonsDone: snap.comparisonsDone,
-        tiedWithNext: Array.from(snap.tiedWithNext)
-    }));
-
     const header = {
         format: SAVE_FORMAT,
         version: SAVE_VERSION,
@@ -3602,54 +4485,200 @@ async function buildSaveObject() {
         images: imagesData,
         sort: {
             resultsVisible: currentScreenName === "sort" && resultsView.hidden === false,
-            characters: characters,
-            groups: groups,
-            currentMerge: currentMerge,
+            initialShuffledOrder: initialShuffledOrder,
+            choiceLog: choiceLog.join(""),
             totalComparisons: totalComparisons,
-            comparisonsDone: comparisonsDone,
-            tiedWithNext: Array.from(tiedWithNext),
-            history: historyData
+            comparisonsDone: comparisonsDone
         }
     };
 
     return { header, fileParts };
 }
 
+async function writeSaveFile(compressionOverrides) {
+    const { header, fileParts } = await buildSaveObject(compressionOverrides);
+
+    const headerBytes = new TextEncoder().encode(JSON.stringify(header));
+    const magicBytes = new TextEncoder().encode(SAVE_MAGIC);
+
+    const lengthPrefix = new Uint8Array(4);
+    new DataView(lengthPrefix.buffer).setUint32(0, headerBytes.byteLength, true);
+
+    const blob = new Blob([magicBytes, lengthPrefix, headerBytes, ...fileParts], { type: "application/octet-stream" });
+
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = buildSaveFilename();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
 async function doSaveState() {
     try {
-        const { header, fileParts } = await buildSaveObject();
-
-        const headerBytes = new TextEncoder().encode(JSON.stringify(header));
-        const magicBytes = new TextEncoder().encode(SAVE_MAGIC);
-
-        const lengthPrefix = new Uint8Array(4);
-        new DataView(lengthPrefix.buffer).setUint32(0, headerBytes.byteLength, true);
-
-        const blob = new Blob([magicBytes, lengthPrefix, headerBytes, ...fileParts], { type: "application/octet-stream" });
-
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = buildSaveFilename();
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        setTimeout(() => URL.revokeObjectURL(url), 2000);
-
+        await writeSaveFile(null);
     } catch (err) {
         console.error("[SORTER] Erreur lors de la sauvegarde :", err);
         alert("Saving failed. The current state of the app has not been changed.\n\nDetail: " + (err && err.message ? err.message : err));
     }
 }
 
+const saveModal = document.getElementById("saveModal");
+const saveModalStats = document.getElementById("saveModalStats");
+const saveCompressToggle = document.getElementById("saveCompressToggle");
+const saveQualitySlider = document.getElementById("saveQualitySlider");
+const saveQualityRow = document.getElementById("saveQualityRow");
+const saveSizePreview = document.getElementById("saveSizePreview");
+const btnSaveModalCancel = document.getElementById("btnSaveModalCancel");
+const btnSaveModalConfirm = document.getElementById("btnSaveModalConfirm");
+
+let saveEstimateToken = 0;
+
+function openSaveModal() {
+    const localImages = images.filter(it => it.type !== "link" && it.file);
+    const remoteCount = images.filter(it => it.type === "link").length;
+    const originalBytes = localImages.reduce((s, it) => s + it.file.size, 0);
+
+    saveModalStats.innerHTML = `
+        <div>Media: <strong>${images.length}</strong></div>
+        <div>Remote links (never embedded): <strong>${remoteCount}</strong></div>
+        <div>Local files: <strong>${localImages.length}</strong></div>
+        <div>Original size of local files: <strong>${formatBytesHuman(originalBytes)}</strong></div>
+    `;
+
+    saveCompressToggle.checked = false;
+    saveQualityRow.hidden = true;
+    saveQualitySlider.value = "60";
+    saveSizePreview.innerHTML = "";
+
+    saveCompressToggle.disabled = true;
+    saveCompressToggle.parentElement.title = "Checking compressible files…";
+
+    saveModal.hidden = false;
+
+    getCompressibleItems().then(compressible => {
+        if (saveModal.hidden) return; // modale refermée entre-temps
+        if (compressible.length === 0) {
+            saveCompressToggle.disabled = true;
+            saveCompressToggle.parentElement.title = "No compressible local files (JPG/PNG/WebP/SVG/single-frame GIF) in this sorter.";
+        } else {
+            saveCompressToggle.disabled = false;
+            saveCompressToggle.parentElement.title = "";
+        }
+    });
+}
+
+function closeSaveModal() {
+    saveModal.hidden = true;
+}
+
+btnSaveModalCancel.addEventListener("click", closeSaveModal);
+
+saveCompressToggle.addEventListener("change", () => {
+    saveQualityRow.hidden = !saveCompressToggle.checked;
+    if (saveCompressToggle.checked) refreshSizeEstimate();
+    else saveSizePreview.innerHTML = "";
+});
+
+let saveEstimateDebounce = null;
+saveQualitySlider.addEventListener("input", () => {
+    saveSizePreview.innerHTML = `<div class="save-size-computing">Computing estimate…</div>`;
+    clearTimeout(saveEstimateDebounce);
+    saveEstimateDebounce = setTimeout(refreshSizeEstimate, 250);
+});
+
+async function refreshSizeEstimate() {
+    const myToken = ++saveEstimateToken;
+
+    const level = parseInt(saveQualitySlider.value, 10);
+    const quality = Math.max(0.05, 1 - (level / 100) * 0.9);
+
+    const result = await estimateCompressedSize(quality, myToken, token => token !== saveEstimateToken);
+    if (!result || myToken !== saveEstimateToken) return;
+
+    const totalOriginal = result.fixedBytes + result.compressibleOriginalBytes;
+    const totalEstimated = result.fixedBytes + result.compressibleEstimatedBytes;
+    const reductionPct = totalOriginal > 0 ? (100 * (1 - totalEstimated / totalOriginal)) : 0;
+
+    const sampleNote = result.totalCompressible > result.sampleCount
+        ? `<div class="save-size-note">Estimated from a sample of ${result.sampleCount}/${result.totalCompressible} images — the exact result may vary slightly.</div>`
+        : `<div class="save-size-note">Measured exactly (all ${result.totalCompressible} compressible images).</div>`;
+
+    saveSizePreview.innerHTML = `
+        <div class="save-size-row"><span>Estimated size</span><strong>${formatBytesHuman(totalEstimated)}</strong></div>
+        <div class="save-size-row"><span>Reduction</span><strong>${reductionPct.toFixed(1)}%</strong></div>
+        ${result.fixedBytes > 0 ? `<div class="save-size-note">Audio and animated GIF files (${formatBytesHuman(result.fixedBytes)}) are kept at their original size — a real audio/GIF-animation re-encoder isn't implemented here. SVG and single-frame GIFs ARE compressed.</div>` : ""}
+        ${sampleNote}
+    `;
+}
+
+btnSaveModalConfirm.addEventListener("click", async () => {
+    btnSaveModalConfirm.disabled = true;
+    const originalLabel = btnSaveModalConfirm.textContent;
+
+    try {
+        let overrides = null;
+        let compressFailures = 0;
+
+        if (saveCompressToggle.checked) {
+            const level = parseInt(saveQualitySlider.value, 10);
+            const quality = Math.max(0.05, 1 - (level / 100) * 0.9);
+
+            btnSaveModalConfirm.textContent = "Checking files…";
+            const eligible = await getCompressibleItems();
+
+            overrides = new Map();
+            let done = 0;
+            btnSaveModalConfirm.textContent = `Compressing… 0/${eligible.length}`;
+
+            // Compression EN PARALLÈLE (bornée) : avec des centaines/milliers
+            // d'images, une boucle séquentielle pouvait donner l'impression
+            // de blocage ou d'échec. Chaque échec individuel est isolé
+            // (compté, journalisé) et n'interrompt jamais le reste : l'item
+            // concerné gardera simplement son fichier original dans la
+            // sauvegarde plutôt que de faire échouer tout l'export.
+            const COMPRESSION_CONCURRENCY = 4;
+            await runWithConcurrency(eligible, COMPRESSION_CONCURRENCY, async ({ item, strategy }) => {
+                try {
+                    const compressed = await compressItemForExport(item, strategy, quality);
+                    if (compressed) overrides.set(item.id, compressed);
+                } catch (err) {
+                    console.error("[SORTER] Compression failed for", item.name, err);
+                    compressFailures++;
+                } finally {
+                    done++;
+                    btnSaveModalConfirm.textContent = `Compressing… ${done}/${eligible.length}`;
+                }
+            });
+        }
+
+        btnSaveModalConfirm.textContent = "Saving…";
+        await writeSaveFile(overrides);
+        closeSaveModal();
+
+        if (compressFailures > 0) {
+            alert(`Save complete. ${compressFailures} image(s) could not be compressed and were kept at their original size in the save (this never blocks the export).`);
+        }
+
+    } catch (err) {
+        console.error("[SORTER] Erreur lors de la sauvegarde :", err);
+        alert("Saving failed. The current state of the app has not been changed.\n\nDetail: " + (err && err.message ? err.message : err));
+    } finally {
+        btnSaveModalConfirm.disabled = false;
+        btnSaveModalConfirm.textContent = originalLabel;
+    }
+});
+
 function triggerLoadFile() {
     inputLoadSave.click();
 }
 
-if (btnSaveImport) btnSaveImport.addEventListener("click", doSaveState);
-if (btnSaveSort) btnSaveSort.addEventListener("click", doSaveState);
+if (btnSaveImport) btnSaveImport.addEventListener("click", openSaveModal);
+if (btnSaveSort) btnSaveSort.addEventListener("click", openSaveModal);
 if (btnLoadImport) btnLoadImport.addEventListener("click", triggerLoadFile);
 if (btnLoadSort) btnLoadSort.addEventListener("click", triggerLoadFile);
 
@@ -3659,15 +4688,19 @@ inputLoadSave.addEventListener("change", async e => {
 
     if (!file) return;
 
+    importProgress.hidden = false;
+    importProgressFill.style.width = "0%";
+    importProgressLabel.textContent = "Reading save file…";
+
     try {
         let data;
-        let fileProvider = null;
+        let fileProvider = null; // (id) -> { main: Blob|null, cover: Blob|null }
 
         const magicBytes = new Uint8Array(await file.slice(0, 4).arrayBuffer());
         const magicText = new TextDecoder().decode(magicBytes);
 
         if (magicText === SAVE_MAGIC) {
-            // format binaire v2
+            // ---- Format binaire (v2+) ----
             const lenBytes = new Uint8Array(await file.slice(4, 8).arrayBuffer());
             const headerLength = new DataView(lenBytes.buffer).getUint32(0, true);
 
@@ -3695,6 +4728,7 @@ inputLoadSave.addEventListener("change", async e => {
             fileProvider = id => slices.get(id) || { main: null, cover: null };
 
         } else {
+            // ---- Format JSON hérité (v1, base64 inline) : reste lisible. ----
             const text = await file.text();
             try {
                 data = JSON.parse(text);
@@ -3727,6 +4761,8 @@ inputLoadSave.addEventListener("change", async e => {
     } catch (err) {
         console.error("[SORTER] Erreur lors du chargement de la sauvegarde :", err);
         alert("Unable to load this file.\n\n" + (err && err.message ? err.message : "Invalid or corrupted file.") + "\n\nThe current status of the application has not changed.");
+    } finally {
+        importProgress.hidden = true;
     }
 });
 
@@ -3745,8 +4781,11 @@ async function restoreFromSave(data, fileProvider) {
         let coverFile = null;
 
         if (type === "link") {
+            // rien à charger : pas de fichier binaire pour un lien.
 
         } else if (fileProvider) {
+            // Format binaire : les Blob ont déjà été découpés par tranche
+            // (File.slice), sans jamais charger tout le fichier en mémoire.
             const slice = fileProvider(entry.id);
             if (slice.main) {
                 file = new File([slice.main], entry.fileName || ((entry.name || type) + ".dat"), { type: entry.fileType || "" });
@@ -3756,6 +4795,7 @@ async function restoreFromSave(data, fileProvider) {
             }
 
         } else {
+            // Format hérité v1 (base64 inline) — uniquement des images.
             if (!entry.dataBase64) {
                 throw new Error("A backup image is invalid.");
             }
@@ -3780,25 +4820,57 @@ async function restoreFromSave(data, fileProvider) {
             coverFile: coverFile,
             coverURL: null,
             linkURL: entry.linkURL || null,
-            youtubeId: entry.youtubeId || null
+            youtubeId: entry.youtubeId || null,
+            directMediaType: entry.linkURL && !entry.youtubeId ? detectDirectMediaType(entry.linkURL) : null
         };
 
         newImages.push(item);
         newImagesById.set(item.id, item);
     }
 
+    // Les gif/audio/lien sont immédiats (juste une URL, pas de décodage) :
+    // traités directement. Seules les images "classiques" nécessitent un
+    // vrai décodage/miniature — c'est la partie coûteuse avec beaucoup de
+    // fichiers, donc la seule qu'on parallélise (au lieu d'un
+    // "await" séquentiel item par item, qui était le principal facteur de
+    // lenteur du Load).
+    const imageItemsToThumbnail = [];
+
     for (const item of newImages) {
         if (item.type === "image") {
-            await generateThumbnail(item);
+            imageItemsToThumbnail.push(item);
         } else if (item.type === "gif") {
             item.thumbURL = item.file ? URL.createObjectURL(item.file) : null;
         } else if (item.type === "audio") {
             item.audioURL = item.file ? URL.createObjectURL(item.file) : null;
             if (item.coverFile) item.coverURL = URL.createObjectURL(item.coverFile);
         } else if (item.type === "link") {
-            item.thumbURL = item.youtubeId ? `https://img.youtube.com/vi/${item.youtubeId}/hqdefault.jpg` : null;
+            if (item.youtubeId) {
+                item.thumbURL = `https://img.youtube.com/vi/${item.youtubeId}/hqdefault.jpg`;
+            } else if (item.directMediaType === "image") {
+                item.thumbURL = item.linkURL;
+            } else if (item.directMediaType === "audio") {
+                item.audioURL = item.linkURL;
+            }
+
         }
     }
+
+    const THUMBNAIL_CONCURRENCY = 6;
+    let thumbDone = 0;
+    if (imageItemsToThumbnail.length > 0) {
+        importProgress.hidden = false;
+        importProgressLabel.textContent = `Generating thumbnails… 0 / ${imageItemsToThumbnail.length}`;
+        importProgressFill.style.width = "0%";
+    }
+    await runWithConcurrency(imageItemsToThumbnail, THUMBNAIL_CONCURRENCY, async item => {
+        await generateThumbnail(item);
+        thumbDone++;
+        if (imageItemsToThumbnail.length > 0) {
+            importProgressLabel.textContent = `Generating thumbnails… ${thumbDone} / ${imageItemsToThumbnail.length}`;
+            importProgressFill.style.width = Math.round((thumbDone / imageItemsToThumbnail.length) * 100) + "%";
+        }
+    });
 
     images.forEach(item => {
         revokeIfBlob(item.thumbURL);
@@ -3814,30 +4886,55 @@ async function restoreFromSave(data, fileProvider) {
 
     const sort = data.sort || {};
 
-    characters = Array.isArray(sort.characters) ? sort.characters : [];
-    groups = Array.isArray(sort.groups) ? sort.groups.map(g => [...g]) : [];
-    currentMerge = sort.currentMerge ? {
-        left: [...sort.currentMerge.left],
-        right: [...sort.currentMerge.right],
-        leftIndex: sort.currentMerge.leftIndex || 0,
-        rightIndex: sort.currentMerge.rightIndex || 0,
-        result: Array.isArray(sort.currentMerge.result) ? [...sort.currentMerge.result] : []
-    } : null;
-    totalComparisons = typeof sort.totalComparisons === "number" ? sort.totalComparisons : 0;
-    comparisonsDone = typeof sort.comparisonsDone === "number" ? sort.comparisonsDone : 0;
-    tiedWithNext = new Set(Array.isArray(sort.tiedWithNext) ? sort.tiedWithNext : []);
-    history = Array.isArray(sort.history) ? sort.history.map(h => ({
-        groups: Array.isArray(h.groups) ? h.groups.map(g => [...g]) : [],
-        currentMerge: h.currentMerge ? {
-            left: [...h.currentMerge.left],
-            right: [...h.currentMerge.right],
-            leftIndex: h.currentMerge.leftIndex || 0,
-            rightIndex: h.currentMerge.rightIndex || 0,
-            result: Array.isArray(h.currentMerge.result) ? [...h.currentMerge.result] : []
-        } : null,
-        comparisonsDone: h.comparisonsDone || 0,
-        tiedWithNext: new Set(Array.isArray(h.tiedWithNext) ? h.tiedWithNext : [])
-    })) : [];
+    characters = images.map(item => ({ id: item.id, name: item.name }));
+    const charactersById = new Map(characters.map(c => [c.id, c]));
+
+    if (Array.isArray(sort.initialShuffledOrder)) {
+        initialShuffledOrder = sort.initialShuffledOrder.slice();
+        totalComparisons = typeof sort.totalComparisons === "number"
+            ? sort.totalComparisons
+            : calculateMaximumComparisons(characters.length);
+
+        if (initialShuffledOrder.length >= 2) {
+            replaySortFromLog(initialShuffledOrder, sort.choiceLog || "", charactersById);
+        } else {
+            groups = [];
+            currentMerge = null;
+            history = [];
+            choiceLog = [];
+            tiedWithNext = new Set();
+            comparisonsDone = 0;
+        }
+
+    } else {
+
+        groups = Array.isArray(sort.groups) ? sort.groups.map(g => [...g]) : [];
+        currentMerge = sort.currentMerge ? {
+            left: [...sort.currentMerge.left],
+            right: [...sort.currentMerge.right],
+            leftIndex: sort.currentMerge.leftIndex || 0,
+            rightIndex: sort.currentMerge.rightIndex || 0,
+            result: Array.isArray(sort.currentMerge.result) ? [...sort.currentMerge.result] : []
+        } : null;
+        totalComparisons = typeof sort.totalComparisons === "number" ? sort.totalComparisons : 0;
+        comparisonsDone = typeof sort.comparisonsDone === "number" ? sort.comparisonsDone : 0;
+        tiedWithNext = new Set(Array.isArray(sort.tiedWithNext) ? sort.tiedWithNext : []);
+        history = Array.isArray(sort.history) ? sort.history.map(h => ({
+            groups: Array.isArray(h.groups) ? h.groups.map(g => [...g]) : [],
+            currentMerge: h.currentMerge ? {
+                left: [...h.currentMerge.left],
+                right: [...h.currentMerge.right],
+                leftIndex: h.currentMerge.leftIndex || 0,
+                rightIndex: h.currentMerge.rightIndex || 0,
+                result: Array.isArray(h.currentMerge.result) ? [...h.currentMerge.result] : []
+            } : null,
+            comparisonsDone: h.comparisonsDone || 0,
+            tiedWithNext: new Set(Array.isArray(h.tiedWithNext) ? h.tiedWithNext : [])
+        })) : [];
+
+        initialShuffledOrder = groups.length ? groups.map(g => g[0].id) : characters.map(c => c.id);
+        choiceLog = [];
+    }
 
     resultsLayoutMode = data.resultsLayoutMode === "horizontal" ? "horizontal" : "vertical";
 
