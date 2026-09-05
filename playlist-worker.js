@@ -5,9 +5,7 @@ const CLIENT = {
     clientVersion: "2.20260708.00.00"
 };
 
-const WORKER_BUILD = "2026-09-05-continuation-scan-v2";
-
-const CACHE_SECONDS = 300;
+const WORKER_BUILD = "2026-09-05-no-cache-v4";
 
 function cors() {
     return {
@@ -22,7 +20,9 @@ function response(data, status = 200) {
         status,
         headers: {
             "Content-Type": "application/json; charset=utf-8",
-            "Cache-Control": `public, max-age=${CACHE_SECONDS}`,
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
             ...cors()
         }
     });
@@ -61,9 +61,14 @@ async function youtubeOnce(body, visitorData) {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
                 "Accept-Language": "en-US,en;q=0.9",
                 "Origin": "https://www.youtube.com",
-                "Referer": "https://www.youtube.com/"
+                "Referer": "https://www.youtube.com/",
+                "Cache-Control": "no-store"
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            cf: {
+                cacheTtl: 0,
+                cacheEverything: false
+            }
         }
     );
 
@@ -144,6 +149,7 @@ function extractVideoFromLockup(lockup) {
 
 function extractContinuationToken(node) {
     return (
+        node?.continuationItemViewModel?.continuationCommand?.innertubeCommand?.continuationCommand?.token ||
         node?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ||
         node?.continuationItemRenderer?.button?.buttonRenderer?.command?.continuationCommand?.token ||
         node?.continuationItemRenderer?.command?.continuationCommand?.token ||
@@ -384,7 +390,7 @@ export default {
                 videos: uniqueVideos,
                 continuation: page.continuation,
                 visitorData: currentVisitorData,
-                complete: !page.continuation,
+                complete: !page.continuation || page.continuation === continuation,
                 error: null,
                 build: WORKER_BUILD,
                 raw: debug ? JSON.stringify(data).slice(0, 6000) : undefined,
