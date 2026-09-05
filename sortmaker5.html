@@ -1652,6 +1652,37 @@ html.custom-theme {
     </div>
 </div>
 
+
+<div id="youtubeApiKeyModal" class="modal" hidden>
+    <div class="modal-box link-modal-box">
+        <h2>Playlist import settings</h2>
+
+        <p class="hint" style="margin-top:0;">By default, playlist import uses a small server-side proxy (no key needed for visitors). You can set your own proxy URL below, and/or a personal YouTube API key as an extra fallback.</p>
+
+        <div class="link-form-row">
+            <label for="playlistWorkerUrlInput">Playlist proxy URL (optional)</label>
+            <input type="text" id="playlistWorkerUrlInput" placeholder="https://your-worker.workers.dev">
+        </div>
+
+        <div class="link-form-row">
+            <label for="youtubeApiKeyInput">YouTube API key (optional fallback)</label>
+            <input type="text" id="youtubeApiKeyInput" placeholder="AIzaSy...">
+        </div>
+
+        <p class="hint">
+            <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener noreferrer">How to get a free key ↗</a>
+            — create a project, enable "YouTube Data API v3", create an API key, and (recommended) restrict it to your website's domain under "Application restrictions → Websites".
+        </p>
+
+        <div class="modal-footer">
+            <button id="btnYoutubeApiKeyClear" class="btn-danger">Remove both</button>
+            <button id="btnYoutubeApiKeyCancel">Cancel</button>
+            <button id="btnYoutubeApiKeySave" class="primary">Save</button>
+        </div>
+    </div>
+</div>
+
+
 <div id="saveModal" class="modal" hidden>
     <div class="modal-box link-modal-box">
         <h2>Save Sorter</h2>
@@ -1889,6 +1920,8 @@ const TITLE_FETCH_TIMEOUT_MS = 9e3;
 
 const PLAYLIST_FETCH_TIMEOUT_MS = 18e3;
 
+const WORKER_PLAYLIST_FETCH_TIMEOUT_MS = 12e4;
+
 const PLAYLIST_PROXIES = [ u => "https://r.jina.ai/" + u, u => "https://api.allorigins.win/get?url=" + encodeURIComponent(u), u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u), u => "https://api.codetabs.com/v1/proxy/?quest=" + encodeURIComponent(u), u => "https://corsproxy.io/?url=" + encodeURIComponent(u), u => "https://thingproxy.freeboard.io/fetch/" + u ];
 
 const DEFAULT_PLAYLIST_WORKER_URL = "";
@@ -1915,7 +1948,7 @@ function setPlaylistWorkerUrl(url) {
 
 async function fetchPlaylistViaWorker(workerUrl, playlistId) {
     const controller = new AbortController;
-    const timer = setTimeout(() => controller.abort(), PLAYLIST_FETCH_TIMEOUT_MS);
+    const timer = setTimeout(() => controller.abort(), WORKER_PLAYLIST_FETCH_TIMEOUT_MS);
     try {
         const base = workerUrl.replace(/\/$/, "");
         const res = await fetch(`${base}/playlist?id=${encodeURIComponent(playlistId)}`, {
