@@ -5,7 +5,7 @@ const CLIENT = {
     clientVersion: "2.20260708.00.00"
 };
 
-const WORKER_BUILD = "2026-09-05-no-cache-v4";
+const WORKER_BUILD = "2026-09-05-first-token-wins-v6";
 
 function cors() {
     return {
@@ -191,14 +191,14 @@ function collectVideosAndContinuation(node, out, seenNodes) {
     }
 
     const token = extractContinuationToken(node);
-    if (token) out.continuation = token;
+    if (token && !out.continuation) out.continuation = token;
 
     if (Array.isArray(node.continuations) && node.continuations.length) {
         const direct =
             node.continuations[0]?.nextContinuationData?.continuation ||
             node.continuations[0]?.reloadContinuationData?.continuation ||
             null;
-        if (direct) out.continuation = direct;
+        if (direct && !out.continuation) out.continuation = direct;
     }
 
     for (const value of Object.values(node)) {
@@ -390,7 +390,7 @@ export default {
                 videos: uniqueVideos,
                 continuation: page.continuation,
                 visitorData: currentVisitorData,
-                complete: !page.continuation || page.continuation === continuation,
+                complete: !page.continuation,
                 error: null,
                 build: WORKER_BUILD,
                 raw: debug ? JSON.stringify(data).slice(0, 6000) : undefined,
