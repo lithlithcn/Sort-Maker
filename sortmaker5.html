@@ -1980,11 +1980,17 @@ async function fetchPlaylistViaWorker(workerUrl, playlistId, onProgress) {
         try {
             data = await fetchWorkerPlaylistPage(base, playlistId, continuation, visitorData);
         } catch (err) {
-            if (videos.length) break;
+            if (videos.length) {
+                console.warn("[SORTER][playlist worker] stopped early after", videos.length, "videos:", err && err.message ? err.message : err);
+                break;
+            }
             throw err;
         }
         if (data && data.error && (!data.videos || !data.videos.length)) {
-            if (videos.length) break;
+            if (videos.length) {
+                console.warn("[SORTER][playlist worker] stopped early after", videos.length, "videos:", data.error);
+                break;
+            }
             throw new Error(data.error);
         }
         const pageVideos = Array.isArray(data.videos) ? data.videos.filter(v => v && v.id) : [];
@@ -2555,15 +2561,18 @@ async function fetchYoutubePlaylistVideosViaFallbacks(playlistId) {
 
 async function fetchYoutubePlaylistVideos(playlistId, onProgress) {
     const workerUrl = getPlaylistWorkerUrl();
+    let workerError = null;
     if (workerUrl) {
         try {
             const videos = await fetchPlaylistViaWorker(workerUrl, playlistId, onProgress);
             return {
                 videos: videos,
-                apiKeyError: null
+                apiKeyError: null,
+                workerError: null
             };
         } catch (err) {
-            console.warn("[SORTER][playlist worker]", err && err.message ? err.message : err);
+            workerError = err && err.message ? err.message : String(err);
+            console.warn("[SORTER][playlist worker]", workerError);
         }
     }
     const apiKey = getYoutubeApiKey();
@@ -2572,7 +2581,8 @@ async function fetchYoutubePlaylistVideos(playlistId, onProgress) {
             const videos = await withTimeout(fetchPlaylistViaOfficialApi(playlistId, apiKey), PLAYLIST_FETCH_TIMEOUT_MS);
             return {
                 videos: videos,
-                apiKeyError: null
+                apiKeyError: null,
+                workerError: workerError
             };
         } catch (err) {
             const message = err && err.message ? err.message : String(err);
@@ -2584,14 +2594,16 @@ async function fetchYoutubePlaylistVideos(playlistId, onProgress) {
                 apiKeyError: {
                     message: message,
                     reason: reason
-                }
+                },
+                workerError: workerError
             };
         }
     }
     const videos = await fetchYoutubePlaylistVideosViaFallbacks(playlistId);
     return {
         videos: videos,
-        apiKeyError: null
+        apiKeyError: null,
+        workerError: workerError
     };
 }
 
@@ -2661,13 +2673,16 @@ async function importYoutubePlaylist(playlistId, startIndex, fallback) {
     });
     let videos = result.videos;
     const apiKeyError = result.apiKeyError;
+    const workerError = result.workerError;
     if (!videos || videos.length === 0) {
         importProgress.hidden = true;
         let reason;
         if (apiKeyError) {
             reason = `Your YouTube API key failed: "${apiKeyError.message}". ${describeYoutubeApiKeyError(apiKeyError.reason, apiKeyError.message)}`;
+        } else if (workerError) {
+            reason = `The playlist proxy reported: "${workerError}".`;
         } else {
-            reason = "The playlist proxy isn't set up yet and the free fallback methods this uses are currently unreliable. Click \"YouTube API key\" to configure a playlist proxy URL or a personal API key.";
+            reason = "The playlist proxy isn't reachable and the free fallback methods this uses are currently unreliable.";
         }
         if (fallback.videoId && isValidYoutubeId(fallback.videoId)) {
             const fallbackUrl = `https://www.youtube.com/watch?v=${fallback.videoId}`;
