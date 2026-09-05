@@ -2192,6 +2192,8 @@ async function probeAsAudio(url) {
 
 const OG_IMAGE_PROXIES = [ u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u), u => "https://api.codetabs.com/v1/proxy/?quest=" + encodeURIComponent(u), u => "https://corsproxy.io/?url=" + encodeURIComponent(u), u => "https://thingproxy.freeboard.io/fetch/" + u ];
 
+const IMAGE_PROXIES = [ u => "https://images.weserv.nl/?url=" + encodeURIComponent(u.replace(/^https?:\/\//, "")), ...OG_IMAGE_PROXIES ];
+
 async function fetchViaProxy(proxyUrl, timeoutMs) {
     const controller = new AbortController;
     const timer = setTimeout(() => controller.abort(), timeoutMs || OG_IMAGE_FETCH_TIMEOUT_MS);
@@ -2208,14 +2210,22 @@ async function fetchViaProxy(proxyUrl, timeoutMs) {
     }
 }
 
+async function fetchViaAnyProxy(proxyBuilders, targetUrl) {
+    const attempts = proxyBuilders.map(buildProxyUrl => fetchViaProxy(buildProxyUrl(targetUrl)).then(result => {
+        if (!result) throw new Error("proxy_empty");
+        return result;
+    }));
+    try {
+        return await Promise.any(attempts);
+    } catch (err) {
+        return null;
+    }
+}
+
 async function tryExtractOgImage(pageUrl) {
     const host = await acquireProbeSlot(pageUrl);
     try {
-        let html = null;
-        for (const buildProxyUrl of OG_IMAGE_PROXIES) {
-            html = await fetchViaProxy(buildProxyUrl(pageUrl));
-            if (html) break;
-        }
+        const html = await fetchViaAnyProxy(OG_IMAGE_PROXIES, pageUrl);
         if (!html) return null;
         const match = html.match(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i) || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image(?::secure_url)?["']/i) || html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i);
         if (!match || !match[1]) return null;
@@ -4769,12 +4779,12 @@ async function loadImageElement(src) {
     try {
         return await loadImageElementFromSrc(src, true);
     } catch (err) {
-        for (const buildProxyUrl of OG_IMAGE_PROXIES) {
-            try {
-                return await loadImageElementFromSrc(buildProxyUrl(src), true);
-            } catch (proxyErr) {}
+        const attempts = IMAGE_PROXIES.map(buildProxyUrl => loadImageElementFromSrc(buildProxyUrl(src), true));
+        try {
+            return await Promise.any(attempts);
+        } catch (proxyErr) {
+            throw new Error("Failed to load an image for export: " + src);
         }
-        throw new Error("Failed to load an image for export: " + src);
     }
 }
 
@@ -4841,6 +4851,10 @@ async function exportResultsAsPng() {
                     rect: relRect(placeholderEl),
                     text: placeholderEl.textContent,
                     style: readComputedBox(placeholderEl)
+                } : imgEl ? {
+                    rect: relRect(imgEl),
+                    text: "🔗",
+                    style: readComputedBox(imgEl)
                 } : null,
                 name: nameEl ? {
                     rect: relRect(nameEl),
@@ -6003,3 +6017,5 @@ showScreen("import");
 
 </body>
 </html>
+
+
