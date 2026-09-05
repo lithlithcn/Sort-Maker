@@ -1946,23 +1946,65 @@ function setPlaylistWorkerUrl(url) {
     } catch (err) {}
 }
 
-async function fetchPlaylistViaWorker(workerUrl, playlistId) {
+const WORKER_PLAYLIST_MAX_PAGES = 500;
+
+async function fetchWorkerPlaylistPage(base, playlistId, continuation, visitorData) {
     const controller = new AbortController;
     const timer = setTimeout(() => controller.abort(), WORKER_PLAYLIST_FETCH_TIMEOUT_MS);
     try {
-        const base = workerUrl.replace(/\/$/, "");
-        const res = await fetch(`${base}/playlist?id=${encodeURIComponent(playlistId)}`, {
+        const params = new URLSearchParams({
+            id: playlistId
+        });
+        if (continuation) params.set("continuation", continuation);
+        if (visitorData) params.set("visitorData", visitorData);
+        const res = await fetch(`${base}/playlist?${params.toString()}`, {
             signal: controller.signal
         });
         if (!res.ok) throw new Error("worker error " + res.status);
-        const data = await res.json();
-        if (data && data.error && (!data.videos || !data.videos.length)) throw new Error(data.error);
-        const videos = Array.isArray(data.videos) ? data.videos.filter(v => v && v.id) : [];
-        if (!videos.length) throw new Error("empty playlist");
-        return videos;
+        return await res.json();
     } finally {
         clearTimeout(timer);
     }
+}
+
+async function fetchPlaylistViaWorker(workerUrl, playlistId, onProgress) {
+    const base = workerUrl.replace(/\/$/, "");
+    const videos = [];
+    const seen = new Set;
+    let continuation = null;
+    let visitorData = null;
+    let page = 0;
+    while (page < WORKER_PLAYLIST_MAX_PAGES) {
+        page++;
+        let data;
+        try {
+            data = await fetchWorkerPlaylistPage(base, playlistId, continuation, visitorData);
+        } catch (err) {
+            if (videos.length) break;
+            throw err;
+        }
+        if (data && data.error && (!data.videos || !data.videos.length)) {
+            if (videos.length) break;
+            throw new Error(data.error);
+        }
+        const pageVideos = Array.isArray(data.videos) ? data.videos.filter(v => v && v.id) : [];
+        let addedThisPage = 0;
+        for (const video of pageVideos) {
+            if (!seen.has(video.id)) {
+                seen.add(video.id);
+                videos.push(video);
+                addedThisPage++;
+            }
+        }
+        if (typeof onProgress === "function") onProgress(videos.length);
+        visitorData = data.visitorData || visitorData;
+        const nextContinuation = data.continuation || null;
+        if (data.complete || !nextContinuation) break;
+        if (!addedThisPage && nextContinuation === continuation) break;
+        continuation = nextContinuation;
+    }
+    if (!videos.length) throw new Error("empty playlist");
+    return videos;
 }
 
 const FALLBACK_INVIDIOUS_INSTANCES = [ "https://yewtu.be", "https://invidious.nerdvpn.de", "https://inv.nadeko.net", "https://iv.ggtyler.dev", "https://invidious.protokolla.fi", "https://invidious.jing.rocks" ];
@@ -2511,11 +2553,11 @@ async function fetchYoutubePlaylistVideosViaFallbacks(playlistId) {
     return await raceSources(sources, PLAYLIST_FETCH_TIMEOUT_MS, "playlist");
 }
 
-async function fetchYoutubePlaylistVideos(playlistId) {
+async function fetchYoutubePlaylistVideos(playlistId, onProgress) {
     const workerUrl = getPlaylistWorkerUrl();
     if (workerUrl) {
         try {
-            const videos = await fetchPlaylistViaWorker(workerUrl, playlistId);
+            const videos = await fetchPlaylistViaWorker(workerUrl, playlistId, onProgress);
             return {
                 videos: videos,
                 apiKeyError: null
@@ -2614,7 +2656,9 @@ async function importYoutubePlaylist(playlistId, startIndex, fallback) {
     importProgress.hidden = false;
     importProgressLabel.textContent = "Fetching playlist…";
     importProgressFill.style.width = "0%";
-    const result = await fetchYoutubePlaylistVideos(playlistId);
+    const result = await fetchYoutubePlaylistVideos(playlistId, count => {
+        importProgressLabel.textContent = `Fetching playlist… ${count} video${count === 1 ? "" : "s"} found`;
+    });
     let videos = result.videos;
     const apiKeyError = result.apiKeyError;
     if (!videos || videos.length === 0) {
