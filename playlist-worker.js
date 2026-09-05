@@ -37,21 +37,27 @@ function response(data, status = 200) {
     });
 }
 
-async function youtube(endpoint, body, client = CLIENT) {
+async function youtube(endpoint, body, client = CLIENT, visitorData = null) {
+    const headers = {
+        "Content-Type": "application/json",
+        "User-Agent": USER_AGENT,
+        "Accept": "application/json",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Origin": "https://www.youtube.com",
+        "Referer": "https://www.youtube.com/",
+        "X-YouTube-Client-Name": client === EMBED_CLIENT ? "56" : "1",
+        "X-YouTube-Client-Version": client.clientVersion
+    };
+
+    if (visitorData) {
+        headers["X-Goog-Visitor-Id"] = visitorData;
+    }
+
     const r = await fetch(
         `https://www.youtube.com/youtubei/v1/${endpoint}?key=${INNERTUBE_KEY}`,
         {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "User-Agent": USER_AGENT,
-                "Accept": "application/json",
-                "Accept-Language": "en-US,en;q=0.9",
-                "Origin": "https://www.youtube.com",
-                "Referer": "https://www.youtube.com/",
-                "X-YouTube-Client-Name": client === EMBED_CLIENT ? "56" : "1",
-                "X-YouTube-Client-Version": client.clientVersion
-            },
+            headers,
             body: JSON.stringify({
                 ...body,
                 context: {
@@ -59,7 +65,8 @@ async function youtube(endpoint, body, client = CLIENT) {
                         clientName: client.clientName,
                         clientVersion: client.clientVersion,
                         hl: "en",
-                        gl: "US"
+                        gl: "US",
+                        ...(visitorData ? { visitorData } : {})
                     }
                 }
             })
@@ -71,6 +78,10 @@ async function youtube(endpoint, body, client = CLIENT) {
     }
 
     return r.json();
+}
+
+function extractVisitorData(data) {
+    return data?.responseContext?.visitorData || null;
 }
 
 function extractPage(data, seen) {
@@ -106,6 +117,8 @@ async function getPlaylist(id) {
         browseId: "VL" + id
     });
 
+    let visitorData = extractVisitorData(data);
+
     for (let page = 0; page < MAX_PAGES; page++) {
         const result = extractPage(data, seen);
 
@@ -113,9 +126,14 @@ async function getPlaylist(id) {
 
         if (!result.continuation) break;
 
-        data = await youtube("browse", {
-            continuation: result.continuation
-        });
+        data = await youtube(
+            "browse",
+            { continuation: result.continuation },
+            CLIENT,
+            visitorData
+        );
+
+        visitorData = extractVisitorData(data) || visitorData;
     }
 
     return videos;
