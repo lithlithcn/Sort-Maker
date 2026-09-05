@@ -1474,6 +1474,7 @@ html.custom-theme {
         <button id="btnAddLink" type="button">Add a link (YouTube...)</button>
         <button id="btnExportLinkFile" type="button">Export Link File (.txt)</button>
         <button id="btnImportLinkFile" type="button">Import Link File (.txt)</button>
+        <button id="btnYoutubeApiKey" class="btn-mini" type="button">YouTube API key</button>
         <input type="file" id="inputFiles" accept="image/*" multiple hidden>
         <input type="file" id="inputFolder" webkitdirectory multiple hidden>
         <input type="file" id="inputAudioFiles" accept="audio/*" multiple hidden>
@@ -1648,6 +1649,31 @@ html.custom-theme {
         <div class="modal-footer">
             <button id="btnLinkCancel">Cancel</button>
             <button id="btnLinkValidate" class="primary">Save</button>
+        </div>
+    </div>
+</div>
+
+
+<div id="youtubeApiKeyModal" class="modal" hidden>
+    <div class="modal-box link-modal-box">
+        <h2>YouTube API key (optional)</h2>
+
+        <p class="hint" style="margin-top:0;">Adding a free YouTube Data API key makes playlist import fully reliable (no more scraping/proxy guesswork). Without a key, playlist import falls back to a best-effort method that may occasionally fail.</p>
+
+        <div class="link-form-row">
+            <label for="youtubeApiKeyInput">API key</label>
+            <input type="text" id="youtubeApiKeyInput" placeholder="AIzaSy...">
+        </div>
+
+        <p class="hint">
+            <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener noreferrer">How to get a free key ↗</a>
+            — create a project, enable "YouTube Data API v3", create an API key, and (recommended) restrict it to your website's domain under "Application restrictions → Websites".
+        </p>
+
+        <div class="modal-footer">
+            <button id="btnYoutubeApiKeyClear" class="btn-danger">Remove key</button>
+            <button id="btnYoutubeApiKeyCancel">Cancel</button>
+            <button id="btnYoutubeApiKeySave" class="primary">Save</button>
         </div>
     </div>
 </div>
@@ -2288,7 +2314,50 @@ async function fetchPlaylistViaProxyHtml(buildProxyUrl, playlistUrl) {
     return videos;
 }
 
+async function fetchPlaylistViaOfficialApi(playlistId, apiKey) {
+    const videos = [];
+    const seen = new Set;
+    let pageToken = "";
+    for (let page = 0; page < 40; page++) {
+        const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&key=${encodeURIComponent(apiKey)}` + (pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : "");
+        const res = await fetch(url);
+        if (!res.ok) {
+            let message = `YouTube API error (${res.status})`;
+            try {
+                const errData = await res.json();
+                if (errData && errData.error && errData.error.message) message = errData.error.message;
+            } catch (err) {}
+            throw new Error(message);
+        }
+        const data = await res.json();
+        const items = Array.isArray(data.items) ? data.items : [];
+        items.forEach(entry => {
+            const snippet = entry.snippet || {};
+            const id = snippet.resourceId && snippet.resourceId.videoId;
+            if (id && !seen.has(id) && snippet.title !== "Private video" && snippet.title !== "Deleted video") {
+                seen.add(id);
+                videos.push({
+                    id: id,
+                    title: snippet.title || null
+                });
+            }
+        });
+        pageToken = data.nextPageToken || "";
+        if (!pageToken) break;
+    }
+    if (!videos.length) throw new Error("empty playlist");
+    return videos;
+}
+
 async function fetchYoutubePlaylistVideos(playlistId) {
+    const apiKey = getYoutubeApiKey();
+    if (apiKey) {
+        try {
+            return await withTimeout(fetchPlaylistViaOfficialApi(playlistId, apiKey), PLAYLIST_FETCH_TIMEOUT_MS);
+        } catch (err) {
+            console.warn("[SORTER][playlist official API]", err && err.message ? err.message : err);
+        }
+    }
     const playlistUrl = `https://www.youtube.com/playlist?list=${encodeURIComponent(playlistId)}`;
     const sources = [ () => fetchPlaylistViaJinaReader(playlistUrl) ];
     PLAYLIST_PROXIES.forEach(buildProxyUrl => {
@@ -2362,9 +2431,9 @@ async function importYoutubePlaylist(playlistId, startIndex, fallback) {
             updateCountLabel();
             refreshGridTotalHeight();
             renderVisibleCards();
-            alert("Couldn't fetch this playlist right now (all the services used to read it are temporarily unavailable or overloaded). Only this one video was added. Try again in a moment, or open the browser console (F12) to see the detailed errors.");
+            alert("Couldn't fetch this playlist right now. YouTube blocks the free proxy services this uses, which makes them unreliable. Only this one video was added. For a fully reliable fix, click \"YouTube API key\" and add a free key (see the help link in that panel). Try again in a moment, or open the browser console (F12) to see the detailed errors.");
         } else {
-            alert("Couldn't fetch this playlist right now (all the services used to read it are temporarily unavailable or overloaded). Try again in a moment, or open the browser console (F12) to see the detailed errors.");
+            alert("Couldn't fetch this playlist right now. YouTube blocks the free proxy services this uses, which makes them unreliable. For a fully reliable fix, click \"YouTube API key\" and add a free key (see the help link in that panel). Try again in a moment, or open the browser console (F12) to see the detailed errors.");
         }
         return;
     }
@@ -2738,6 +2807,62 @@ function removeCoverForItem(id) {
     item.coverURL = null;
     renderVisibleCards();
 }
+
+const YOUTUBE_API_KEY_STORAGE = "sorter-maker-youtube-api-key";
+
+function getYoutubeApiKey() {
+    try {
+        return localStorage.getItem(YOUTUBE_API_KEY_STORAGE) || "";
+    } catch (err) {
+        return "";
+    }
+}
+
+function setYoutubeApiKey(key) {
+    try {
+        if (key) {
+            localStorage.setItem(YOUTUBE_API_KEY_STORAGE, key);
+        } else {
+            localStorage.removeItem(YOUTUBE_API_KEY_STORAGE);
+        }
+    } catch (err) {}
+}
+
+const youtubeApiKeyModal = document.getElementById("youtubeApiKeyModal");
+
+const youtubeApiKeyInput = document.getElementById("youtubeApiKeyInput");
+
+function openYoutubeApiKeyModal() {
+    youtubeApiKeyInput.value = getYoutubeApiKey();
+    youtubeApiKeyModal.hidden = false;
+    youtubeApiKeyInput.focus();
+}
+
+function closeYoutubeApiKeyModal() {
+    youtubeApiKeyModal.hidden = true;
+}
+
+const btnYoutubeApiKey = document.getElementById("btnYoutubeApiKey");
+
+if (btnYoutubeApiKey) btnYoutubeApiKey.addEventListener("click", openYoutubeApiKeyModal);
+
+const btnYoutubeApiKeyCancel = document.getElementById("btnYoutubeApiKeyCancel");
+
+if (btnYoutubeApiKeyCancel) btnYoutubeApiKeyCancel.addEventListener("click", closeYoutubeApiKeyModal);
+
+const btnYoutubeApiKeySave = document.getElementById("btnYoutubeApiKeySave");
+
+if (btnYoutubeApiKeySave) btnYoutubeApiKeySave.addEventListener("click", () => {
+    setYoutubeApiKey(youtubeApiKeyInput.value.trim());
+    closeYoutubeApiKeyModal();
+});
+
+const btnYoutubeApiKeyClear = document.getElementById("btnYoutubeApiKeyClear");
+
+if (btnYoutubeApiKeyClear) btnYoutubeApiKeyClear.addEventListener("click", () => {
+    setYoutubeApiKey("");
+    youtubeApiKeyInput.value = "";
+});
 
 const linkModal = document.getElementById("linkModal");
 
