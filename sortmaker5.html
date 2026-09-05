@@ -109,7 +109,7 @@
 		background: var(--image-bg);
 	}
 
-	html.dark .result-item {
+	html.dark .result-item:not(.podium-1):not(.podium-2):not(.podium-3) {
 		background: var(--surface);
 		border-color: #555550;
 	}
@@ -201,7 +201,7 @@
     .screen { width: 100%; }
     .screen[hidden] { display: none; }
 
-    /* ecran import et gestion des images*/
+    
 
     #screenImport {
 		max-width: 1200px;
@@ -342,7 +342,7 @@
     }
 
     .card.is-cropped .card-thumb::after {
-        content: "cropped";
+        content: "recadrée";
         position: absolute;
         bottom: 4px;
         right: 4px;
@@ -401,7 +401,7 @@
 
     #countLabel { color: var(--muted); font-size: 14px; }
 
-    /* ecran tri */
+    
 
     #screenSort {
 		width: 100%;
@@ -481,6 +481,7 @@
         box-shadow: 0 3px 10px rgba(0,0,0,.12);
     }
 
+    
     .choice.choice-has-audio:hover {
         transform: none;
     }
@@ -526,7 +527,7 @@
         color: var(--muted);
     }
 
-    /* resultat */
+    
 
     .results { margin: 30px auto 0; width: min(600px, 100%); text-align: left; }
     .results h2 { text-align: center; margin-bottom: 20px; }
@@ -539,7 +540,7 @@
         margin-bottom: 14px;
     }
 
-    /* horizontal */
+    
     #resultList.horizontal {
         display: grid;
         grid-auto-flow: column;
@@ -571,18 +572,42 @@
 
     .rank { text-align: center; font-size: 18px; font-weight: bold; }
     .result-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; image-rendering: pixelated; image-rendering: crisp-edges; }
-    .result-name { padding-left: 12px; font-weight: bold; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .result-name {
+        display: block;
+        padding-left: 12px;
+        font-weight: bold;
+        font-family: inherit;
+        color: var(--ink);
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid transparent;
+        outline: none;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        cursor: text;
+    }
+    .result-name:hover,
+    .result-name:focus {
+        border-bottom-color: var(--accent);
+    }
+    .result-name:focus {
+        text-overflow: clip;
+        white-space: normal;
+    }
 	#resultList .result-name {
 		font-size: 14px;
 	}
 
-
     .tie {
         display: block;
+        grid-column: 2 / -1;
         color: #888;
         font-size: 11.5px;
         font-weight: normal;
-        margin-top: 2px;
+        margin-top: -2px;
     }
 
     .results-actions {
@@ -592,7 +617,7 @@
         margin-top: 22px;
     }
 
-    /* recadrage */
+    
 
     .modal {
         position: fixed;
@@ -706,7 +731,7 @@
         padding-top: 14px;
     }
 
-    /* lien (ajout / edition) */
+    
 
     .link-modal-box { max-width: 480px; }
 
@@ -788,6 +813,8 @@
         color: var(--ink);
     }
 
+    
+
     .card.type-gif .card-thumb::before {
         content: "GIF";
         position: absolute;
@@ -803,7 +830,7 @@
         z-index: 2;
     }
 
-    /* audio: placeholder de couverture sur la minia */
+    
 
     .audio-thumb-placeholder,
     .link-thumb-placeholder,
@@ -854,11 +881,13 @@
         cursor: pointer;
     }
 
+    
     .card.type-audio,
     .card.type-audio .card-thumb {
         overflow: visible;
     }
 
+    
     .card.type-audio .audio-cover-img {
         position: absolute;
         top: 0;
@@ -878,6 +907,8 @@
         bottom: auto;
         height: calc(100% - 42px);
     }
+
+    
 
     .audio-bar {
         position: absolute;
@@ -991,6 +1022,7 @@
         justify-content: center;
     }
 
+    
     .audio-volume-popup {
         position: absolute;
         bottom: 37px;
@@ -1012,7 +1044,7 @@
         z-index: 100;
     }
 
-    /* zone invisible pour passer du bouton au popup sans le perdre */
+    
     .audio-volume-popup::after {
         content: "";
         position: absolute;
@@ -1040,6 +1072,8 @@
         accent-color: #fff;
     }
 
+    
+
     .link-embed-iframe {
         position: absolute;
         inset: 0;
@@ -1048,6 +1082,7 @@
         border: 0;
     }
 
+    
     .youtube-thumb-link {
         display: block;
         position: relative;
@@ -1063,6 +1098,7 @@
         object-fit: cover;
     }
 
+    
     .youtube-embed {
         display: block;
         width: 100%;
@@ -1081,6 +1117,7 @@
         pointer-events: none;
     }
 
+    
 
     .choice-media {
         position: relative;
@@ -1091,6 +1128,7 @@
         overflow: hidden;
     }
 
+    
     .choice-media.choice-media-audio {
         overflow: visible;
     }
@@ -1145,7 +1183,7 @@
         .choice-media { height: 240px; }
     }
 
-    /* resultats miniature generique */
+    
 
     .result-thumb {
         width: 60px;
@@ -1188,7 +1226,7 @@
         grid-column: 2 / -1;
     }
 
-    /* pour les tels */
+    
 
     @media (max-width: 640px) {
         .battle { grid-template-columns: 1fr; }
@@ -1201,42 +1239,210 @@
         * { transition: none !important; }
     }
 	
-/* podium*/
 
-/* OR */
-#resultList .result-item:nth-child(1) {
-    background: linear-gradient(
-        135deg,
-        rgba(255, 215, 0, 0.5),
-        rgba(184, 134, 11, 0.5)
-    );
+@keyframes resultEnterUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes resultEnterLeft {
+    from { opacity: 0; transform: translateX(18px); }
+    to   { opacity: 1; transform: translateX(0); }
 }
 
-/* ARGENT */
-#resultList .result-item:nth-child(2) {
-    background: linear-gradient(
-        135deg,
-        rgba(232, 232, 232, 0.5),
-        rgba(140, 140, 140, 0.5)
-    );
+@keyframes podiumEnter1 {
+    0%   { opacity: 0; transform: translateY(30px) scale(.92); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* BRONZE */
-#resultList .result-item:nth-child(3) {
-    background: linear-gradient(
-        135deg,
-        rgba(205, 127, 50, 0.2),
-        rgba(139, 69, 19, 0.3)
-    );
+@keyframes podiumEnter23 {
+    0%   { opacity: 0; transform: translateY(18px) scale(.96); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-#resultList .result-item:nth-child(1) .rank,
-#resultList .result-item:nth-child(1) .result-name,
-#resultList .result-item:nth-child(2) .rank,
-#resultList .result-item:nth-child(2) .result-name,
-#resultList .result-item:nth-child(3) .rank,
-#resultList .result-item:nth-child(3) .result-name {
-    color: inherit;
+.result-item {
+    animation: resultEnterUp .5s cubic-bezier(.16, 1, .3, 1) both;
+}
+.results.layout-horizontal .result-item {
+    animation-name: resultEnterLeft;
+}
+.result-item.podium-1 {
+    animation-name: podiumEnter1;
+    animation-duration: .78s;
+    animation-timing-function: cubic-bezier(.16, 1, .3, 1);
+}
+.result-item.podium-2,
+.result-item.podium-3 {
+    animation-name: podiumEnter23;
+    animation-duration: .56s;
+    animation-timing-function: cubic-bezier(.16, 1, .3, 1);
+}
+
+.podium-divider {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0 12px;
+    animation: resultEnterUp .4s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .result-item, .podium-divider {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+    }
+}
+
+.results-podium {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+.results-podium .result-item {
+    grid-column: 1 / -1;
+}
+.results-podium .result-item.podium-1 {
+    justify-self: center;
+    width: min(320px, 94%);
+}
+.results-podium .result-item.podium-2 {
+    grid-column: 1 / 2;
+    justify-self: end;
+    width: 100%;
+    max-width: 240px;
+}
+.results-podium .result-item.podium-3 {
+    grid-column: 2 / 3;
+    justify-self: start;
+    width: 100%;
+    max-width: 240px;
+}
+
+.results.layout-horizontal .results-podium {
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.result-item.podium-1,
+.result-item.podium-2,
+.result-item.podium-3 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    padding: 16px 12px 14px;
+    min-height: 0;
+}
+
+.result-item.podium-1 { background: linear-gradient(135deg, rgba(255,215,0,.35), rgba(184,134,11,.35)); border-color: rgba(184,134,11,.6); }
+.result-item.podium-2 { background: linear-gradient(135deg, rgba(232,232,232,.35), rgba(140,140,140,.35)); border-color: rgba(140,140,140,.6); }
+.result-item.podium-3 { background: linear-gradient(135deg, rgba(205,127,50,.18), rgba(139,69,19,.22)); border-color: rgba(139,69,19,.5); }
+
+.result-item.podium-1 .result-thumb { width: 140px; height: 140px; }
+.result-item.podium-2 .result-thumb { width: 106px; height: 106px; }
+.result-item.podium-3 .result-thumb { width: 94px; height: 94px; }
+
+.result-item.podium-1 .rank { font-size: 34px; }
+.result-item.podium-2 .rank,
+.result-item.podium-3 .rank { font-size: 26px; }
+
+.result-item.podium-1 .result-name { font-size: 17px; }
+.result-item.podium-2 .result-name,
+.result-item.podium-3 .result-name { font-size: 14.5px; }
+
+.result-item.podium-1 .result-name,
+.result-item.podium-2 .result-name,
+.result-item.podium-3 .result-name,
+.result-item.podium-1 .result-audio-row,
+.result-item.podium-2 .result-audio-row,
+.result-item.podium-3 .result-audio-row,
+.result-item.podium-1 .result-link,
+.result-item.podium-2 .result-link,
+.result-item.podium-3 .result-link,
+.result-item.podium-1 .tie,
+.result-item.podium-2 .tie,
+.result-item.podium-3 .tie {
+    grid-column: auto;
+    padding-left: 0;
+    white-space: normal;
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
+}
+
+.theme-fab {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong, #b9b9b2);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,.25);
+    z-index: 90;
+}
+.theme-fab:hover { background: var(--surface-hover); }
+
+.theme-section {
+    margin-bottom: 18px;
+}
+.theme-section h3 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--muted);
+}
+.theme-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 42px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.theme-row label {
+    font-size: 13px;
+    color: var(--ink);
+}
+.theme-row input[type="range"] {
+    width: 100%;
+}
+.theme-row output {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: right;
+}
+.theme-preview {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.theme-preview-swatch {
+    flex: 1;
+    height: 44px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--muted);
+}
+
+html.custom-theme {
+    --bg: var(--custom-bg);
+    --surface: var(--custom-element);
 }
 
 </style>
@@ -1244,7 +1450,7 @@
 
 <body>
 
-<!-- import et gestion des images -->
+
 
 <section id="screenImport" class="screen">
 
@@ -1296,7 +1502,7 @@
 </section>
 
 
-<!-- la parti grv chiant-->
+
 
 <section id="screenSort" class="screen" hidden>
 
@@ -1352,6 +1558,8 @@
             <div class="results-toolbar">
                 <button id="btnToggleResultsLayout" class="btn-mini" type="button">↔ Horizontal display</button>
             </div>
+            <div id="resultsPodium" class="results-podium"></div>
+            <div id="podiumDivider" class="podium-divider" hidden></div>
             <div id="resultList"></div>
         </div>
 
@@ -1367,7 +1575,7 @@
 
 <input type="file" id="inputLoadSave" accept=".sorter-save,application/json" hidden>
 
-<!-- recadrage -->
+
 
 <div id="cropModal" class="modal" hidden>
     <div class="modal-box">
@@ -1421,7 +1629,7 @@
 </div>
 
 
-<!-- ajout slash edition de lien -->
+
 
 <div id="linkModal" class="modal" hidden>
     <div class="modal-box link-modal-box">
@@ -1453,7 +1661,7 @@
 
         <label class="save-compress-toggle-row">
             <input type="checkbox" id="saveCompressToggle">
-            Compress local files (images, SVG, single-frame GIFs — reduces file size; audio and animated GIFs can't be compressed here)
+            Compress local files (images, SVG, single-frame GIFs, reduces file size; audio and animated GIFs can't be compressed here)
         </label>
 
         <div id="saveQualityRow" hidden>
@@ -1472,8 +1680,66 @@
 </div>
 
 
-<script>
 
+
+<button id="btnThemeCustomize" class="theme-fab" type="button" title="Customize colors">+</button>
+
+<div id="themeModal" class="modal" hidden>
+    <div class="modal-box" style="max-width:440px;">
+        <h2>Customize colors</h2>
+
+        <div class="theme-preview">
+            <div id="themePreviewBg" class="theme-preview-swatch">Background</div>
+            <div id="themePreviewEl" class="theme-preview-swatch">Sorter Elements</div>
+        </div>
+
+        <div class="theme-section">
+            <h3>Background</h3>
+            <div class="theme-row">
+                <label for="themeBgHue">Hue</label>
+                <input type="range" id="themeBgHue" min="0" max="360" step="1">
+                <output id="themeBgHueOut"></output>
+            </div>
+            <div class="theme-row">
+                <label for="themeBgSat">Saturation</label>
+                <input type="range" id="themeBgSat" min="0" max="100" step="1">
+                <output id="themeBgSatOut"></output>
+            </div>
+            <div class="theme-row">
+                <label for="themeBgLight">Lightness</label>
+                <input type="range" id="themeBgLight" min="0" max="100" step="1">
+                <output id="themeBgLightOut"></output>
+            </div>
+        </div>
+
+        <div class="theme-section">
+            <h3>Sorter Elements</h3>
+            <div class="theme-row">
+                <label for="themeElHue">Hue</label>
+                <input type="range" id="themeElHue" min="0" max="360" step="1">
+                <output id="themeElHueOut"></output>
+            </div>
+            <div class="theme-row">
+                <label for="themeElSat">Saturation</label>
+                <input type="range" id="themeElSat" min="0" max="100" step="1">
+                <output id="themeElSatOut"></output>
+            </div>
+            <div class="theme-row">
+                <label for="themeElLight">Lightness</label>
+                <input type="range" id="themeElLight" min="0" max="100" step="1">
+                <output id="themeElLightOut"></output>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button id="btnThemeReset">Reset</button>
+            <button id="btnThemeClose" class="primary">Done</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
 function uid() {
     return "img_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 9);
 }
@@ -1490,7 +1756,9 @@ function clamp(value, min, max) {
 function yieldToBrowser() {
     return new Promise(resolve => {
         if (window.requestIdleCallback) {
-            requestIdleCallback(() => resolve(), { timeout: 100 });
+            requestIdleCallback(() => resolve(), {
+                timeout: 100
+            });
         } else {
             setTimeout(resolve, 0);
         }
@@ -1500,7 +1768,6 @@ function yieldToBrowser() {
 async function runWithConcurrency(items, limit, worker) {
     let cursor = 0;
     const effectiveLimit = Math.max(1, Math.min(limit, items.length));
-
     async function runOne() {
         while (cursor < items.length) {
             const index = cursor++;
@@ -1511,16 +1778,10 @@ async function runWithConcurrency(items, limit, worker) {
             }
         }
     }
-
     await Promise.all(new Array(effectiveLimit).fill(0).map(runOne));
 }
 
-
-/*#######################################################################*/
-
-
 async function loadDrawable(file) {
-
     if (window.createImageBitmap) {
         try {
             const bitmap = await createImageBitmap(file);
@@ -1528,17 +1789,16 @@ async function loadDrawable(file) {
                 source: bitmap,
                 width: bitmap.width,
                 height: bitmap.height,
-                close() { bitmap.close(); }
+                close() {
+                    bitmap.close();
+                }
             };
-        } catch (err) {
-
-        }
+        } catch (err) {}
     }
-
     const objectUrl = URL.createObjectURL(file);
     try {
         const imgEl = await new Promise((resolve, reject) => {
-            const el = new Image();
+            const el = new Image;
             el.onload = () => resolve(el);
             el.onerror = reject;
             el.src = objectUrl;
@@ -1547,7 +1807,9 @@ async function loadDrawable(file) {
             source: imgEl,
             width: imgEl.naturalWidth,
             height: imgEl.naturalHeight,
-            close() { URL.revokeObjectURL(objectUrl); }
+            close() {
+                URL.revokeObjectURL(objectUrl);
+            }
         };
     } catch (err) {
         URL.revokeObjectURL(objectUrl);
@@ -1556,27 +1818,27 @@ async function loadDrawable(file) {
 }
 
 function renderToBlobURL(drawable, cropRect, maxDim, quality) {
-
     const sx = cropRect ? cropRect.x : 0;
     const sy = cropRect ? cropRect.y : 0;
     const sw = cropRect ? cropRect.w : drawable.width;
     const sh = cropRect ? cropRect.h : drawable.height;
-
     const scale = Math.min(1, maxDim / Math.max(sw, sh));
     const dw = Math.max(1, Math.round(sw * scale));
     const dh = Math.max(1, Math.round(sh * scale));
-
     const canvas = document.createElement("canvas");
     canvas.width = dw;
     canvas.height = dh;
-
     const ctx = canvas.getContext("2d");
     ctx.imageSmoothingEnabled = false;
-	ctx.drawImage(drawable.source, sx, sy, sw, sh, 0, 0, dw, dh);
-
+    ctx.drawImage(drawable.source, sx, sy, sw, sh, 0, 0, dw, dh);
     return new Promise(resolve => {
         canvas.toBlob(blob => {
-            resolve({ blob, url: URL.createObjectURL(blob), width: dw, height: dh });
+            resolve({
+                blob: blob,
+                url: URL.createObjectURL(blob),
+                width: dw,
+                height: dh
+            });
         }, "image/png");
     });
 }
@@ -1588,22 +1850,23 @@ async function renderItemToURL(item, maxDim, quality) {
             item.naturalWidth = drawable.width;
             item.naturalHeight = drawable.height;
         }
-        return await renderToBlobURL(drawable, item.crop, maxDim, quality || 0.85);
+        return await renderToBlobURL(drawable, item.crop, maxDim, quality || .85);
     } finally {
         drawable.close();
     }
 }
 
+const THUMB_MAX_DIM = 220;
 
-const THUMB_MAX_DIM = 220;   // miniatures de la grille
-const BATTLE_MAX_DIM = 560;  // images afficher pendant le tri
+const BATTLE_MAX_DIM = 560;
+
 const CROP_STAGE_MAX_W = 620;
+
 const CROP_STAGE_MAX_H = 440;
 
-let images = [];               // ordre dimport, source de veriter
-const imagesById = new Map();  // acces rapide par id
+let images = [];
 
-// detection de type de fichier ----
+const imagesById = new Map;
 
 function isImageFile(f) {
     return f.type.startsWith("image/") || /\.(png|jpe?g|gif|webp|bmp|avif)$/i.test(f.name);
@@ -1616,15 +1879,18 @@ function isGifFile(file) {
 }
 
 function isAudioFile(f) {
-    return (f.type && f.type.startsWith("audio/")) || /\.(mp3|wav|ogg|oga|m4a|flac|aac|opus|weba)$/i.test(f.name);
+    return f.type && f.type.startsWith("audio/") || /\.(mp3|wav|ogg|oga|m4a|flac|aac|opus|weba)$/i.test(f.name);
 }
 
-const REMOTE_PROBE_TIMEOUT_MS = 6000;
-const OG_IMAGE_FETCH_TIMEOUT_MS = 6000;
-const remoteMediaProbeCache = new Map(); // url -> Promise<{kind, resolvedUrl}|null>
+const REMOTE_PROBE_TIMEOUT_MS = 6e3;
+
+const OG_IMAGE_FETCH_TIMEOUT_MS = 6e3;
+
+const remoteMediaProbeCache = new Map;
 
 const REMOTE_PROBE_CONCURRENCY_PER_HOST = 4;
-const probeHostState = new Map(); // host -> { active, queue: [] }
+
+const probeHostState = new Map;
 
 function hostKeyFor(url) {
     try {
@@ -1637,8 +1903,13 @@ function hostKeyFor(url) {
 function acquireProbeSlot(url) {
     const host = hostKeyFor(url);
     let state = probeHostState.get(host);
-    if (!state) { state = { active: 0, queue: [] }; probeHostState.set(host, state); }
-
+    if (!state) {
+        state = {
+            active: 0,
+            queue: []
+        };
+        probeHostState.set(host, state);
+    }
     return new Promise(resolve => {
         const tryNow = () => {
             if (state.active < REMOTE_PROBE_CONCURRENCY_PER_HOST) {
@@ -1665,10 +1936,27 @@ async function probeAsImage(url) {
     try {
         return await new Promise(resolve => {
             let done = false;
-            const img = new Image();
-            const timer = setTimeout(() => { if (!done) { done = true; resolve(false); } }, REMOTE_PROBE_TIMEOUT_MS);
-            img.onload = () => { if (!done) { done = true; clearTimeout(timer); resolve(true); } };
-            img.onerror = () => { if (!done) { done = true; clearTimeout(timer); resolve(false); } };
+            const img = new Image;
+            const timer = setTimeout(() => {
+                if (!done) {
+                    done = true;
+                    resolve(false);
+                }
+            }, REMOTE_PROBE_TIMEOUT_MS);
+            img.onload = () => {
+                if (!done) {
+                    done = true;
+                    clearTimeout(timer);
+                    resolve(true);
+                }
+            };
+            img.onerror = () => {
+                if (!done) {
+                    done = true;
+                    clearTimeout(timer);
+                    resolve(false);
+                }
+            };
             img.src = url;
         });
     } finally {
@@ -1683,9 +1971,30 @@ async function probeAsAudio(url) {
             let done = false;
             const audio = document.createElement("audio");
             audio.preload = "metadata";
-            const timer = setTimeout(() => { if (!done) { done = true; resolve(false); } }, REMOTE_PROBE_TIMEOUT_MS);
-            audio.addEventListener("loadedmetadata", () => { if (!done) { done = true; clearTimeout(timer); resolve(true); } }, { once: true });
-            audio.addEventListener("error", () => { if (!done) { done = true; clearTimeout(timer); resolve(false); } }, { once: true });
+            const timer = setTimeout(() => {
+                if (!done) {
+                    done = true;
+                    resolve(false);
+                }
+            }, REMOTE_PROBE_TIMEOUT_MS);
+            audio.addEventListener("loadedmetadata", () => {
+                if (!done) {
+                    done = true;
+                    clearTimeout(timer);
+                    resolve(true);
+                }
+            }, {
+                once: true
+            });
+            audio.addEventListener("error", () => {
+                if (!done) {
+                    done = true;
+                    clearTimeout(timer);
+                    resolve(false);
+                }
+            }, {
+                once: true
+            });
             audio.src = url;
         });
     } finally {
@@ -1693,16 +2002,15 @@ async function probeAsAudio(url) {
     }
 }
 
-const OG_IMAGE_PROXIES = [
-    u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
-    u => "https://api.codetabs.com/v1/proxy/?quest=" + encodeURIComponent(u)
-];
+const OG_IMAGE_PROXIES = [ u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u), u => "https://api.codetabs.com/v1/proxy/?quest=" + encodeURIComponent(u) ];
 
 async function fetchViaProxy(proxyUrl) {
-    const controller = new AbortController();
+    const controller = new AbortController;
     const timer = setTimeout(() => controller.abort(), OG_IMAGE_FETCH_TIMEOUT_MS);
     try {
-        const res = await fetch(proxyUrl, { signal: controller.signal });
+        const res = await fetch(proxyUrl, {
+            signal: controller.signal
+        });
         if (!res.ok) return null;
         return await res.text();
     } catch (err) {
@@ -1721,14 +2029,10 @@ async function tryExtractOgImage(pageUrl) {
             if (html) break;
         }
         if (!html) return null;
-
-        const match =
-            html.match(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i) ||
-            html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image(?::secure_url)?["']/i) ||
-            html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i);
+        const match = html.match(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i) || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image(?::secure_url)?["']/i) || html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i);
         if (!match || !match[1]) return null;
         try {
-            return new URL(match[1], pageUrl).href; // resout les url relatives
+            return new URL(match[1], pageUrl).href;
         } catch (err) {
             return null;
         }
@@ -1739,31 +2043,37 @@ async function tryExtractOgImage(pageUrl) {
 
 function probeRemoteMediaType(url, extensionHint) {
     if (remoteMediaProbeCache.has(url)) return remoteMediaProbeCache.get(url);
-
     const promise = (async () => {
-        const [imageOk, audioOk] = await Promise.all([probeAsImage(url), probeAsAudio(url)]);
-
+        const [imageOk, audioOk] = await Promise.all([ probeAsImage(url), probeAsAudio(url) ]);
         const preferAudio = extensionHint === "audio";
-        if (preferAudio && audioOk) return { kind: "audio", resolvedUrl: url };
-        if (imageOk) return { kind: "image", resolvedUrl: url };
-        if (audioOk) return { kind: "audio", resolvedUrl: url };
-
+        if (preferAudio && audioOk) return {
+            kind: "audio",
+            resolvedUrl: url
+        };
+        if (imageOk) return {
+            kind: "image",
+            resolvedUrl: url
+        };
+        if (audioOk) return {
+            kind: "audio",
+            resolvedUrl: url
+        };
         const ogImage = await tryExtractOgImage(url);
         if (ogImage) {
             const ok = await probeAsImage(ogImage);
-            if (ok) return { kind: "image", resolvedUrl: ogImage };
+            if (ok) return {
+                kind: "image",
+                resolvedUrl: ogImage
+            };
         }
-
         return null;
     })();
-
     remoteMediaProbeCache.set(url, promise);
     return promise;
 }
 
 function clearRemoteMediaProbeCache(url) {
     remoteMediaProbeCache.delete(url);
-
 }
 
 function ensureLinkMediaResolved(item) {
@@ -1787,15 +2097,12 @@ function ensureLinkMediaResolved(item) {
 function buildUnavailablePlaceholder(item, className, onRetry) {
     const wrap = document.createElement("div");
     wrap.className = className;
-    wrap.title = "Media unavailable" + (item.linkURL ? " — " + item.linkURL : "");
-
+    wrap.title = "Media unavailable" + (item.linkURL ? " / " + item.linkURL : "");
     const icon = document.createElement("span");
     icon.textContent = "🔗";
     wrap.appendChild(icon);
-
     const row = document.createElement("div");
     row.className = "media-unavailable-actions";
-
     const retryBtn = document.createElement("button");
     retryBtn.type = "button";
     retryBtn.className = "media-retry-btn";
@@ -1805,7 +2112,6 @@ function buildUnavailablePlaceholder(item, className, onRetry) {
         onRetry();
     });
     row.appendChild(retryBtn);
-
     if (item.linkURL) {
         const openLink = document.createElement("a");
         openLink.className = "media-open-link";
@@ -1816,7 +2122,6 @@ function buildUnavailablePlaceholder(item, className, onRetry) {
         openLink.addEventListener("click", e => e.stopPropagation());
         row.appendChild(openLink);
     }
-
     wrap.appendChild(row);
     return wrap;
 }
@@ -1833,8 +2138,6 @@ function detectDirectMediaType(url) {
     return null;
 }
 
-// yt links
-
 function parseYouTubeId(url) {
     try {
         const u = new URL(url);
@@ -1848,9 +2151,111 @@ function parseYouTubeId(url) {
             if (u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2] || null;
             if (u.pathname.startsWith("/live/")) return u.pathname.split("/")[2] || null;
         }
-    } catch (err) {
-    }
+    } catch (err) {}
     return null;
+}
+
+function parseYoutubePlaylistInfo(url) {
+    try {
+        const u = new URL(url);
+        const host = u.hostname.replace(/^www\.|^m\./, "");
+        if (host !== "youtube.com" && host !== "music.youtube.com") return null;
+        const listId = u.searchParams.get("list");
+        if (!listId) return null;
+        const indexParam = u.searchParams.get("index");
+        const startIndex = indexParam ? Math.max(1, parseInt(indexParam, 10) || 1) : 1;
+        return {
+            playlistId: listId,
+            startIndex: startIndex
+        };
+    } catch (err) {
+        return null;
+    }
+}
+
+function extractPlaylistVideosFromHtml(html) {
+    const seen = new Set;
+    const out = [];
+    const idRegex = /"videoId":"([a-zA-Z0-9_-]{11})"/g;
+    let m;
+    while (m = idRegex.exec(html)) {
+        const id = m[1];
+        if (seen.has(id)) continue;
+        seen.add(id);
+        const windowText = html.slice(m.index, m.index + 350);
+        const runsMatch = windowText.match(/"title":\{"runs":\[\{"text":"([^"]{1,150})"/);
+        const simpleMatch = windowText.match(/"title":\{"simpleText":"([^"]{1,150})"/);
+        let titleMatch = null;
+        if (runsMatch && simpleMatch) {
+            titleMatch = runsMatch.index <= simpleMatch.index ? runsMatch : simpleMatch;
+        } else {
+            titleMatch = runsMatch || simpleMatch;
+        }
+        let title = titleMatch ? titleMatch[1] : null;
+        if (title) {
+            title = title.replace(/\\u0026/g, "&").replace(/\\"/g, '"').replace(/\\\//g, "/").replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+        }
+        out.push({
+            id: id,
+            title: title
+        });
+    }
+    return out;
+}
+
+async function importYoutubePlaylist(playlistId, startIndex, fallback) {
+    fallback = fallback || {};
+    const playlistUrl = `https://www.youtube.com/playlist?list=${encodeURIComponent(playlistId)}`;
+    importProgress.hidden = false;
+    importProgressLabel.textContent = "Fetching playlist…";
+    importProgressFill.style.width = "0%";
+    let html = null;
+    for (const buildProxyUrl of OG_IMAGE_PROXIES) {
+        html = await fetchViaProxy(buildProxyUrl(playlistUrl));
+        if (html) break;
+    }
+    if (!html) {
+        importProgress.hidden = true;
+        if (fallback.videoId && isValidYoutubeId(fallback.videoId)) {
+            createLinkItem(fallback.name || null, `https://www.youtube.com/watch?v=${fallback.videoId}`);
+            updateCountLabel();
+            refreshGridTotalHeight();
+            renderVisibleCards();
+            alert("Couldn't reach the playlist page to expand it (the free proxy services used to read it may be unreachable, this is common when testing a file:// page locally, since some proxies reject that origin). Added just this one video instead. Try again later, or open this file from a real web server (not file://) for full playlist expansion.");
+        } else {
+            alert("Unable to fetch this playlist right now, the free proxy services used to read it may be temporarily unavailable (or unreachable from a local file:// page). Try again in a moment, or add videos individually.");
+        }
+        return;
+    }
+    let videos = extractPlaylistVideosFromHtml(html);
+    if (videos.length === 0) {
+        importProgress.hidden = true;
+        if (fallback.videoId && isValidYoutubeId(fallback.videoId)) {
+            createLinkItem(fallback.name || null, `https://www.youtube.com/watch?v=${fallback.videoId}`);
+            updateCountLabel();
+            refreshGridTotalHeight();
+            renderVisibleCards();
+            alert("No videos could be found on this playlist page. Added just the one video from your link instead.");
+        } else {
+            alert("No videos found in this playlist. It may be private, empty, or unavailable right now.");
+        }
+        return;
+    }
+    if (startIndex > 1 && startIndex <= videos.length) {
+        videos = videos.slice(startIndex - 1);
+    }
+    let created = 0;
+    videos.forEach(({id: id, title: title}) => {
+        if (!isValidYoutubeId(id)) return;
+        createLinkItem(title || `Video ${startIndex + created}`, `https://www.youtube.com/watch?v=${id}`);
+        created++;
+        importProgressLabel.textContent = `Adding videos… ${created} / ${videos.length}`;
+        importProgressFill.style.width = Math.round(created / videos.length * 100) + "%";
+    });
+    importProgress.hidden = true;
+    updateCountLabel();
+    refreshGridTotalHeight();
+    renderVisibleCards();
 }
 
 function isValidYoutubeId(id) {
@@ -1871,30 +2276,24 @@ function buildYoutubeThumbLink(item, badgeClass, onEmbed) {
             onEmbed();
         }
     });
-
     const img = document.createElement("img");
     img.src = item.thumbURL || `https://img.youtube.com/vi/${item.youtubeId}/hqdefault.jpg`;
     img.alt = item.name;
     link.appendChild(img);
-
     const badge = document.createElement("div");
     badge.className = badgeClass || "card-play-badge";
     badge.textContent = "▶";
     link.appendChild(badge);
-
     return link;
 }
 
 function embedYoutubeInline(mediaEl, item) {
     const videoId = item.youtubeId;
     if (!isValidYoutubeId(videoId)) return;
-
     mediaEl.innerHTML = "";
     mediaEl.classList.add("choice-media-embedded");
-
     const iframe = document.createElement("iframe");
     iframe.className = "youtube-embed";
-
     iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1`;
     iframe.title = item.name || "YouTube video player";
     iframe.setAttribute("frameborder", "0");
@@ -1910,7 +2309,7 @@ function createBaseItem(overrides) {
         type: "image",
         file: null,
         name: "",
-        crop: null,           // {x,y,w,h} en pixels de limage ORIGINALE ou null
+        crop: null,
         naturalWidth: null,
         naturalHeight: null,
         thumbURL: null,
@@ -1920,7 +2319,6 @@ function createBaseItem(overrides) {
         linkURL: null,
         youtubeId: null,
         directMediaType: null,
-        // "image" | "audio" | "unavailable" | null (pas encore sondé)
         mediaProbeState: null
     }, overrides);
     images.push(item);
@@ -1948,16 +2346,13 @@ function createAudioItem(file) {
 function createLinkItem(name, url) {
     const youtubeId = parseYouTubeId(url);
     const directMediaType = youtubeId ? null : detectDirectMediaType(url);
-
     return createBaseItem({
         type: "link",
-        name: name && name.trim() ? name.trim() : (youtubeId ? "Vidéo YouTube" : nameFromUrl(url)),
+        name: name && name.trim() ? name.trim() : youtubeId ? "Vidéo YouTube" : nameFromUrl(url),
         linkURL: url,
         youtubeId: youtubeId,
         directMediaType: directMediaType,
-        thumbURL: youtubeId
-            ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`
-            : (directMediaType === "image" ? url : null),
+        thumbURL: youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : directMediaType === "image" ? url : null,
         audioURL: directMediaType === "audio" ? url : null
     });
 }
@@ -1979,7 +2374,6 @@ function nameFromUrl(url) {
 function buildRemoteImageEl(item) {
     const wrap = document.createElement("div");
     wrap.className = "remote-media-wrap";
-
     const img = document.createElement("img");
     img.src = item.thumbURL || item.linkURL;
     img.alt = item.name;
@@ -1994,13 +2388,17 @@ function buildRemoteImageEl(item) {
             wrap.innerHTML = "";
             wrap.replaceWith(buildRemoteImageEl(item));
         }));
-    }, { once: true });
-
+    }, {
+        once: true
+    });
     wrap.appendChild(img);
     return wrap;
 }
+
 const LINK_FILE_HEADER = "SORTER-MAKER-LINKS|1";
+
 const LINK_FILE_OPEN = "{#€@(";
+
 const LINK_FILE_CLOSE = ")@€#}";
 
 function pad2LinkFile(n) {
@@ -2008,25 +2406,24 @@ function pad2LinkFile(n) {
 }
 
 function buildLinkFileFilename() {
-    const now = new Date();
+    const now = new Date;
     return `sorter-maker-links-${now.getFullYear()}${pad2LinkFile(now.getMonth() + 1)}${pad2LinkFile(now.getDate())}-${pad2LinkFile(now.getHours())}${pad2LinkFile(now.getMinutes())}.txt`;
 }
 
 function exportLinkFile() {
     const entries = images.filter(item => item.type === "link" && item.linkURL);
-
     if (entries.length === 0) {
         alert("No link-based media to export yet. Add a link first (or import media whose source is a remote URL).");
         return;
     }
-
-    const lines = [LINK_FILE_HEADER, ""];
+    const lines = [ LINK_FILE_HEADER, "" ];
     entries.forEach(item => {
         const safeName = (item.name || "Untitled").split(LINK_FILE_OPEN).join("").split(LINK_FILE_CLOSE).join("");
         lines.push(`${safeName}${LINK_FILE_OPEN}${item.linkURL}${LINK_FILE_CLOSE}`);
     });
-
-    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    const blob = new Blob([ lines.join("\n") ], {
+        type: "text/plain;charset=utf-8"
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -2034,33 +2431,34 @@ function exportLinkFile() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    setTimeout(() => URL.revokeObjectURL(url), 2e3);
 }
 
 function parseLinkFileText(text) {
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     if (lines.length === 0) return [];
-
     let startIndex = 0;
     if (lines[0].startsWith("SORTER-MAKER-LINKS")) {
-        startIndex = 1; // ligne den tete/version reconnue et ignorer
+        startIndex = 1;
     }
-
     const results = [];
     for (let i = startIndex; i < lines.length; i++) {
         const line = lines[i];
         const openIdx = line.indexOf(LINK_FILE_OPEN);
         const closeIdx = line.lastIndexOf(LINK_FILE_CLOSE);
-
         if (openIdx !== -1 && closeIdx !== -1 && closeIdx > openIdx) {
             const name = line.slice(0, openIdx).trim();
             const url = line.slice(openIdx + LINK_FILE_OPEN.length, closeIdx).trim();
-            if (url) results.push({ name: name || null, url });
-
+            if (url) results.push({
+                name: name || null,
+                url: url
+            });
         } else if (/^https?:\/\//i.test(line)) {
-            results.push({ name: null, url: line });
+            results.push({
+                name: null,
+                url: line
+            });
         }
-
     }
     return results;
 }
@@ -2073,17 +2471,14 @@ async function importLinkFile(file) {
         alert("Unable to read this file.");
         return;
     }
-
     const entries = parseLinkFileText(text);
     if (entries.length === 0) {
-        alert("No links found in this file. Expected format: SORTER-MAKER-LINKS|1 header followed by \"Name{#€@(URL)@€#}\" lines (or a plain list of URLs).");
+        alert('No links found in this file. Expected format: SORTER-MAKER-LINKS|1 header followed by "Name{#€@(URL)@€#}" lines (or a plain list of URLs).');
         return;
     }
-
     entries.forEach(entry => {
         createLinkItem(entry.name || nameFromUrl(entry.url), entry.url);
     });
-
     updateCountLabel();
     refreshGridTotalHeight();
     renderVisibleCards();
@@ -2092,7 +2487,9 @@ async function importLinkFile(file) {
 document.getElementById("btnExportLinkFile").addEventListener("click", exportLinkFile);
 
 const inputLinkFile = document.getElementById("inputLinkFile");
+
 document.getElementById("btnImportLinkFile").addEventListener("click", () => inputLinkFile.click());
+
 inputLinkFile.addEventListener("change", e => {
     const file = e.target.files[0];
     e.target.value = "";
@@ -2136,7 +2533,7 @@ async function generateThumbnail(item) {
     try {
         item.naturalWidth = drawable.width;
         item.naturalHeight = drawable.height;
-        const rendered = await renderToBlobURL(drawable, item.crop, THUMB_MAX_DIM, 0.82);
+        const rendered = await renderToBlobURL(drawable, item.crop, THUMB_MAX_DIM, .82);
         if (item.thumbURL) URL.revokeObjectURL(item.thumbURL);
         item.thumbURL = rendered.url;
     } finally {
@@ -2144,17 +2541,20 @@ async function generateThumbnail(item) {
     }
 }
 
-
-/* import*/
-
 const importZone = document.getElementById("importZone");
+
 const inputFiles = document.getElementById("inputFiles");
+
 const inputFolder = document.getElementById("inputFolder");
+
 const importProgress = document.getElementById("importProgress");
+
 const importProgressFill = document.getElementById("importProgressFill");
+
 const importProgressLabel = document.getElementById("importProgressLabel");
 
 document.getElementById("btnImportFiles").addEventListener("click", () => inputFiles.click());
+
 document.getElementById("btnImportFolder").addEventListener("click", () => inputFolder.click());
 
 inputFiles.addEventListener("change", e => {
@@ -2176,9 +2576,8 @@ inputAudioFiles.addEventListener("change", e => {
     e.target.value = "";
 });
 
-// image de couverture associee a un fichier audio
-
 const inputCoverFile = document.getElementById("inputCoverFile");
+
 let coverTargetItemId = null;
 
 function requestCoverForItem(id) {
@@ -2189,17 +2588,16 @@ function requestCoverForItem(id) {
 inputCoverFile.addEventListener("change", e => {
     const file = e.target.files[0];
     e.target.value = "";
-
-    if (!file || !coverTargetItemId) { coverTargetItemId = null; return; }
-
+    if (!file || !coverTargetItemId) {
+        coverTargetItemId = null;
+        return;
+    }
     const item = imagesById.get(coverTargetItemId);
     coverTargetItemId = null;
     if (!item) return;
-
     revokeIfBlob(item.coverURL);
     item.coverFile = file;
     item.coverURL = URL.createObjectURL(file);
-
     renderVisibleCards();
 });
 
@@ -2213,16 +2611,20 @@ function removeCoverForItem(id) {
 }
 
 const linkModal = document.getElementById("linkModal");
+
 const linkModalTitle = document.getElementById("linkModalTitle");
+
 const linkNameInput = document.getElementById("linkNameInput");
+
 const linkUrlInput = document.getElementById("linkUrlInput");
+
 let linkEditingId = null;
 
 function openLinkModal(editItem) {
     linkEditingId = editItem ? editItem.id : null;
     linkModalTitle.textContent = editItem ? "Edit link" : "Add a link";
     linkNameInput.value = editItem ? editItem.name : "";
-    linkUrlInput.value = editItem ? (editItem.linkURL || "") : "";
+    linkUrlInput.value = editItem ? editItem.linkURL || "" : "";
     linkModal.hidden = false;
     linkUrlInput.focus();
 }
@@ -2233,16 +2635,15 @@ function closeLinkModal() {
 }
 
 document.getElementById("btnAddLink").addEventListener("click", () => openLinkModal(null));
+
 document.getElementById("btnLinkCancel").addEventListener("click", closeLinkModal);
 
-document.getElementById("btnLinkValidate").addEventListener("click", () => {
+document.getElementById("btnLinkValidate").addEventListener("click", async () => {
     const url = linkUrlInput.value.trim();
-
     if (!url) {
         alert("Please enter a URL.");
         return;
     }
-
     let parsedUrl;
     try {
         parsedUrl = new URL(url);
@@ -2251,25 +2652,42 @@ document.getElementById("btnLinkValidate").addEventListener("click", () => {
         alert("This URL doesn't look valid. It must start with http:// or https://");
         return;
     }
-
     const name = linkNameInput.value.trim();
-
-    if (linkEditingId) {
-        const item = imagesById.get(linkEditingId);
-        if (item) {
-            item.linkURL = url;
-            item.youtubeId = parseYouTubeId(url);
-            item.thumbURL = item.youtubeId ? `https://img.youtube.com/vi/${item.youtubeId}/hqdefault.jpg` : null;
-            if (name) item.name = name;
+    try {
+        if (linkEditingId) {
+            const item = imagesById.get(linkEditingId);
+            if (item) {
+                item.linkURL = url;
+                item.youtubeId = parseYouTubeId(url);
+                item.thumbURL = item.youtubeId ? `https://img.youtube.com/vi/${item.youtubeId}/hqdefault.jpg` : null;
+                if (name) item.name = name;
+            }
+            closeLinkModal();
+            updateCountLabel();
+            refreshGridTotalHeight();
+            renderVisibleCards();
+            return;
         }
-    } else {
+        const playlistInfo = parseYoutubePlaylistInfo(url);
+        if (playlistInfo) {
+            closeLinkModal();
+            const singleVideoId = parseYouTubeId(url);
+            await importYoutubePlaylist(playlistInfo.playlistId, playlistInfo.startIndex, {
+                videoId: singleVideoId,
+                name: name || null
+            });
+            return;
+        }
         createLinkItem(name, url);
+        closeLinkModal();
+        updateCountLabel();
+        refreshGridTotalHeight();
+        renderVisibleCards();
+    } catch (err) {
+        console.error("[SORTER] Error while adding link:", err);
+        importProgress.hidden = true;
+        alert("Something went wrong while adding this link.\n\nDetail: " + (err && err.message ? err.message : err));
     }
-
-    closeLinkModal();
-    updateCountLabel();
-    refreshGridTotalHeight();
-    renderVisibleCards();
 });
 
 importZone.addEventListener("dragover", e => {
@@ -2284,9 +2702,7 @@ importZone.addEventListener("dragleave", () => {
 importZone.addEventListener("drop", async e => {
     e.preventDefault();
     importZone.classList.remove("drag-over");
-
     const dtItems = e.dataTransfer.items;
-
     if (dtItems && dtItems.length && dtItems[0].webkitGetAsEntry) {
         const entries = Array.from(dtItems).map(it => it.webkitGetAsEntry()).filter(Boolean);
         const files = await collectFilesFromEntries(entries);
@@ -2301,37 +2717,41 @@ function collectFilesFromEntries(entries) {
         const files = [];
         let pending = 0;
         let scanStarted = false;
-
         function checkDone() {
             if (scanStarted && pending === 0) resolve(files);
         }
-
         function walk(entry) {
             if (!entry) return;
-
             if (entry.isFile) {
                 pending++;
-                entry.file(
-                    file => { files.push(file); pending--; checkDone(); },
-                    () => { pending--; checkDone(); }
-                );
+                entry.file(file => {
+                    files.push(file);
+                    pending--;
+                    checkDone();
+                }, () => {
+                    pending--;
+                    checkDone();
+                });
             } else if (entry.isDirectory) {
                 pending++;
                 const reader = entry.createReader();
                 const readBatch = () => {
-                    reader.readEntries(
-                        batch => {
-                            if (batch.length === 0) { pending--; checkDone(); return; }
-                            batch.forEach(walk);
-                            readBatch();
-                        },
-                        () => { pending--; checkDone(); }
-                    );
+                    reader.readEntries(batch => {
+                        if (batch.length === 0) {
+                            pending--;
+                            checkDone();
+                            return;
+                        }
+                        batch.forEach(walk);
+                        readBatch();
+                    }, () => {
+                        pending--;
+                        checkDone();
+                    });
                 };
                 readBatch();
             }
         }
-
         entries.forEach(walk);
         scanStarted = true;
         checkDone();
@@ -2339,28 +2759,21 @@ function collectFilesFromEntries(entries) {
 }
 
 function updateImportProgress(done, total) {
-    const pct = total > 0 ? Math.round((done / total) * 100) : 100;
+    const pct = total > 0 ? Math.round(done / total * 100) : 100;
     importProgressFill.style.width = pct + "%";
     importProgressLabel.textContent = `Processing… ${done} / ${total}`;
 }
 
 async function importFiles(fileList) {
-
     const files = Array.from(fileList).filter(f => isImageFile(f) || isAudioFile(f));
-
     if (files.length === 0) return;
-
     importProgress.hidden = false;
-
     let done = 0;
     const total = files.length;
     updateImportProgress(done, total);
-
     const BATCH_SIZE = 15;
-
     for (let i = 0; i < files.length; i += BATCH_SIZE) {
         const batch = files.slice(i, i + BATCH_SIZE);
-
         await Promise.all(batch.map(async file => {
             const item = createItemForFile(file);
             try {
@@ -2371,39 +2784,42 @@ async function importFiles(fileList) {
             }
             done++;
         }));
-
         updateImportProgress(done, total);
         refreshGridTotalHeight();
         renderVisibleCards();
         updateCountLabel();
-
         await yieldToBrowser();
     }
-
     importProgress.hidden = true;
     updateCountLabel();
     refreshGridTotalHeight();
     renderVisibleCards();
 }
 
-
-/* la grille*/
-
 const gridViewport = document.getElementById("gridViewport");
+
 const gridSizer = document.getElementById("gridSizer");
+
 const gridInner = document.getElementById("gridInner");
+
 const emptyState = document.getElementById("emptyState");
+
 const countLabel = document.getElementById("countLabel");
+
 const btnLaunchSort = document.getElementById("btnLaunchSort");
+
 const btnLaunchSortTop = document.getElementById("btnLaunchSortTop");
 
 const CARD_MIN_WIDTH = 168;
+
 const CARD_GAP = 14;
+
 const CARD_HEIGHT = 232;
-const GRID_ROW_BUFFER = 2; // lignes de marge au dessus/en dessous du viewport
+
+const GRID_ROW_BUFFER = 2;
 
 function computeColumns() {
-    const w = gridViewport.clientWidth - (CARD_GAP * 2);
+    const w = gridViewport.clientWidth - CARD_GAP * 2;
     const cols = Math.floor((w + CARD_GAP) / (CARD_MIN_WIDTH + CARD_GAP));
     return Math.max(1, cols);
 }
@@ -2411,54 +2827,43 @@ function computeColumns() {
 function refreshGridTotalHeight() {
     const cols = computeColumns();
     const rows = Math.ceil(images.length / cols);
-    const totalHeight = rows > 0 ? (rows * (CARD_HEIGHT + CARD_GAP)) + CARD_GAP : 0;
+    const totalHeight = rows > 0 ? rows * (CARD_HEIGHT + CARD_GAP) + CARD_GAP : 0;
     gridSizer.style.height = totalHeight + "px";
 }
 
-
 function renderVisibleCards() {
-
     const cols = computeColumns();
     const rowHeight = CARD_HEIGHT + CARD_GAP;
-
     const scrollTop = gridViewport.scrollTop;
     const viewportHeight = gridViewport.clientHeight;
-
     const firstRow = Math.max(0, Math.floor(scrollTop / rowHeight) - GRID_ROW_BUFFER);
     const lastRow = Math.ceil((scrollTop + viewportHeight) / rowHeight) + GRID_ROW_BUFFER;
-
     const startIndex = firstRow * cols;
     const endIndex = Math.min(images.length, (lastRow + 1) * cols);
-
     gridInner.style.setProperty("--cols", cols);
     gridInner.style.transform = `translateY(${CARD_GAP + firstRow * rowHeight}px)`;
-
     const frag = document.createDocumentFragment();
     for (let idx = startIndex; idx < endIndex; idx++) {
         const item = images[idx];
         if (item) frag.appendChild(buildCard(item));
     }
-
-
     gridInner.querySelectorAll("audio").forEach(audioEl => {
-        try { audioEl.pause(); } catch (err) { /* ignore */ }
+        try {
+            audioEl.pause();
+        } catch (err) {}
     });
-
     gridInner.innerHTML = "";
     gridInner.appendChild(frag);
-
     emptyState.hidden = images.length > 0;
 }
 
 function createAudioPlayerBar(item) {
     const bar = document.createElement("div");
     bar.className = "audio-bar";
-
     const audioEl = document.createElement("audio");
     audioEl.preload = "metadata";
     audioEl.src = item.audioURL || (item.file ? URL.createObjectURL(item.file) : "");
     bar.appendChild(audioEl);
-
     const playBtn = document.createElement("button");
     playBtn.type = "button";
     playBtn.className = "audio-play-btn";
@@ -2466,7 +2871,6 @@ function createAudioPlayerBar(item) {
     playBtn.setAttribute("aria-label", "Lecture");
     playBtn.textContent = "▶";
     bar.appendChild(playBtn);
-
     const timeEl = document.createElement("div");
     timeEl.className = "audio-time";
     const currentTimeSpan = document.createElement("span");
@@ -2477,7 +2881,6 @@ function createAudioPlayerBar(item) {
     timeEl.appendChild(document.createTextNode(" / "));
     timeEl.appendChild(durationSpan);
     bar.appendChild(timeEl);
-
     const progress = document.createElement("div");
     progress.className = "audio-progress";
     const track = document.createElement("div");
@@ -2490,21 +2893,17 @@ function createAudioPlayerBar(item) {
     track.appendChild(thumbDot);
     progress.appendChild(track);
     bar.appendChild(progress);
-
     const volumeWrap = document.createElement("div");
     volumeWrap.className = "audio-volume";
     volumeWrap.tabIndex = -1;
-
     const volumeBtn = document.createElement("button");
     volumeBtn.type = "button";
     volumeBtn.className = "audio-volume-btn";
     volumeBtn.title = "Mute / Unmute";
     volumeBtn.setAttribute("aria-label", "Mute / Unmute");
     volumeBtn.textContent = "🔊";
-
     const volumePopup = document.createElement("div");
     volumePopup.className = "audio-volume-popup";
-
     const volumeSlider = document.createElement("input");
     volumeSlider.type = "range";
     volumeSlider.className = "audio-volume-slider";
@@ -2514,26 +2913,19 @@ function createAudioPlayerBar(item) {
     volumeSlider.value = "1";
     volumeSlider.setAttribute("aria-label", "Volume");
     volumePopup.appendChild(volumeSlider);
-
     volumeWrap.appendChild(volumeBtn);
     volumeWrap.appendChild(volumePopup);
     bar.appendChild(volumeWrap);
-
-    // logique
-
     let previousVolume = 1;
-
     function formatTime(seconds) {
         if (!Number.isFinite(seconds)) return "0:00";
         const minutes = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60).toString().padStart(2, "0");
         return `${minutes}:${secs}`;
     }
-
     playBtn.addEventListener("click", async e => {
         e.stopPropagation();
         if (!audioEl.src) return;
-
         if (audioEl.paused) {
             try {
                 await audioEl.play();
@@ -2546,29 +2938,24 @@ function createAudioPlayerBar(item) {
             playBtn.textContent = "▶";
         }
     });
-
     audioEl.addEventListener("loadedmetadata", () => {
         durationSpan.textContent = formatTime(audioEl.duration);
     });
-
     audioEl.addEventListener("timeupdate", () => {
         if (!audioEl.duration) return;
-        const percent = (audioEl.currentTime / audioEl.duration) * 100;
+        const percent = audioEl.currentTime / audioEl.duration * 100;
         fill.style.width = percent + "%";
         thumbDot.style.left = percent + "%";
         currentTimeSpan.textContent = formatTime(audioEl.currentTime);
     });
-
     audioEl.addEventListener("ended", () => {
         playBtn.textContent = "▶";
     });
-
     audioEl.addEventListener("error", () => {
         playBtn.textContent = "⚠";
         playBtn.title = "Media unavailable";
         playBtn.disabled = true;
     });
-
     function setProgressFromClientX(clientX) {
         if (!audioEl.duration) return;
         const rect = progress.getBoundingClientRect();
@@ -2576,27 +2963,27 @@ function createAudioPlayerBar(item) {
         position = Math.max(0, Math.min(1, position));
         audioEl.currentTime = position * audioEl.duration;
     }
-
     let dragging = false;
-
     progress.addEventListener("pointerdown", e => {
         e.stopPropagation();
         dragging = true;
-        try { progress.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+        try {
+            progress.setPointerCapture(e.pointerId);
+        } catch (err) {}
         setProgressFromClientX(e.clientX);
     });
-
     progress.addEventListener("pointermove", e => {
         if (dragging) setProgressFromClientX(e.clientX);
     });
-
     progress.addEventListener("pointerup", e => {
         dragging = false;
-        try { progress.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+        try {
+            progress.releasePointerCapture(e.pointerId);
+        } catch (err) {}
     });
-
-    progress.addEventListener("pointercancel", () => { dragging = false; });
-
+    progress.addEventListener("pointercancel", () => {
+        dragging = false;
+    });
     volumeSlider.addEventListener("input", e => {
         e.stopPropagation();
         const value = Number(volumeSlider.value);
@@ -2608,7 +2995,6 @@ function createAudioPlayerBar(item) {
             audioEl.muted = true;
         }
     });
-
     volumeBtn.addEventListener("click", e => {
         e.stopPropagation();
         if (audioEl.muted || audioEl.volume === 0) {
@@ -2621,22 +3007,19 @@ function createAudioPlayerBar(item) {
             audioEl.muted = true;
         }
     });
-
     audioEl.addEventListener("volumechange", () => {
         if (audioEl.muted || audioEl.volume === 0) {
             volumeBtn.textContent = "🔇";
-        } else if (audioEl.volume < 0.5) {
+        } else if (audioEl.volume < .5) {
             volumeBtn.textContent = "🔉";
         } else {
             volumeBtn.textContent = "🔊";
         }
         volumeSlider.value = String(audioEl.volume);
     });
-
     bar.addEventListener("click", e => e.stopPropagation());
     bar.addEventListener("mousedown", e => e.stopPropagation());
     bar.addEventListener("pointerdown", e => e.stopPropagation());
-
     return bar;
 }
 
@@ -2662,14 +3045,11 @@ function renderLinkThumbAsync(item, container) {
         }));
         return;
     }
-
     const loading = document.createElement("div");
     loading.className = "link-thumb-placeholder media-probing";
     loading.textContent = "⏳";
     container.appendChild(loading);
-
     ensureLinkMediaResolved(item).then(() => {
-
         if (!container.isConnected || !container.contains(loading)) return;
         container.innerHTML = "";
         renderLinkThumbAsync(item, container);
@@ -2680,24 +3060,19 @@ function buildCard(item) {
     const card = document.createElement("div");
     card.className = "card type-" + item.type + (item.crop ? " is-cropped" : "");
     card.dataset.id = item.id;
-
     const thumb = document.createElement("div");
     thumb.className = "card-thumb";
-
     if (item.type === "image") {
         const img = document.createElement("img");
         img.src = item.thumbURL || "";
         img.alt = item.name;
         img.loading = "lazy";
         thumb.appendChild(img);
-
     } else if (item.type === "gif") {
-
         const img = document.createElement("img");
         img.src = item.thumbURL || "";
         img.alt = item.name;
         thumb.appendChild(img);
-
     } else if (item.type === "audio") {
         if (item.coverURL) {
             const img = document.createElement("img");
@@ -2711,29 +3086,23 @@ function buildCard(item) {
             placeholder.textContent = "🎵";
             thumb.appendChild(placeholder);
         }
-
         const bar = createAudioPlayerBar(item);
         thumb.appendChild(bar);
-
     } else if (item.type === "link") {
         if (item.youtubeId) {
-
             thumb.appendChild(buildYoutubeThumbLink(item, "card-play-badge"));
         } else {
             renderLinkThumbAsync(item, thumb);
         }
     }
-
     const nameInput = document.createElement("input");
     nameInput.type = "text";
     nameInput.className = "card-name";
     nameInput.value = item.name;
     nameInput.spellcheck = false;
     nameInput.dataset.action = "rename";
-
     const actions = document.createElement("div");
     actions.className = "card-actions";
-
     if (item.type === "image") {
         const btnCrop = document.createElement("button");
         btnCrop.type = "button";
@@ -2741,7 +3110,6 @@ function buildCard(item) {
         btnCrop.textContent = "Crop";
         btnCrop.dataset.action = "crop";
         actions.appendChild(btnCrop);
-
     } else if (item.type === "audio") {
         const btnCover = document.createElement("button");
         btnCover.type = "button";
@@ -2749,7 +3117,6 @@ function buildCard(item) {
         btnCover.textContent = item.coverURL ? "Change image" : "Add image";
         btnCover.dataset.action = "set-cover";
         actions.appendChild(btnCover);
-
         if (item.coverURL) {
             const btnRemoveCover = document.createElement("button");
             btnRemoveCover.type = "button";
@@ -2758,7 +3125,6 @@ function buildCard(item) {
             btnRemoveCover.dataset.action = "remove-cover";
             actions.appendChild(btnRemoveCover);
         }
-
     } else if (item.type === "link") {
         const btnEditLink = document.createElement("button");
         btnEditLink.type = "button";
@@ -2767,18 +3133,15 @@ function buildCard(item) {
         btnEditLink.dataset.action = "edit-link";
         actions.appendChild(btnEditLink);
     }
-
     const btnDelete = document.createElement("button");
     btnDelete.type = "button";
     btnDelete.className = "btn-mini btn-danger";
     btnDelete.textContent = "Delete";
     btnDelete.dataset.action = "delete";
     actions.appendChild(btnDelete);
-
     card.appendChild(thumb);
     card.appendChild(nameInput);
     card.appendChild(actions);
-
     return card;
 }
 
@@ -2787,12 +3150,7 @@ gridInner.addEventListener("click", e => {
     if (!btn) return;
     const card = btn.closest(".card");
     const id = card.dataset.id;
-
-    if (btn.dataset.action === "crop") openCropEditor(id);
-    else if (btn.dataset.action === "delete") handleDeleteImage(id);
-    else if (btn.dataset.action === "set-cover") requestCoverForItem(id);
-    else if (btn.dataset.action === "remove-cover") removeCoverForItem(id);
-    else if (btn.dataset.action === "edit-link") {
+    if (btn.dataset.action === "crop") openCropEditor(id); else if (btn.dataset.action === "delete") handleDeleteImage(id); else if (btn.dataset.action === "set-cover") requestCoverForItem(id); else if (btn.dataset.action === "remove-cover") removeCoverForItem(id); else if (btn.dataset.action === "edit-link") {
         const item = imagesById.get(id);
         if (item) openLinkModal(item);
     }
@@ -2810,7 +3168,6 @@ function handleDeleteImage(id) {
     const item = imagesById.get(id);
     if (!item) return;
     if (!confirm(`Delete « ${item.name} » ?`)) return;
-
     removeImageItem(id);
     updateCountLabel();
     refreshGridTotalHeight();
@@ -2819,20 +3176,15 @@ function handleDeleteImage(id) {
 
 function updateCountLabel() {
     const n = images.length;
-
-    countLabel.textContent = n === 0
-        ? "No images imported"
-        : `${n} image${n > 1 ? "s" : ""} imported${n > 1 ? "" : ""}`;
-
+    countLabel.textContent = n === 0 ? "No images imported" : `${n} image${n > 1 ? "s" : ""} imported${n > 1 ? "" : ""}`;
     const canLaunch = n >= 2;
-
     btnLaunchSort.disabled = !canLaunch;
     btnLaunchSortTop.disabled = !canLaunch;
-
     console.log("[SORTER] Images :", n, "| Active buttons :", canLaunch);
 }
 
 let gridScrollTicking = false;
+
 gridViewport.addEventListener("scroll", () => {
     if (gridScrollTicking) return;
     gridScrollTicking = true;
@@ -2843,6 +3195,7 @@ gridViewport.addEventListener("scroll", () => {
 });
 
 let gridResizeTicking = false;
+
 window.addEventListener("resize", () => {
     if (gridResizeTicking) return;
     gridResizeTicking = true;
@@ -2853,55 +3206,57 @@ window.addEventListener("resize", () => {
     });
 });
 
-
-/* crop */
-
 const cropModal = document.getElementById("cropModal");
+
 const cropModalTitle = document.getElementById("cropModalTitle");
+
 const cropStage = document.getElementById("cropStage");
+
 const cropCanvas = document.getElementById("cropCanvas");
+
 const cropRectEl = document.getElementById("cropRect");
+
 const cropPreviewCanvas = document.getElementById("cropPreviewCanvas");
+
 const ratioButtons = document.getElementById("ratioButtons");
 
-let cropState = null; // { itemId, drawable, scale, dispW, dispH, rect, ratioLock }
+let cropState = null;
 
 async function openCropEditor(id) {
     const item = imagesById.get(id);
     if (!item || item.type !== "image") return;
-
     cropModalTitle.textContent = `Recadrer « ${item.name} »`;
     cropModal.hidden = false;
-
     const drawable = await loadDrawable(item.file);
-
-    const scale = Math.min(
-        CROP_STAGE_MAX_W / drawable.width,
-        CROP_STAGE_MAX_H / drawable.height,
-        1
-    );
+    const scale = Math.min(CROP_STAGE_MAX_W / drawable.width, CROP_STAGE_MAX_H / drawable.height, 1);
     const dispW = Math.round(drawable.width * scale);
     const dispH = Math.round(drawable.height * scale);
-
     cropStage.style.width = dispW + "px";
     cropStage.style.height = dispH + "px";
     cropCanvas.width = dispW;
     cropCanvas.height = dispH;
     cropCanvas.getContext("2d").drawImage(drawable.source, 0, 0, dispW, dispH);
-
-    const rect = item.crop
-        ? {
-            x: item.crop.x * scale,
-            y: item.crop.y * scale,
-            w: item.crop.w * scale,
-            h: item.crop.h * scale
-        }
-        : { x: 0, y: 0, w: dispW, h: dispH };
-
-    cropState = { itemId: id, drawable, scale, dispW, dispH, rect, ratioLock: null };
-
+    const rect = item.crop ? {
+        x: item.crop.x * scale,
+        y: item.crop.y * scale,
+        w: item.crop.w * scale,
+        h: item.crop.h * scale
+    } : {
+        x: 0,
+        y: 0,
+        w: dispW,
+        h: dispH
+    };
+    cropState = {
+        itemId: id,
+        drawable: drawable,
+        scale: scale,
+        dispW: dispW,
+        dispH: dispH,
+        rect: rect,
+        ratioLock: null
+    };
     ratioButtons.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.ratio === "free"));
-
     updateCropRectStyle();
     updateCropPreview();
 }
@@ -2918,7 +3273,12 @@ document.getElementById("btnCropCancel").addEventListener("click", closeCropEdit
 
 document.getElementById("btnCropReset").addEventListener("click", () => {
     if (!cropState) return;
-    cropState.rect = { x: 0, y: 0, w: cropState.dispW, h: cropState.dispH };
+    cropState.rect = {
+        x: 0,
+        y: 0,
+        w: cropState.dispW,
+        h: cropState.dispH
+    };
     cropState.ratioLock = null;
     ratioButtons.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.ratio === "free"));
     updateCropRectStyle();
@@ -2928,18 +3288,14 @@ document.getElementById("btnCropReset").addEventListener("click", () => {
 ratioButtons.addEventListener("click", e => {
     const btn = e.target.closest("button[data-ratio]");
     if (!btn || !cropState) return;
-
     ratioButtons.querySelectorAll("button").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-
     if (btn.dataset.ratio === "free") {
         cropState.ratioLock = null;
         return;
     }
-
     const [rw, rh] = btn.dataset.ratio.split(":").map(Number);
     cropState.ratioLock = rw / rh;
-
     const r = cropState.rect;
     let newW = r.w;
     let newH = newW / cropState.ratioLock;
@@ -2949,12 +3305,10 @@ ratioButtons.addEventListener("click", e => {
     }
     const cx = r.x + r.w / 2;
     const cy = r.y + r.h / 2;
-
     r.w = newW;
     r.h = newH;
     r.x = clamp(cx - newW / 2, 0, cropState.dispW - newW);
     r.y = clamp(cy - newH / 2, 0, cropState.dispH - newH);
-
     updateCropRectStyle();
     updateCropPreview();
 });
@@ -2969,161 +3323,153 @@ function updateCropRectStyle() {
 
 function updateCropPreview() {
     if (!cropState) return;
-    const { rect, scale, drawable } = cropState;
-
+    const {rect: rect, scale: scale, drawable: drawable} = cropState;
     const sx = rect.x / scale;
     const sy = rect.y / scale;
     const sw = rect.w / scale;
     const sh = rect.h / scale;
-
     const ctx = cropPreviewCanvas.getContext("2d");
     const pw = cropPreviewCanvas.width;
     const ph = cropPreviewCanvas.height;
-
     ctx.fillStyle = "#e5e5e0";
     ctx.fillRect(0, 0, pw, ph);
-
     if (sw <= 0 || sh <= 0) return;
-
     const fit = Math.min(pw / sw, ph / sh);
     const dw = sw * fit;
     const dh = sh * fit;
     const dx = (pw - dw) / 2;
     const dy = (ph - dh) / 2;
-
     ctx.drawImage(drawable.source, sx, sy, sw, sh, dx, dy, dw, dh);
 }
 
-let cropDrag = null; // { mode: 'move'|'resize', handle, startX, startY, startRect }
+let cropDrag = null;
 
 cropRectEl.addEventListener("pointerdown", e => {
     if (!cropState) return;
     const handle = e.target.dataset.handle;
     e.preventDefault();
     e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId);
-
     cropDrag = {
         mode: handle ? "resize" : "move",
         handle: handle,
         startX: e.clientX,
         startY: e.clientY,
-        startRect: { ...cropState.rect }
+        startRect: {
+            ...cropState.rect
+        }
     };
 });
 
 document.addEventListener("pointermove", e => {
     if (!cropDrag || !cropState) return;
-
     const dx = e.clientX - cropDrag.startX;
     const dy = e.clientY - cropDrag.startY;
     const stageW = cropState.dispW;
     const stageH = cropState.dispH;
     const start = cropDrag.startRect;
-    let r = { ...start };
-
+    let r = {
+        ...start
+    };
     if (cropDrag.mode === "move") {
         r.x = clamp(start.x + dx, 0, stageW - start.w);
         r.y = clamp(start.y + dy, 0, stageH - start.h);
-
     } else {
         const MIN_SIZE = 24;
         let left = start.x, top = start.y, right = start.x + start.w, bottom = start.y + start.h;
-
         if (cropDrag.handle.includes("w")) left = clamp(start.x + dx, 0, right - MIN_SIZE);
         if (cropDrag.handle.includes("e")) right = clamp(start.x + start.w + dx, left + MIN_SIZE, stageW);
         if (cropDrag.handle.includes("n")) top = clamp(start.y + dy, 0, bottom - MIN_SIZE);
         if (cropDrag.handle.includes("s")) bottom = clamp(start.y + start.h + dy, top + MIN_SIZE, stageH);
-
         if (cropState.ratioLock) {
-
             let w = right - left;
             let h = w / cropState.ratioLock;
-
-            if (cropDrag.handle.includes("n")) top = bottom - h;
-            else bottom = top + h;
-
-            if (top < 0) { top = 0; h = bottom - top; w = h * cropState.ratioLock; if (cropDrag.handle.includes("w")) left = right - w; else right = left + w; }
-            if (bottom > stageH) { bottom = stageH; h = bottom - top; w = h * cropState.ratioLock; if (cropDrag.handle.includes("w")) left = right - w; else right = left + w; }
+            if (cropDrag.handle.includes("n")) top = bottom - h; else bottom = top + h;
+            if (top < 0) {
+                top = 0;
+                h = bottom - top;
+                w = h * cropState.ratioLock;
+                if (cropDrag.handle.includes("w")) left = right - w; else right = left + w;
+            }
+            if (bottom > stageH) {
+                bottom = stageH;
+                h = bottom - top;
+                w = h * cropState.ratioLock;
+                if (cropDrag.handle.includes("w")) left = right - w; else right = left + w;
+            }
         }
-
-        r = { x: left, y: top, w: right - left, h: bottom - top };
+        r = {
+            x: left,
+            y: top,
+            w: right - left,
+            h: bottom - top
+        };
     }
-
     cropState.rect = r;
     updateCropRectStyle();
     updateCropPreview();
 });
 
-document.addEventListener("pointerup", () => { cropDrag = null; });
+document.addEventListener("pointerup", () => {
+    cropDrag = null;
+});
 
 document.getElementById("btnCropValidate").addEventListener("click", async () => {
     if (!cropState) return;
-
-    const { itemId, drawable, scale, rect } = cropState;
+    const {itemId: itemId, drawable: drawable, scale: scale, rect: rect} = cropState;
     const item = imagesById.get(itemId);
-    if (!item) { closeCropEditor(); return; }
-
+    if (!item) {
+        closeCropEditor();
+        return;
+    }
     const sx = Math.round(rect.x / scale);
     const sy = Math.round(rect.y / scale);
     const sw = Math.round(rect.w / scale);
     const sh = Math.round(rect.h / scale);
-
     const isFullImage = sx <= 0 && sy <= 0 && sw >= drawable.width - 1 && sh >= drawable.height - 1;
-
     item.crop = isFullImage ? null : {
         x: Math.max(0, sx),
         y: Math.max(0, sy),
         w: Math.min(sw, drawable.width - Math.max(0, sx)),
         h: Math.min(sh, drawable.height - Math.max(0, sy))
     };
-
-    const rendered = await renderToBlobURL(drawable, item.crop, THUMB_MAX_DIM, 0.82);
+    const rendered = await renderToBlobURL(drawable, item.crop, THUMB_MAX_DIM, .82);
     if (item.thumbURL) URL.revokeObjectURL(item.thumbURL);
     item.thumbURL = rendered.url;
-
     closeCropEditor();
     renderVisibleCards();
 });
 
-
-/* les differnets ecrans*/
-
 const screenImport = document.getElementById("screenImport");
+
 const screenSort = document.getElementById("screenSort");
+
 const battleView = document.getElementById("battleView");
+
 const resultsView = document.getElementById("resultsView");
 
 let currentScreenName = "import";
 
 function showScreen(name) {
     stopAllPlayingAudio();
-
     currentScreenName = name;
-
     if (name === "sort") {
         screenImport.hidden = true;
         screenImport.style.display = "none";
-
         screenSort.hidden = false;
         screenSort.style.display = "block";
-
         window.scrollTo({
             top: 0,
             left: 0,
             behavior: "instant"
         });
-
         requestAnimationFrame(() => {
             window.scrollTo(0, 0);
         });
-
     } else {
         screenSort.hidden = true;
         screenSort.style.display = "none";
-
         screenImport.hidden = false;
         screenImport.style.display = "flex";
-
         requestAnimationFrame(() => {
             refreshGridTotalHeight();
             renderVisibleCards();
@@ -3136,9 +3482,7 @@ function stopAllPlayingAudio() {
     document.querySelectorAll("audio").forEach(audioEl => {
         try {
             audioEl.pause();
-        } catch (err) {
-            // ignore
-        }
+        } catch (err) {}
     });
 }
 
@@ -3146,127 +3490,131 @@ function goBackToImport() {
     if (currentMerge && resultsView.hidden) {
         if (!confirm("Go back? Your current sorting progress will be lost.")) return;
     }
-
     clearMediaContainer(leftMedia);
     clearMediaContainer(rightMedia);
     stopAllPlayingAudio();
-
     showScreen("import");
 }
 
 document.getElementById("btnBackToImport").addEventListener("click", goBackToImport);
+
 document.getElementById("btnBackToImportFromResults").addEventListener("click", goBackToImport);
 
 function launchSorter() {
     console.log("[SORTER] starting");
     console.log("[SORTER] number of images:", images.length);
-
     if (images.length < 2) {
         alert("You need at least 2 images to start.");
         return;
     }
-
     startSorter();
 }
 
 btnLaunchSort.addEventListener("click", launchSorter);
+
 btnLaunchSortTop.addEventListener("click", launchSorter);
 
-
-/* merge sort interactif*/
-
 let characters = [];
+
 let groups = [];
+
 let currentMerge = null;
+
 let totalComparisons = 0;
+
 let comparisonsDone = 0;
+
 let history = [];
-let tiedWithNext = new Set();
+
+let tiedWithNext = new Set;
 
 let initialShuffledOrder = [];
+
 let choiceLog = [];
 
 let isRenderingBattle = false;
+
 let battleRenderToken = 0;
 
 const leftChoice = document.getElementById("leftChoice");
+
 const rightChoice = document.getElementById("rightChoice");
+
 const leftMedia = document.getElementById("leftMedia");
+
 const rightMedia = document.getElementById("rightMedia");
+
 const leftName = document.getElementById("leftName");
+
 const rightName = document.getElementById("rightName");
+
 const tieButton = document.getElementById("tieButton");
+
 const undoButton = document.getElementById("undoButton");
+
 const progressFill = document.getElementById("progressFill");
+
 const progressLabel = document.getElementById("progressLabel");
+
 const battleEl = document.getElementById("battle");
+
 const resultList = document.getElementById("resultList");
+
+const resultsPodium = document.getElementById("resultsPodium");
+
+const podiumDivider = document.getElementById("podiumDivider");
+
 const restartButton = document.getElementById("restartButton");
 
 function startSorter() {
     console.log("[SORTER] start");
-
     stopAllPlayingAudio();
-
     characters = images.map(item => ({
         id: item.id,
         name: item.name
     }));
-
     if (characters.length < 2) {
         alert("You need at least 2 images to start.");
         return;
     }
-
-    groups = characters.map(character => [character]);
+    groups = characters.map(character => [ character ]);
     currentMerge = null;
     comparisonsDone = 0;
     history = [];
     choiceLog = [];
-    tiedWithNext = new Set();
-
+    tiedWithNext = new Set;
     totalComparisons = calculateMaximumComparisons(characters.length);
-
     shuffle(groups);
     initialShuffledOrder = groups.map(group => group[0].id);
-
     resultsView.hidden = true;
     battleView.hidden = false;
-
     tieButton.style.display = "inline-block";
     undoButton.style.display = "inline-block";
     battleEl.style.display = "grid";
-
     showScreen("sort");
-
     console.log("[SORTER] sort?");
     console.log("[SORTER] planned comparaisons :", totalComparisons);
-
     nextStep();
 }
 
-
 function calculateMaximumComparisons(n) {
     if (n <= 1) return 0;
-
     const queue = new Array(n).fill(1);
     let head = 0;
     let total = 0;
-
     while (queue.length - head > 1) {
         const a = queue[head++];
         const b = queue[head++];
         total += a + b - 1;
         queue.push(a + b);
     }
-
     return total;
 }
 
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+        [array[i], array[j]] = [ array[j], array[i] ];
     }
 }
 
@@ -3275,11 +3623,9 @@ function nextStep() {
         finishSorter();
         return;
     }
-
     if (currentMerge === null) {
         const left = groups.shift();
         const right = groups.shift();
-
         currentMerge = {
             left: left,
             right: right,
@@ -3288,7 +3634,6 @@ function nextStep() {
             result: []
         };
     }
-
     displayCurrentComparison();
 }
 
@@ -3304,7 +3649,6 @@ function clearMediaContainer(el) {
     });
     el.innerHTML = "";
     el.classList.remove("choice-media-audio");
-
     const choiceEl = el.closest(".choice");
     if (choiceEl) choiceEl.classList.remove("choice-has-audio");
 }
@@ -3312,28 +3656,24 @@ function clearMediaContainer(el) {
 async function renderBattleMedia(mediaEl, item) {
     clearMediaContainer(mediaEl);
     if (!item) return;
-
     if (item.type === "image") {
         const img = document.createElement("img");
         img.className = "battle-media-img";
         img.alt = item.name;
         mediaEl.appendChild(img);
         try {
-            const rendered = await renderItemToURL(item, BATTLE_MAX_DIM, 0.9);
+            const rendered = await renderItemToURL(item, BATTLE_MAX_DIM, .9);
             img.src = rendered.url;
             img.dataset.blobUrl = rendered.url;
         } catch (err) {
             console.error("[SORTER] Impossible d'afficher l'image :", item.name, err);
         }
-
     } else if (item.type === "gif") {
-
         const img = document.createElement("img");
         img.className = "battle-media-img";
         img.alt = item.name;
         img.src = item.thumbURL || (item.file ? URL.createObjectURL(item.file) : "");
         mediaEl.appendChild(img);
-
     } else if (item.type === "audio") {
         mediaEl.classList.add("choice-media-audio");
         const choiceEl = mediaEl.closest(".choice");
@@ -3350,9 +3690,7 @@ async function renderBattleMedia(mediaEl, item) {
             placeholder.textContent = "🎵";
             mediaEl.appendChild(placeholder);
         }
-
         mediaEl.appendChild(createAudioPlayerBar(item));
-
     } else if (item.type === "link") {
         if (item.youtubeId && isValidYoutubeId(item.youtubeId)) {
             mediaEl.appendChild(buildYoutubeThumbLink(item, "battle-play-badge", () => {
@@ -3374,11 +3712,12 @@ function renderBattleLinkMedia(item, mediaEl) {
             item.mediaProbeState = "unavailable";
             mediaEl.innerHTML = "";
             renderBattleLinkMedia(item, mediaEl);
-        }, { once: true });
+        }, {
+            once: true
+        });
         mediaEl.appendChild(img);
         return;
     }
-
     if (item.mediaProbeState === "audio") {
         mediaEl.classList.add("choice-media-audio");
         const choiceEl = mediaEl.closest(".choice");
@@ -3390,7 +3729,6 @@ function renderBattleLinkMedia(item, mediaEl) {
         mediaEl.appendChild(createAudioPlayerBar(item));
         return;
     }
-
     if (item.mediaProbeState === "unavailable") {
         mediaEl.appendChild(buildUnavailablePlaceholder(item, "battle-media-placeholder", () => {
             item.mediaProbeState = null;
@@ -3400,14 +3738,11 @@ function renderBattleLinkMedia(item, mediaEl) {
         }));
         return;
     }
-
     const loading = document.createElement("div");
     loading.className = "battle-media-placeholder media-probing";
     loading.textContent = "⏳";
     mediaEl.appendChild(loading);
-
     ensureLinkMediaResolved(item).then(() => {
-
         if (!mediaEl.isConnected || !mediaEl.contains(loading)) return;
         mediaEl.innerHTML = "";
         renderBattleLinkMedia(item, mediaEl);
@@ -3416,7 +3751,6 @@ function renderBattleLinkMedia(item, mediaEl) {
 
 async function displayCurrentComparison() {
     const merge = currentMerge;
-
     if (merge.leftIndex >= merge.left.length) {
         while (merge.rightIndex < merge.right.length) {
             merge.result.push(merge.right[merge.rightIndex++]);
@@ -3424,7 +3758,6 @@ async function displayCurrentComparison() {
         finishMerge();
         return;
     }
-
     if (merge.rightIndex >= merge.right.length) {
         while (merge.leftIndex < merge.left.length) {
             merge.result.push(merge.left[merge.leftIndex++]);
@@ -3432,58 +3765,44 @@ async function displayCurrentComparison() {
         finishMerge();
         return;
     }
-
     const leftChar = merge.left[merge.leftIndex];
     const rightChar = merge.right[merge.rightIndex];
-
     leftName.textContent = leftChar.name;
     rightName.textContent = rightChar.name;
-
     updateProgress();
-
     const leftItem = imagesById.get(leftChar.id);
     const rightItem = imagesById.get(rightChar.id);
-
     const myToken = ++battleRenderToken;
     isRenderingBattle = true;
-
     leftMedia.classList.add("is-loading");
     rightMedia.classList.add("is-loading");
-
-    await Promise.all([
-        renderBattleMedia(leftMedia, leftItem),
-        renderBattleMedia(rightMedia, rightItem)
-    ]);
-
+    await Promise.all([ renderBattleMedia(leftMedia, leftItem), renderBattleMedia(rightMedia, rightItem) ]);
     if (myToken !== battleRenderToken) return;
-
     leftMedia.classList.remove("is-loading");
     rightMedia.classList.remove("is-loading");
-
     isRenderingBattle = false;
 }
 
 leftChoice.addEventListener("click", () => choose("left"));
+
 rightChoice.addEventListener("click", () => choose("right"));
+
 tieButton.addEventListener("click", () => choose("tie"));
 
 function choiceCodeFor(choice) {
-    return choice === "left" ? "L" : (choice === "right" ? "R" : "T");
+    return choice === "left" ? "L" : choice === "right" ? "R" : "T";
 }
 
 function applyChoiceCode(code) {
     const merge = currentMerge;
     const left = merge.left[merge.leftIndex];
     const right = merge.right[merge.rightIndex];
-
     if (code === "L") {
         merge.result.push(left);
         merge.leftIndex++;
-
     } else if (code === "R") {
         merge.result.push(right);
         merge.rightIndex++;
-
     } else if (code === "T") {
         merge.result.push(left);
         merge.result.push(right);
@@ -3491,18 +3810,14 @@ function applyChoiceCode(code) {
         merge.leftIndex++;
         merge.rightIndex++;
     }
-
     comparisonsDone++;
 }
 
 function choose(choice) {
     if (!currentMerge || isRenderingBattle) return;
-
     history.push(createStateSnapshot());
     choiceLog.push(choiceCodeFor(choice));
-
     applyChoiceCode(choiceCodeFor(choice));
-
     displayCurrentComparison();
 }
 
@@ -3514,13 +3829,13 @@ function finishMerge() {
 
 function createStateSnapshot() {
     return {
-        groups: groups.map(group => [...group]),
+        groups: groups.map(group => [ ...group ]),
         currentMerge: currentMerge ? {
-            left: [...currentMerge.left],
-            right: [...currentMerge.right],
+            left: [ ...currentMerge.left ],
+            right: [ ...currentMerge.right ],
             leftIndex: currentMerge.leftIndex,
             rightIndex: currentMerge.rightIndex,
-            result: [...currentMerge.result]
+            result: [ ...currentMerge.result ]
         } : null,
         comparisonsDone: comparisonsDone,
         tiedWithNext: new Set(tiedWithNext)
@@ -3530,14 +3845,18 @@ function createStateSnapshot() {
 function headlessAdvance() {
     while (true) {
         if (currentMerge === null) {
-            if (groups.length <= 1) return; // tri terminé (ou pas commencé)
+            if (groups.length <= 1) return;
             const left = groups.shift();
             const right = groups.shift();
-            currentMerge = { left, right, leftIndex: 0, rightIndex: 0, result: [] };
+            currentMerge = {
+                left: left,
+                right: right,
+                leftIndex: 0,
+                rightIndex: 0,
+                result: []
+            };
         }
-
         const merge = currentMerge;
-
         if (merge.leftIndex >= merge.left.length) {
             while (merge.rightIndex < merge.right.length) {
                 merge.result.push(merge.right[merge.rightIndex++]);
@@ -3546,7 +3865,6 @@ function headlessAdvance() {
             currentMerge = null;
             continue;
         }
-
         if (merge.rightIndex >= merge.right.length) {
             while (merge.leftIndex < merge.left.length) {
                 merge.result.push(merge.left[merge.leftIndex++]);
@@ -3555,33 +3873,24 @@ function headlessAdvance() {
             currentMerge = null;
             continue;
         }
-
         return;
     }
 }
 
 function replaySortFromLog(orderIds, logString, charactersById) {
-    groups = orderIds
-        .map(id => charactersById.get(id))
-        .filter(Boolean)
-        .map(character => [character]);
-
+    groups = orderIds.map(id => charactersById.get(id)).filter(Boolean).map(character => [ character ]);
     currentMerge = null;
     history = [];
-    tiedWithNext = new Set();
+    tiedWithNext = new Set;
     comparisonsDone = 0;
-
     headlessAdvance();
-
     const codes = (logString || "").split("");
-
     for (const code of codes) {
         if (!currentMerge) break;
         history.push(createStateSnapshot());
         applyChoiceCode(code);
         headlessAdvance();
     }
-
     choiceLog = codes.slice(0, comparisonsDone);
 }
 
@@ -3589,21 +3898,18 @@ undoButton.addEventListener("click", undo);
 
 function undo() {
     if (history.length === 0 || isRenderingBattle) return;
-
     const state = history.pop();
     choiceLog.pop();
-
-    groups = state.groups.map(group => [...group]);
+    groups = state.groups.map(group => [ ...group ]);
     currentMerge = state.currentMerge ? {
-        left: [...state.currentMerge.left],
-        right: [...state.currentMerge.right],
+        left: [ ...state.currentMerge.left ],
+        right: [ ...state.currentMerge.right ],
         leftIndex: state.currentMerge.leftIndex,
         rightIndex: state.currentMerge.rightIndex,
-        result: [...state.currentMerge.result]
+        result: [ ...state.currentMerge.result ]
     } : null;
     comparisonsDone = state.comparisonsDone;
     tiedWithNext = new Set(state.tiedWithNext);
-
     if (currentMerge === null) {
         nextStep();
     } else {
@@ -3616,20 +3922,16 @@ function updateProgress() {
         progressFill.style.width = "100%";
         return;
     }
-
-    const percentage = Math.min(100, (comparisonsDone / totalComparisons) * 100);
+    const percentage = Math.min(100, comparisonsDone / totalComparisons * 100);
     progressFill.style.width = percentage + "%";
     progressLabel.textContent = `Comparaison ${comparisonsDone} / ${totalComparisons}`;
 }
 
 function finishSorter() {
     const finalRanking = groups[0];
-
     battleView.hidden = true;
-
     clearMediaContainer(leftMedia);
     clearMediaContainer(rightMedia);
-
     displayResults(finalRanking);
     resultsView.hidden = false;
 }
@@ -3637,7 +3939,6 @@ function finishSorter() {
 function buildResultThumb(item, character) {
     const wrap = document.createElement("div");
     wrap.className = "result-thumb";
-
     if (item && item.type === "audio") {
         if (item.coverURL) {
             const img = document.createElement("img");
@@ -3648,23 +3949,19 @@ function buildResultThumb(item, character) {
             wrap.classList.add("result-thumb-placeholder");
             wrap.textContent = "🎵";
         }
-
     } else if (item && item.type === "link") {
         renderResultLinkThumb(item, wrap);
-
     } else {
         const img = document.createElement("img");
-        img.src = item ? (item.thumbURL || "") : "";
+        img.src = item ? item.thumbURL || "" : "";
         img.alt = character.name;
         wrap.appendChild(img);
     }
-
     return wrap;
 }
 
 function renderResultLinkThumb(item, wrap) {
     if (item.thumbURL) {
-
         const img = document.createElement("img");
         img.src = item.thumbURL;
         img.alt = item.name;
@@ -3674,26 +3971,24 @@ function renderResultLinkThumb(item, wrap) {
             wrap.innerHTML = "";
             wrap.className = "result-thumb";
             renderResultLinkThumb(item, wrap);
-        }, { once: true });
+        }, {
+            once: true
+        });
         wrap.appendChild(img);
         return;
     }
-
     if (item.mediaProbeState === "audio") {
         wrap.classList.add("result-thumb-placeholder");
         wrap.textContent = "🎵";
         return;
     }
-
     if (item.mediaProbeState === "unavailable") {
         wrap.classList.add("result-thumb-placeholder");
         wrap.textContent = "🔗";
         return;
     }
-
     wrap.classList.add("result-thumb-placeholder", "media-probing");
     wrap.textContent = "⏳";
-
     ensureLinkMediaResolved(item).then(() => {
         if (!wrap.isConnected) return;
         wrap.innerHTML = "";
@@ -3704,7 +3999,6 @@ function renderResultLinkThumb(item, wrap) {
 
 function appendResultControlsRow(item, el) {
     if (!item) return;
-
     if (item.type === "audio") {
         const row = document.createElement("div");
         row.className = "result-audio-row";
@@ -3712,9 +4006,7 @@ function appendResultControlsRow(item, el) {
         el.appendChild(row);
         return;
     }
-
     if (item.type !== "link") return;
-
     if (item.mediaProbeState === "audio") {
         const row = document.createElement("div");
         row.className = "result-audio-row";
@@ -3722,8 +4014,7 @@ function appendResultControlsRow(item, el) {
         el.appendChild(row);
         return;
     }
-
-    if (item.mediaProbeState === "unavailable" || (item.youtubeId && item.linkURL)) {
+    if (item.mediaProbeState === "unavailable" || item.youtubeId && item.linkURL) {
         if (item.linkURL) {
             const linkEl = document.createElement("a");
             linkEl.className = "result-link";
@@ -3735,97 +4026,112 @@ function appendResultControlsRow(item, el) {
         }
         return;
     }
-
-    if (item.mediaProbeState === "image") return; // yes
-
+    if (item.mediaProbeState === "image") return;
     ensureLinkMediaResolved(item).then(() => {
         if (!el.isConnected) return;
         appendResultControlsRow(item, el);
     });
 }
 
+function fitResultNames() {
+    const names = document.querySelectorAll("#resultsPodium .result-name, #resultList .result-name");
+    names.forEach(nameEl => {
+        let size = nameEl.classList.contains("is-podium-name") ? 17 : 14;
+        nameEl.style.fontSize = size + "px";
+        while (nameEl.scrollWidth > nameEl.clientWidth && size > 7) {
+            size -= .25;
+            nameEl.style.fontSize = size + "px";
+        }
+    });
+}
+
+const RESULT_STAGGER_STEP_MS = 35;
+
+const RESULT_CASCADE_BUDGET_MS = 2200;
+
+const PODIUM_STAGGER_MS = [ 0, 130, 200 ];
+
+const PODIUM_BASE_DELAY_MS = 560;
+
 function displayResults(ranking) {
     stopAllPlayingAudio();
+    resultsPodium.innerHTML = "";
     resultList.innerHTML = "";
-
     let rank = 1;
-
+    const restCount = Math.max(1, ranking.length - 3);
+    const dynamicStep = Math.min(RESULT_STAGGER_STEP_MS, RESULT_CASCADE_BUDGET_MS / restCount);
     ranking.forEach((character, index) => {
         if (index > 0 && !tiedWithNext.has(ranking[index - 1].id)) {
             rank = index + 1;
         }
-
         const item = imagesById.get(character.id);
-
+        const isPodium = index < 3;
         const el = document.createElement("div");
-        el.className = "result-item";
-
+        el.className = "result-item" + (isPodium ? ` podium-${index + 1}` : "");
         const rankEl = document.createElement("div");
         rankEl.className = "rank";
-        rankEl.textContent = rank;
-
+        if (isPodium) {
+            rankEl.textContent = [ "🥇", "🥈", "🥉" ][index];
+            rankEl.title = "Rank " + rank;
+        } else {
+            rankEl.textContent = rank;
+        }
         const thumbEl = buildResultThumb(item, character);
-
-        const nameEl = document.createElement("div");
-        nameEl.className = "result-name";
-        nameEl.textContent = character.name;
-		nameEl.title = character.name;
-
+        const nameEl = document.createElement("input");
+        nameEl.type = "text";
+        nameEl.className = "result-name" + (isPodium ? " is-podium-name" : "");
+        nameEl.value = character.name;
+        nameEl.title = character.name;
+        nameEl.spellcheck = false;
+        nameEl.addEventListener("input", () => {
+            character.name = nameEl.value;
+            if (item) item.name = nameEl.value;
+            nameEl.title = nameEl.value;
+        });
+        nameEl.addEventListener("click", e => e.stopPropagation());
+        el.appendChild(rankEl);
+        el.appendChild(thumbEl);
+        el.appendChild(nameEl);
         if (tiedWithNext.has(character.id)) {
             const tieEl = document.createElement("span");
             tieEl.className = "tie";
             tieEl.textContent = "tied with the next one";
-            nameEl.appendChild(tieEl);
+            el.appendChild(tieEl);
         }
-
-        el.appendChild(rankEl);
-        el.appendChild(thumbEl);
-        el.appendChild(nameEl);
-
         appendResultControlsRow(item, el);
-
-        resultList.appendChild(el);
+        if (isPodium) {
+            el.style.animationDelay = PODIUM_STAGGER_MS[index] + "ms";
+            resultsPodium.appendChild(el);
+        } else {
+            const delay = PODIUM_BASE_DELAY_MS + (index - 3) * dynamicStep;
+            el.style.animationDelay = delay + "ms";
+            resultList.appendChild(el);
+        }
     });
-	
-	function fitResultNames() {
-		const names = document.querySelectorAll("#resultList .result-name");
-
-		names.forEach(nameEl => {
-			let size = 14;
-
-			nameEl.style.fontSize = size + "px";
-
-			while (nameEl.scrollWidth > nameEl.clientWidth && size > 7) {
-				size -= 0.25;
-				nameEl.style.fontSize = size + "px";
-			}
-		});
-	}
-	
+    if (ranking.length > 3) {
+        podiumDivider.hidden = false;
+        podiumDivider.style.animationDelay = PODIUM_BASE_DELAY_MS + "ms";
+    } else {
+        podiumDivider.hidden = true;
+    }
     applyResultsLayoutMode();
-	fitResultNames();
+    fitResultNames();
 }
 
 restartButton.addEventListener("click", startSorter);
 
-
-/* laffichage des resultats*/
-
 const btnToggleResultsLayout = document.getElementById("btnToggleResultsLayout");
+
 const resultsPanel = document.querySelector(".results");
 
-let resultsLayoutMode = "vertical"; 
+let resultsLayoutMode = "vertical";
 
 function applyResultsLayoutMode() {
     const horizontal = resultsLayoutMode === "horizontal";
-
     resultList.classList.toggle("horizontal", horizontal);
     if (resultsPanel) resultsPanel.classList.toggle("layout-horizontal", horizontal);
-
     if (btnToggleResultsLayout) {
-        btnToggleResultsLayout.textContent = horizontal
-            ? "↕ Vertical display"
-            : "↔ Horizontal display";
+        btnToggleResultsLayout.textContent = horizontal ? "↕ Vertical display" : "↔ Horizontal display";
     }
 }
 
@@ -3839,9 +4145,6 @@ if (btnToggleResultsLayout) {
     btnToggleResultsLayout.addEventListener("click", toggleResultsLayout);
 }
 
-
-/* export png des results  */
-
 const btnExportResultsPng = document.getElementById("btnExportResultsPng");
 
 function syncExportResultsButtonVisibility() {
@@ -3849,8 +4152,10 @@ function syncExportResultsButtonVisibility() {
 }
 
 if (btnExportResultsPng && window.MutationObserver) {
-    new MutationObserver(syncExportResultsButtonVisibility)
-        .observe(resultsView, { attributes: true, attributeFilter: ["hidden"] });
+    new MutationObserver(syncExportResultsButtonVisibility).observe(resultsView, {
+        attributes: true,
+        attributeFilter: [ "hidden" ]
+    });
 }
 
 syncExportResultsButtonVisibility();
@@ -3860,15 +4165,14 @@ function pad2ForExport(n) {
 }
 
 function buildResultsPngFilename() {
-    const now = new Date();
+    const now = new Date;
     return `results-${now.getFullYear()}${pad2ForExport(now.getMonth() + 1)}${pad2ForExport(now.getDate())}-${pad2ForExport(now.getHours())}${pad2ForExport(now.getMinutes())}.png`;
 }
 
-// "#resultList .result-item:nth-child(1/2/3)" plus haut dans ce fichier
 const RESULTS_PODIUM_GRADIENTS = {
-    1: ["rgba(255, 215, 0, 0.5)", "rgba(184, 134, 11, 0.5)"],
-    2: ["rgba(232, 232, 232, 0.5)", "rgba(140, 140, 140, 0.5)"],
-    3: ["rgba(205, 127, 50, 0.2)", "rgba(139, 69, 19, 0.3)"]
+    1: [ "rgba(255, 215, 0, 0.5)", "rgba(184, 134, 11, 0.5)" ],
+    2: [ "rgba(232, 232, 232, 0.5)", "rgba(140, 140, 140, 0.5)" ],
+    3: [ "rgba(205, 127, 50, 0.2)", "rgba(139, 69, 19, 0.3)" ]
 };
 
 function readComputedBox(el) {
@@ -3883,7 +4187,8 @@ function readComputedBox(el) {
         fontSize: parseFloat(cs.fontSize) || 14,
         fontWeight: cs.fontWeight,
         fontFamily: cs.fontFamily,
-        imageRendering: cs.imageRendering
+        imageRendering: cs.imageRendering,
+        textAlign: cs.textAlign
     };
 }
 
@@ -3908,16 +4213,14 @@ function drawEllipsizedText(ctx, text, x, y, maxWidth) {
     let lo = 0, hi = text.length;
     while (lo < hi) {
         const mid = Math.ceil((lo + hi) / 2);
-        if (ctx.measureText(text.slice(0, mid) + ellipsis).width <= maxWidth) lo = mid;
-        else hi = mid - 1;
+        if (ctx.measureText(text.slice(0, mid) + ellipsis).width <= maxWidth) lo = mid; else hi = mid - 1;
     }
     ctx.fillText(text.slice(0, lo) + ellipsis, x, y);
 }
 
 function loadImageElement(src) {
     return new Promise((resolve, reject) => {
-        const img = new Image();
-
+        const img = new Image;
         if (!/^(blob:|data:)/.test(src)) {
             img.crossOrigin = "anonymous";
         }
@@ -3930,120 +4233,117 @@ function loadImageElement(src) {
 async function exportResultsAsPng() {
     const resultsPanelEl = document.querySelector("#resultsView .results");
     const listEl = document.getElementById("resultList");
+    const podiumEl = document.getElementById("resultsPodium");
     if (!resultsPanelEl || !listEl || !btnExportResultsPng) return;
-
-    const items = Array.from(listEl.querySelectorAll(".result-item"));
+    const items = [ ...podiumEl ? Array.from(podiumEl.querySelectorAll(".result-item")) : [], ...Array.from(listEl.querySelectorAll(".result-item")) ];
     if (items.length === 0) {
         alert("There are no results to export yet.");
         return;
     }
-
     const originalLabel = btnExportResultsPng.textContent;
     btnExportResultsPng.disabled = true;
     btnExportResultsPng.textContent = "Exporting…";
-
     const prevScrollLeft = listEl.scrollLeft;
     const prevScrollTop = listEl.scrollTop;
-
     const hiddenExtras = [];
     items.forEach(item => {
         item.querySelectorAll(".result-audio-row, .result-link").forEach(extra => {
-            hiddenExtras.push({ el: extra, display: extra.style.display });
+            hiddenExtras.push({
+                el: extra,
+                display: extra.style.display
+            });
             extra.style.display = "none";
         });
     });
-
     try {
-
         listEl.scrollLeft = 0;
         listEl.scrollTop = 0;
-
-        const listRect = listEl.getBoundingClientRect();
-
+        const listRect = resultsPanelEl.getBoundingClientRect();
         function relRect(el) {
             const r = el.getBoundingClientRect();
-            return { x: r.left - listRect.left, y: r.top - listRect.top, w: r.width, h: r.height };
+            return {
+                x: r.left - listRect.left,
+                y: r.top - listRect.top,
+                w: r.width,
+                h: r.height
+            };
         }
-
         const itemData = items.map(item => {
             const rankEl = item.querySelector(".rank");
             const imgEl = item.querySelector(".result-thumb img");
             const placeholderEl = item.querySelector(".result-thumb-placeholder");
             const nameEl = item.querySelector(".result-name");
-            const tieEl = nameEl ? nameEl.querySelector(".tie") : null;
-
-            const nameText = nameEl
-                ? Array.from(nameEl.childNodes)
-                    .filter(n => n.nodeType === Node.TEXT_NODE)
-                    .map(n => n.textContent)
-                    .join("")
-                    .trim()
-                : "";
-
+            const tieEl = item.querySelector(".tie");
+            const nameText = nameEl ? String(nameEl.value !== undefined ? nameEl.value : nameEl.textContent).trim() : "";
             return {
                 rect: relRect(item),
                 style: readComputedBox(item),
                 isAudio: !!item.querySelector(".result-audio-row"),
-                rank: rankEl ? { rect: relRect(rankEl), text: rankEl.textContent, style: readComputedBox(rankEl) } : null,
-                img: imgEl ? { rect: relRect(imgEl), src: imgEl.src, style: readComputedBox(imgEl) } : null,
-
-                placeholder: (!imgEl && placeholderEl) ? { rect: relRect(placeholderEl), text: placeholderEl.textContent, style: readComputedBox(placeholderEl) } : null,
-                name: nameEl ? { rect: relRect(nameEl), text: nameText, style: readComputedBox(nameEl) } : null,
-                tie: tieEl ? { rect: relRect(tieEl), text: tieEl.textContent, style: readComputedBox(tieEl) } : null
+                rank: rankEl ? {
+                    rect: relRect(rankEl),
+                    text: rankEl.textContent,
+                    style: readComputedBox(rankEl)
+                } : null,
+                img: imgEl ? {
+                    rect: relRect(imgEl),
+                    src: imgEl.src,
+                    style: readComputedBox(imgEl)
+                } : null,
+                placeholder: !imgEl && placeholderEl ? {
+                    rect: relRect(placeholderEl),
+                    text: placeholderEl.textContent,
+                    style: readComputedBox(placeholderEl)
+                } : null,
+                name: nameEl ? {
+                    rect: relRect(nameEl),
+                    text: nameText,
+                    style: readComputedBox(nameEl)
+                } : null,
+                tie: tieEl ? {
+                    rect: relRect(tieEl),
+                    text: tieEl.textContent,
+                    style: readComputedBox(tieEl)
+                } : null
             };
         });
-
         const titleEl = resultsPanelEl.querySelector("h2");
         const titleText = titleEl ? titleEl.textContent.trim() : "";
         const titleStyle = titleEl ? readComputedBox(titleEl) : null;
-        const titleBlockHeight = titleEl ? Math.round(titleStyle.fontSize * 1.3) + 20 : 0;
-
-        const contentWidth = Math.ceil(Math.max(listRect.width, ...itemData.map(d => d.rect.x + d.rect.w)));
-        const contentHeight = Math.ceil(Math.max(listRect.height, ...itemData.map(d => d.rect.y + d.rect.h)));
-
+        const titleRect = titleEl ? relRect(titleEl) : null;
+        const contentWidth = Math.ceil(Math.max(listRect.width, titleRect ? titleRect.x + titleRect.w : 0, ...itemData.map(d => d.rect.x + d.rect.w)));
+        const contentHeight = Math.ceil(Math.max(listRect.height, titleRect ? titleRect.y + titleRect.h : 0, ...itemData.map(d => d.rect.y + d.rect.h)));
         listEl.scrollLeft = prevScrollLeft;
         listEl.scrollTop = prevScrollTop;
-
         const PADDING = 20;
         const totalWidth = contentWidth + PADDING * 2;
-        const totalHeight = titleBlockHeight + contentHeight + PADDING * 2;
-
+        const totalHeight = contentHeight + PADDING * 2;
         const decodedImages = await Promise.all(itemData.map(d => {
             if (!d.img || !d.img.src) return Promise.resolve(null);
             return loadImageElement(d.img.src).catch(() => null);
         }));
-
         const scaleFactor = Math.max(2, window.devicePixelRatio || 1);
-
         const canvas = document.createElement("canvas");
         canvas.width = Math.round(totalWidth * scaleFactor);
         canvas.height = Math.round(totalHeight * scaleFactor);
-
         const ctx = canvas.getContext("2d");
         ctx.scale(scaleFactor, scaleFactor);
-
         ctx.fillStyle = getComputedStyle(document.body).backgroundColor;
         ctx.fillRect(0, 0, totalWidth, totalHeight);
-
-        if (titleEl) {
+        if (titleEl && titleRect) {
             ctx.fillStyle = titleStyle.color;
             ctx.font = `${titleStyle.fontWeight} ${titleStyle.fontSize}px ${titleStyle.fontFamily}`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText(titleText, totalWidth / 2, PADDING + titleStyle.fontSize * 0.75);
+            ctx.fillText(titleText, PADDING + titleRect.x + titleRect.w / 2, PADDING + titleRect.y + titleRect.h / 2);
         }
-
         const originX = PADDING;
-        const originY = PADDING + titleBlockHeight;
-
+        const originY = PADDING;
         itemData.forEach((d, index) => {
             const x = originX + d.rect.x;
             const y = originY + d.rect.y;
             const w = d.rect.w;
             const h = d.rect.h;
-
             drawRoundedRectPath(ctx, x, y, w, h, d.style.borderRadius);
-
             if (index < 3) {
                 const stops = RESULTS_PODIUM_GRADIENTS[index + 1];
                 const gradient = ctx.createLinearGradient(x, y, x + w, y + h);
@@ -4058,28 +4358,23 @@ async function exportResultsAsPng() {
                 ctx.fillStyle = bg;
             }
             ctx.fill();
-
             if (d.style.borderWidth > 0) {
                 ctx.lineWidth = d.style.borderWidth;
                 ctx.strokeStyle = d.style.borderColor;
                 ctx.stroke();
             }
-
             const img = decodedImages[index];
             if (img && d.img) {
                 const ix = originX + d.img.rect.x;
                 const iy = originY + d.img.rect.y;
                 const iw = d.img.rect.w;
                 const ih = d.img.rect.h;
-
                 ctx.save();
                 drawRoundedRectPath(ctx, ix, iy, iw, ih, d.img.style.borderRadius);
                 ctx.clip();
-
                 const pixelated = d.img.style.imageRendering === "pixelated" || d.img.style.imageRendering === "crisp-edges";
                 ctx.imageSmoothingEnabled = !pixelated;
                 ctx.imageSmoothingQuality = "high";
-
                 const coverScale = Math.max(iw / img.naturalWidth, ih / img.naturalHeight);
                 const dw = img.naturalWidth * coverScale;
                 const dh = img.naturalHeight * coverScale;
@@ -4087,17 +4382,13 @@ async function exportResultsAsPng() {
                 const dy = iy + (ih - dh) / 2;
                 ctx.drawImage(img, dx, dy, dw, dh);
                 ctx.restore();
-
             } else {
-
                 const ph = d.placeholder;
                 if (ph && ph.rect) {
                     const px = originX + ph.rect.x + ph.rect.w / 2;
                     const py = originY + ph.rect.y + ph.rect.h / 2;
                     ctx.save();
-                    ctx.fillStyle = ph.style.backgroundColor && ph.style.backgroundColor !== "rgba(0, 0, 0, 0)"
-                        ? ph.style.backgroundColor
-                        : (getComputedStyle(document.documentElement).getPropertyValue("--image-bg").trim() || "#eeeeee");
+                    ctx.fillStyle = ph.style.backgroundColor && ph.style.backgroundColor !== "rgba(0, 0, 0, 0)" ? ph.style.backgroundColor : getComputedStyle(document.documentElement).getPropertyValue("--image-bg").trim() || "#eeeeee";
                     drawRoundedRectPath(ctx, originX + ph.rect.x, originY + ph.rect.y, ph.rect.w, ph.rect.h, 4);
                     ctx.fill();
                     ctx.font = `${ph.style.fontSize}px ${ph.style.fontFamily}`;
@@ -4107,24 +4398,19 @@ async function exportResultsAsPng() {
                     ctx.restore();
                 }
             }
-
-
-            const audioIconRect = d.isAudio ? (d.img ? d.img.rect : (d.placeholder ? d.placeholder.rect : null)) : null;
+            const audioIconRect = d.isAudio ? d.img ? d.img.rect : d.placeholder ? d.placeholder.rect : null : null;
             if (audioIconRect) {
                 const ix = originX + audioIconRect.x;
                 const iy = originY + audioIconRect.y;
                 const iw = audioIconRect.w;
                 const ih = audioIconRect.h;
-                const barH = Math.max(10, Math.min(14, ih * 0.28));
-
+                const barH = Math.max(10, Math.min(14, ih * .28));
                 ctx.save();
                 drawRoundedRectPath(ctx, ix, iy, iw, ih, 4);
                 ctx.clip();
-
                 ctx.fillStyle = "rgba(0,0,0,.55)";
                 ctx.fillRect(ix, iy + ih - barH, iw, barH);
-
-                const triSize = barH * 0.55;
+                const triSize = barH * .55;
                 const triX = ix + 6;
                 const triY = iy + ih - barH / 2;
                 ctx.fillStyle = "#fff";
@@ -4134,55 +4420,37 @@ async function exportResultsAsPng() {
                 ctx.lineTo(triX + triSize, triY);
                 ctx.closePath();
                 ctx.fill();
-
                 ctx.restore();
             }
-
-            // numro de classement
             if (d.rank && d.rank.rect) {
                 ctx.fillStyle = d.rank.style.color;
                 ctx.font = `${d.rank.style.fontWeight} ${d.rank.style.fontSize}px ${d.rank.style.fontFamily}`;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
-                ctx.fillText(
-                    d.rank.text,
-                    originX + d.rank.rect.x + d.rank.rect.w / 2,
-                    originY + d.rank.rect.y + d.rank.rect.h / 2
-                );
+                ctx.fillText(d.rank.text, originX + d.rank.rect.x + d.rank.rect.w / 2, originY + d.rank.rect.y + d.rank.rect.h / 2);
             }
-
-            // nom (+ mention degalite eventuelle en dessous)
             if (d.name && d.name.rect) {
                 ctx.fillStyle = d.name.style.color;
                 ctx.font = `${d.name.style.fontWeight} ${d.name.style.fontSize}px ${d.name.style.fontFamily}`;
-                ctx.textAlign = "left";
+                const centered = d.name.style.textAlign === "center";
+                ctx.textAlign = centered ? "center" : "left";
                 ctx.textBaseline = "middle";
-
-                const nameY = d.tie
-                    ? originY + d.name.rect.y + d.name.rect.h * 0.35
-                    : originY + d.name.rect.y + d.name.rect.h / 2;
-
-                drawEllipsizedText(ctx, d.name.text, originX + d.name.rect.x, nameY, d.name.rect.w);
-
+                const nameX = centered ? originX + d.name.rect.x + d.name.rect.w / 2 : originX + d.name.rect.x;
+                const nameY = d.tie ? originY + d.name.rect.y + d.name.rect.h * .35 : originY + d.name.rect.y + d.name.rect.h / 2;
+                drawEllipsizedText(ctx, d.name.text, nameX, nameY, d.name.rect.w);
                 if (d.tie && d.tie.rect) {
                     ctx.fillStyle = d.tie.style.color;
                     ctx.font = `${d.tie.style.fontWeight} ${d.tie.style.fontSize}px ${d.tie.style.fontFamily}`;
-                    ctx.textAlign = "left";
+                    const tieCentered = d.tie.style.textAlign === "center";
+                    ctx.textAlign = tieCentered ? "center" : "left";
                     ctx.textBaseline = "middle";
-                    drawEllipsizedText(
-                        ctx,
-                        d.tie.text,
-                        originX + d.tie.rect.x,
-                        originY + d.tie.rect.y + d.tie.rect.h / 2,
-                        d.tie.rect.w
-                    );
+                    const tieX = tieCentered ? originX + d.tie.rect.x + d.tie.rect.w / 2 : originX + d.tie.rect.x;
+                    drawEllipsizedText(ctx, d.tie.text, tieX, originY + d.tie.rect.y + d.tie.rect.h / 2, d.tie.rect.w);
                 }
             }
         });
-
         const pngBlob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
         if (!pngBlob) throw new Error("PNG generation failed.");
-
         const downloadUrl = URL.createObjectURL(pngBlob);
         const a = document.createElement("a");
         a.href = downloadUrl;
@@ -4190,19 +4458,16 @@ async function exportResultsAsPng() {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(downloadUrl), 2000);
-
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 2e3);
     } catch (err) {
         console.error("[SORTER] Erreur lors de l'export PNG des résultats :", err);
         alert("Unable to export the Results as a PNG image.\n\nDetail: " + (err && err.message ? err.message : err));
-
     } finally {
-
         listEl.scrollLeft = prevScrollLeft;
         listEl.scrollTop = prevScrollTop;
-
-        hiddenExtras.forEach(({ el, display }) => { el.style.display = display; });
-
+        hiddenExtras.forEach(({el: el, display: display}) => {
+            el.style.display = display;
+        });
         btnExportResultsPng.disabled = false;
         btnExportResultsPng.textContent = originalLabel;
     }
@@ -4212,28 +4477,28 @@ if (btnExportResultsPng) {
     btnExportResultsPng.addEventListener("click", exportResultsAsPng);
 }
 
-
-/* save et chargement*/
-
 const SAVE_FORMAT = "sorter-maker-save";
+
 const SAVE_VERSION = 3;
 
 const btnSaveImport = document.getElementById("btnSaveImport");
+
 const btnLoadImport = document.getElementById("btnLoadImport");
+
 const btnSaveSort = document.getElementById("btnSaveSort");
+
 const btnLoadSort = document.getElementById("btnLoadSort");
+
 const inputLoadSave = document.getElementById("inputLoadSave");
 
 function arrayBufferToBase64(buffer) {
     const bytes = new Uint8Array(buffer);
     let binary = "";
-    const chunkSize = 0x8000;
-
+    const chunkSize = 32768;
     for (let i = 0; i < bytes.length; i += chunkSize) {
         const chunk = bytes.subarray(i, i + chunkSize);
         binary += String.fromCharCode.apply(null, chunk);
     }
-
     return btoa(binary);
 }
 
@@ -4241,11 +4506,9 @@ function base64ToArrayBuffer(base64) {
     const binary = atob(base64);
     const len = binary.length;
     const bytes = new Uint8Array(len);
-
     for (let i = 0; i < len; i++) {
         bytes[i] = binary.charCodeAt(i);
     }
-
     return bytes.buffer;
 }
 
@@ -4254,7 +4517,7 @@ function pad2(n) {
 }
 
 function buildSaveFilename() {
-    const now = new Date();
+    const now = new Date;
     return `sorter-maker-${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}-${pad2(now.getHours())}${pad2(now.getMinutes())}.sorter-save`;
 }
 
@@ -4265,13 +4528,11 @@ async function isAnimatedGif(file) {
         const buffer = await file.arrayBuffer();
         const b = new Uint8Array(buffer);
         if (b.length < 13) return true;
-
         const packed = b[10];
-        const gctFlag = (packed & 0x80) !== 0;
-        const gctSize = gctFlag ? 3 * Math.pow(2, (packed & 0x07) + 1) : 0;
+        const gctFlag = (packed & 128) !== 0;
+        const gctSize = gctFlag ? 3 * Math.pow(2, (packed & 7) + 1) : 0;
         let pos = 13 + gctSize;
         let frames = 0;
-
         function skipSubBlocks(p) {
             while (p < b.length) {
                 const size = b[p];
@@ -4281,33 +4542,31 @@ async function isAnimatedGif(file) {
             }
             return p;
         }
-
         while (pos < b.length) {
             const marker = b[pos];
-            if (marker === 0x21) {
+            if (marker === 33) {
                 pos += 2;
                 pos = skipSubBlocks(pos);
-            } else if (marker === 0x2C) {
+            } else if (marker === 44) {
                 frames++;
                 if (frames > 1) return true;
                 const packedByte = b[pos + 9];
-                const lctFlag = (packedByte & 0x80) !== 0;
-                const lctSize = lctFlag ? 3 * Math.pow(2, (packedByte & 0x07) + 1) : 0;
-                pos = pos + 10 + lctSize + 1; // + LZW min code size
+                const lctFlag = (packedByte & 128) !== 0;
+                const lctSize = lctFlag ? 3 * Math.pow(2, (packedByte & 7) + 1) : 0;
+                pos = pos + 10 + lctSize + 1;
                 pos = skipSubBlocks(pos);
             } else {
-                break; // trailer (0x3B) ou fin
+                break;
             }
         }
         return frames > 1;
     } catch (err) {
-        return true; // prudence
+        return true;
     }
 }
 
 async function getCompressionStrategy(item) {
     if (item._compressionStrategy !== undefined) return item._compressionStrategy;
-
     let strategy = null;
     if (item.type === "image" && item.file) {
         strategy = item.file.type === "image/svg+xml" ? "svg" : "raster";
@@ -4315,7 +4574,6 @@ async function getCompressionStrategy(item) {
         const animated = await isAnimatedGif(item.file);
         strategy = animated ? null : "raster";
     }
-
     item._compressionStrategy = strategy;
     return strategy;
 }
@@ -4325,16 +4583,16 @@ async function getCompressibleItems() {
     const results = [];
     await runWithConcurrency(candidates, 8, async item => {
         const strategy = await getCompressionStrategy(item);
-        if (strategy) results.push({ item, strategy });
+        if (strategy) results.push({
+            item: item,
+            strategy: strategy
+        });
     });
     return results;
 }
 
 async function compressImageBlob(file, quality) {
-    return Promise.race([
-        compressImageBlobInner(file, quality),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Compression timed out")), 20000))
-    ]);
+    return Promise.race([ compressImageBlobInner(file, quality), new Promise((_, reject) => setTimeout(() => reject(new Error("Compression timed out")), 2e4)) ]);
 }
 
 async function compressImageBlobInner(file, quality) {
@@ -4353,18 +4611,16 @@ async function compressImageBlobInner(file, quality) {
 }
 
 function minifySvgText(text) {
-    return text
-        .replace(/<!--[\s\S]*?-->/g, "")
-        .replace(/>\s+</g, "><")
-        .replace(/\s{2,}/g, " ")
-        .trim();
+    return text.replace(/<!--[\s\S]*?-->/g, "").replace(/>\s+</g, "><").replace(/\s{2,}/g, " ").trim();
 }
 
 async function compressSvgBlob(file) {
     const text = await file.text();
     const minified = minifySvgText(text);
     if (!minified) return null;
-    const blob = new Blob([minified], { type: "image/svg+xml" });
+    const blob = new Blob([ minified ], {
+        type: "image/svg+xml"
+    });
     if (blob.size >= file.size) return null;
     return blob;
 }
@@ -4378,28 +4634,29 @@ async function compressItemForExport(item, strategy, quality) {
 async function estimateCompressedSize(quality, requestToken, isStaleFn) {
     const compressible = await getCompressibleItems();
     const compressibleIds = new Set(compressible.map(c => c.item.id));
-
     const fixedBytes = images.reduce((sum, item) => {
         if (!item.file || compressibleIds.has(item.id)) return sum;
         return sum + item.file.size;
     }, 0);
-
     if (compressible.length === 0) {
-        return { fixedBytes, compressibleOriginalBytes: 0, compressibleEstimatedBytes: 0, sampleCount: 0, totalCompressible: 0 };
+        return {
+            fixedBytes: fixedBytes,
+            compressibleOriginalBytes: 0,
+            compressibleEstimatedBytes: 0,
+            sampleCount: 0,
+            totalCompressible: 0
+        };
     }
-
     const SAMPLE_SIZE = 12;
     const step = Math.max(1, Math.floor(compressible.length / SAMPLE_SIZE));
     const sample = [];
     for (let i = 0; i < compressible.length && sample.length < SAMPLE_SIZE; i += step) {
         sample.push(compressible[i]);
     }
-
     let sampleOriginal = 0;
     let sampleCompressed = 0;
-
-    for (const { item, strategy } of sample) {
-        if (isStaleFn(requestToken)) return null; // un reglage plus recent a pris le relais
+    for (const {item: item, strategy: strategy} of sample) {
+        if (isStaleFn(requestToken)) return null;
         try {
             const compressed = await compressItemForExport(item, strategy, quality);
             sampleOriginal += item.file.size;
@@ -4409,13 +4666,11 @@ async function estimateCompressedSize(quality, requestToken, isStaleFn) {
             sampleCompressed += item.file.size;
         }
     }
-
-    const ratio = sampleOriginal > 0 ? (sampleCompressed / sampleOriginal) : 1;
+    const ratio = sampleOriginal > 0 ? sampleCompressed / sampleOriginal : 1;
     const compressibleOriginalBytes = compressible.reduce((s, c) => s + c.item.file.size, 0);
-
     return {
-        fixedBytes,
-        compressibleOriginalBytes,
+        fixedBytes: fixedBytes,
+        compressibleOriginalBytes: compressibleOriginalBytes,
         compressibleEstimatedBytes: Math.round(compressibleOriginalBytes * ratio),
         sampleCount: sample.length,
         totalCompressible: compressible.length
@@ -4430,7 +4685,6 @@ function formatBytesHuman(bytes) {
 
 async function buildSaveObject(compressionOverrides) {
     const fileParts = [];
-
     const imagesData = images.map(item => {
         const entry = {
             id: item.id,
@@ -4440,15 +4694,12 @@ async function buildSaveObject(compressionOverrides) {
             naturalWidth: item.naturalWidth,
             naturalHeight: item.naturalHeight
         };
-
         if (item.type === "link") {
             entry.linkURL = item.linkURL;
             entry.youtubeId = item.youtubeId || null;
             return entry;
         }
-
         const override = compressionOverrides ? compressionOverrides.get(item.id) : null;
-
         if (override) {
             const isSvg = override.type === "image/svg+xml";
             const baseName = item.file && item.file.name ? item.file.name.replace(/\.[^.]+$/, "") : item.name;
@@ -4457,29 +4708,26 @@ async function buildSaveObject(compressionOverrides) {
             entry.fileByteLength = override.size;
             fileParts.push(override);
         } else if (item.file) {
-            entry.fileName = item.file.name || (item.name + (item.type === "audio" ? ".mp3" : ".jpg"));
+            entry.fileName = item.file.name || item.name + (item.type === "audio" ? ".mp3" : ".jpg");
             entry.fileType = item.file.type || (item.type === "audio" ? "audio/mpeg" : "image/png");
             entry.fileByteLength = item.file.size;
             fileParts.push(item.file);
         }
-
         if (item.type === "audio" && item.coverFile) {
             entry.hasCover = true;
-            entry.coverFileName = item.coverFile.name || (item.name + "-cover.jpg");
+            entry.coverFileName = item.coverFile.name || item.name + "-cover.jpg";
             entry.coverFileType = item.coverFile.type || "image/jpeg";
             entry.coverByteLength = item.coverFile.size;
             fileParts.push(item.coverFile);
         } else {
             entry.hasCover = false;
         }
-
         return entry;
     });
-
     const header = {
         format: SAVE_FORMAT,
         version: SAVE_VERSION,
-        savedAt: new Date().toISOString(),
+        savedAt: (new Date).toISOString(),
         resultsLayoutMode: resultsLayoutMode,
         screen: currentScreenName,
         images: imagesData,
@@ -4491,31 +4739,29 @@ async function buildSaveObject(compressionOverrides) {
             comparisonsDone: comparisonsDone
         }
     };
-
-    return { header, fileParts };
+    return {
+        header: header,
+        fileParts: fileParts
+    };
 }
 
 async function writeSaveFile(compressionOverrides) {
-    const { header, fileParts } = await buildSaveObject(compressionOverrides);
-
-    const headerBytes = new TextEncoder().encode(JSON.stringify(header));
-    const magicBytes = new TextEncoder().encode(SAVE_MAGIC);
-
+    const {header: header, fileParts: fileParts} = await buildSaveObject(compressionOverrides);
+    const headerBytes = (new TextEncoder).encode(JSON.stringify(header));
+    const magicBytes = (new TextEncoder).encode(SAVE_MAGIC);
     const lengthPrefix = new Uint8Array(4);
     new DataView(lengthPrefix.buffer).setUint32(0, headerBytes.byteLength, true);
-
-    const blob = new Blob([magicBytes, lengthPrefix, headerBytes, ...fileParts], { type: "application/octet-stream" });
-
+    const blob = new Blob([ magicBytes, lengthPrefix, headerBytes, ...fileParts ], {
+        type: "application/octet-stream"
+    });
     const url = URL.createObjectURL(blob);
-
     const a = document.createElement("a");
     a.href = url;
     a.download = buildSaveFilename();
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    setTimeout(() => URL.revokeObjectURL(url), 2e3);
 }
 
 async function doSaveState() {
@@ -4528,12 +4774,19 @@ async function doSaveState() {
 }
 
 const saveModal = document.getElementById("saveModal");
+
 const saveModalStats = document.getElementById("saveModalStats");
+
 const saveCompressToggle = document.getElementById("saveCompressToggle");
+
 const saveQualitySlider = document.getElementById("saveQualitySlider");
+
 const saveQualityRow = document.getElementById("saveQualityRow");
+
 const saveSizePreview = document.getElementById("saveSizePreview");
+
 const btnSaveModalCancel = document.getElementById("btnSaveModalCancel");
+
 const btnSaveModalConfirm = document.getElementById("btnSaveModalConfirm");
 
 let saveEstimateToken = 0;
@@ -4542,26 +4795,16 @@ function openSaveModal() {
     const localImages = images.filter(it => it.type !== "link" && it.file);
     const remoteCount = images.filter(it => it.type === "link").length;
     const originalBytes = localImages.reduce((s, it) => s + it.file.size, 0);
-
-    saveModalStats.innerHTML = `
-        <div>Media: <strong>${images.length}</strong></div>
-        <div>Remote links (never embedded): <strong>${remoteCount}</strong></div>
-        <div>Local files: <strong>${localImages.length}</strong></div>
-        <div>Original size of local files: <strong>${formatBytesHuman(originalBytes)}</strong></div>
-    `;
-
+    saveModalStats.innerHTML = `\n        <div>Media: <strong>${images.length}</strong></div>\n        <div>Remote links (never embedded): <strong>${remoteCount}</strong></div>\n        <div>Local files: <strong>${localImages.length}</strong></div>\n        <div>Original size of local files: <strong>${formatBytesHuman(originalBytes)}</strong></div>\n    `;
     saveCompressToggle.checked = false;
     saveQualityRow.hidden = true;
     saveQualitySlider.value = "60";
     saveSizePreview.innerHTML = "";
-
     saveCompressToggle.disabled = true;
     saveCompressToggle.parentElement.title = "Checking compressible files…";
-
     saveModal.hidden = false;
-
     getCompressibleItems().then(compressible => {
-        if (saveModal.hidden) return; // modale refermée entre-temps
+        if (saveModal.hidden) return;
         if (compressible.length === 0) {
             saveCompressToggle.disabled = true;
             saveCompressToggle.parentElement.title = "No compressible local files (JPG/PNG/WebP/SVG/single-frame GIF) in this sorter.";
@@ -4580,11 +4823,11 @@ btnSaveModalCancel.addEventListener("click", closeSaveModal);
 
 saveCompressToggle.addEventListener("change", () => {
     saveQualityRow.hidden = !saveCompressToggle.checked;
-    if (saveCompressToggle.checked) refreshSizeEstimate();
-    else saveSizePreview.innerHTML = "";
+    if (saveCompressToggle.checked) refreshSizeEstimate(); else saveSizePreview.innerHTML = "";
 });
 
 let saveEstimateDebounce = null;
+
 saveQualitySlider.addEventListener("input", () => {
     saveSizePreview.innerHTML = `<div class="save-size-computing">Computing estimate…</div>`;
     clearTimeout(saveEstimateDebounce);
@@ -4593,56 +4836,33 @@ saveQualitySlider.addEventListener("input", () => {
 
 async function refreshSizeEstimate() {
     const myToken = ++saveEstimateToken;
-
     const level = parseInt(saveQualitySlider.value, 10);
-    const quality = Math.max(0.05, 1 - (level / 100) * 0.9);
-
+    const quality = Math.max(.05, 1 - level / 100 * .9);
     const result = await estimateCompressedSize(quality, myToken, token => token !== saveEstimateToken);
     if (!result || myToken !== saveEstimateToken) return;
-
     const totalOriginal = result.fixedBytes + result.compressibleOriginalBytes;
     const totalEstimated = result.fixedBytes + result.compressibleEstimatedBytes;
-    const reductionPct = totalOriginal > 0 ? (100 * (1 - totalEstimated / totalOriginal)) : 0;
-
-    const sampleNote = result.totalCompressible > result.sampleCount
-        ? `<div class="save-size-note">Estimated from a sample of ${result.sampleCount}/${result.totalCompressible} images — the exact result may vary slightly.</div>`
-        : `<div class="save-size-note">Measured exactly (all ${result.totalCompressible} compressible images).</div>`;
-
-    saveSizePreview.innerHTML = `
-        <div class="save-size-row"><span>Estimated size</span><strong>${formatBytesHuman(totalEstimated)}</strong></div>
-        <div class="save-size-row"><span>Reduction</span><strong>${reductionPct.toFixed(1)}%</strong></div>
-        ${result.fixedBytes > 0 ? `<div class="save-size-note">Audio and animated GIF files (${formatBytesHuman(result.fixedBytes)}) are kept at their original size — a real audio/GIF-animation re-encoder isn't implemented here. SVG and single-frame GIFs ARE compressed.</div>` : ""}
-        ${sampleNote}
-    `;
+    const reductionPct = totalOriginal > 0 ? 100 * (1 - totalEstimated / totalOriginal) : 0;
+    const sampleNote = result.totalCompressible > result.sampleCount ? `<div class="save-size-note">Estimated from a sample of ${result.sampleCount}/${result.totalCompressible} images, the exact result may vary slightly.</div>` : `<div class="save-size-note">Measured exactly (all ${result.totalCompressible} compressible images).</div>`;
+    saveSizePreview.innerHTML = `\n        <div class="save-size-row"><span>Estimated size</span><strong>${formatBytesHuman(totalEstimated)}</strong></div>\n        <div class="save-size-row"><span>Reduction</span><strong>${reductionPct.toFixed(1)}%</strong></div>\n        ${result.fixedBytes > 0 ? `<div class="save-size-note">Audio and animated GIF files (${formatBytesHuman(result.fixedBytes)}) are kept at their original size, a real audio/GIF-animation re-encoder isn't implemented here. SVG and single-frame GIFs ARE compressed.</div>` : ""}\n        ${sampleNote}\n    `;
 }
 
 btnSaveModalConfirm.addEventListener("click", async () => {
     btnSaveModalConfirm.disabled = true;
     const originalLabel = btnSaveModalConfirm.textContent;
-
     try {
         let overrides = null;
         let compressFailures = 0;
-
         if (saveCompressToggle.checked) {
             const level = parseInt(saveQualitySlider.value, 10);
-            const quality = Math.max(0.05, 1 - (level / 100) * 0.9);
-
+            const quality = Math.max(.05, 1 - level / 100 * .9);
             btnSaveModalConfirm.textContent = "Checking files…";
             const eligible = await getCompressibleItems();
-
-            overrides = new Map();
+            overrides = new Map;
             let done = 0;
             btnSaveModalConfirm.textContent = `Compressing… 0/${eligible.length}`;
-
-            // Compression EN PARALLÈLE (bornée) : avec des centaines/milliers
-            // d'images, une boucle séquentielle pouvait donner l'impression
-            // de blocage ou d'échec. Chaque échec individuel est isolé
-            // (compté, journalisé) et n'interrompt jamais le reste : l'item
-            // concerné gardera simplement son fichier original dans la
-            // sauvegarde plutôt que de faire échouer tout l'export.
             const COMPRESSION_CONCURRENCY = 4;
-            await runWithConcurrency(eligible, COMPRESSION_CONCURRENCY, async ({ item, strategy }) => {
+            await runWithConcurrency(eligible, COMPRESSION_CONCURRENCY, async ({item: item, strategy: strategy}) => {
                 try {
                     const compressed = await compressItemForExport(item, strategy, quality);
                     if (compressed) overrides.set(item.id, compressed);
@@ -4655,15 +4875,12 @@ btnSaveModalConfirm.addEventListener("click", async () => {
                 }
             });
         }
-
         btnSaveModalConfirm.textContent = "Saving…";
         await writeSaveFile(overrides);
         closeSaveModal();
-
         if (compressFailures > 0) {
             alert(`Save complete. ${compressFailures} image(s) could not be compressed and were kept at their original size in the save (this never blocks the export).`);
         }
-
     } catch (err) {
         console.error("[SORTER] Erreur lors de la sauvegarde :", err);
         alert("Saving failed. The current state of the app has not been changed.\n\nDetail: " + (err && err.message ? err.message : err));
@@ -4678,41 +4895,34 @@ function triggerLoadFile() {
 }
 
 if (btnSaveImport) btnSaveImport.addEventListener("click", openSaveModal);
+
 if (btnSaveSort) btnSaveSort.addEventListener("click", openSaveModal);
+
 if (btnLoadImport) btnLoadImport.addEventListener("click", triggerLoadFile);
+
 if (btnLoadSort) btnLoadSort.addEventListener("click", triggerLoadFile);
 
 inputLoadSave.addEventListener("change", async e => {
     const file = e.target.files[0];
-    e.target.value = ""; // permet de recharger deux fois le meme fichier daffiler
-
+    e.target.value = "";
     if (!file) return;
-
     importProgress.hidden = false;
     importProgressFill.style.width = "0%";
     importProgressLabel.textContent = "Reading save file…";
-
     try {
         let data;
-        let fileProvider = null; // (id) -> { main: Blob|null, cover: Blob|null }
-
+        let fileProvider = null;
         const magicBytes = new Uint8Array(await file.slice(0, 4).arrayBuffer());
-        const magicText = new TextDecoder().decode(magicBytes);
-
+        const magicText = (new TextDecoder).decode(magicBytes);
         if (magicText === SAVE_MAGIC) {
-            // ---- Format binaire (v2+) ----
             const lenBytes = new Uint8Array(await file.slice(4, 8).arrayBuffer());
             const headerLength = new DataView(lenBytes.buffer).getUint32(0, true);
-
             const headerText = await file.slice(8, 8 + headerLength).text();
             data = JSON.parse(headerText);
-
             let cursor = 8 + headerLength;
-            const slices = new Map();
-
+            const slices = new Map;
             (data.images || []).forEach(entry => {
                 let main = null, cover = null;
-
                 if (entry.type !== "link" && typeof entry.fileByteLength === "number") {
                     main = file.slice(cursor, cursor + entry.fileByteLength, entry.fileType);
                     cursor += entry.fileByteLength;
@@ -4721,14 +4931,16 @@ inputLoadSave.addEventListener("change", async e => {
                     cover = file.slice(cursor, cursor + entry.coverByteLength, entry.coverFileType);
                     cursor += entry.coverByteLength;
                 }
-
-                slices.set(entry.id, { main, cover });
+                slices.set(entry.id, {
+                    main: main,
+                    cover: cover
+                });
             });
-
-            fileProvider = id => slices.get(id) || { main: null, cover: null };
-
+            fileProvider = id => slices.get(id) || {
+                main: null,
+                cover: null
+            };
         } else {
-            // ---- Format JSON hérité (v1, base64 inline) : reste lisible. ----
             const text = await file.text();
             try {
                 data = JSON.parse(text);
@@ -4736,7 +4948,6 @@ inputLoadSave.addEventListener("change", async e => {
                 throw new Error("The selected file is not a readable backup file (invalid JSON).");
             }
         }
-
         if (!data || typeof data !== "object") {
             throw new Error("The backup file is empty or corrupted.");
         }
@@ -4755,9 +4966,7 @@ inputLoadSave.addEventListener("change", async e => {
         if (!data.sort || typeof data.sort !== "object") {
             throw new Error("The backup file is corrupted (sort status missing).");
         }
-
         await restoreFromSave(data, fileProvider);
-
     } catch (err) {
         console.error("[SORTER] Erreur lors du chargement de la sauvegarde :", err);
         alert("Unable to load this file.\n\n" + (err && err.message ? err.message : "Invalid or corrupted file.") + "\n\nThe current status of the application has not changed.");
@@ -4767,51 +4976,41 @@ inputLoadSave.addEventListener("change", async e => {
 });
 
 async function restoreFromSave(data, fileProvider) {
-
     const newImages = [];
-    const newImagesById = new Map();
-
+    const newImagesById = new Map;
     for (const entry of data.images) {
         if (!entry || !entry.id) {
             throw new Error("A backup item is invalid.");
         }
-
         const type = entry.type || "image";
         let file = null;
         let coverFile = null;
-
-        if (type === "link") {
-            // rien à charger : pas de fichier binaire pour un lien.
-
-        } else if (fileProvider) {
-            // Format binaire : les Blob ont déjà été découpés par tranche
-            // (File.slice), sans jamais charger tout le fichier en mémoire.
+        if (type === "link") {} else if (fileProvider) {
             const slice = fileProvider(entry.id);
             if (slice.main) {
-                file = new File([slice.main], entry.fileName || ((entry.name || type) + ".dat"), { type: entry.fileType || "" });
+                file = new File([ slice.main ], entry.fileName || (entry.name || type) + ".dat", {
+                    type: entry.fileType || ""
+                });
             }
             if (slice.cover) {
-                coverFile = new File([slice.cover], entry.coverFileName || "cover.jpg", { type: entry.coverFileType || "image/jpeg" });
+                coverFile = new File([ slice.cover ], entry.coverFileName || "cover.jpg", {
+                    type: entry.coverFileType || "image/jpeg"
+                });
             }
-
         } else {
-            // Format hérité v1 (base64 inline) — uniquement des images.
             if (!entry.dataBase64) {
                 throw new Error("A backup image is invalid.");
             }
             const buffer = base64ToArrayBuffer(entry.dataBase64);
-            file = new File(
-                [buffer],
-                entry.fileName || ((entry.name || "image") + ".jpg"),
-                { type: entry.fileType || "image/png" }
-            );
+            file = new File([ buffer ], entry.fileName || (entry.name || "image") + ".jpg", {
+                type: entry.fileType || "image/png"
+            });
         }
-
         const item = {
             id: entry.id,
             type: type,
             file: file,
-            name: typeof entry.name === "string" ? entry.name : (file ? nameFromFilename(file.name) : "Untitled"),
+            name: typeof entry.name === "string" ? entry.name : file ? nameFromFilename(file.name) : "Untitled",
             crop: entry.crop || null,
             naturalWidth: typeof entry.naturalWidth === "number" ? entry.naturalWidth : null,
             naturalHeight: typeof entry.naturalHeight === "number" ? entry.naturalHeight : null,
@@ -4823,19 +5022,10 @@ async function restoreFromSave(data, fileProvider) {
             youtubeId: entry.youtubeId || null,
             directMediaType: entry.linkURL && !entry.youtubeId ? detectDirectMediaType(entry.linkURL) : null
         };
-
         newImages.push(item);
         newImagesById.set(item.id, item);
     }
-
-    // Les gif/audio/lien sont immédiats (juste une URL, pas de décodage) :
-    // traités directement. Seules les images "classiques" nécessitent un
-    // vrai décodage/miniature — c'est la partie coûteuse avec beaucoup de
-    // fichiers, donc la seule qu'on parallélise (au lieu d'un
-    // "await" séquentiel item par item, qui était le principal facteur de
-    // lenteur du Load).
     const imageItemsToThumbnail = [];
-
     for (const item of newImages) {
         if (item.type === "image") {
             imageItemsToThumbnail.push(item);
@@ -4852,10 +5042,8 @@ async function restoreFromSave(data, fileProvider) {
             } else if (item.directMediaType === "audio") {
                 item.audioURL = item.linkURL;
             }
-
         }
     }
-
     const THUMBNAIL_CONCURRENCY = 6;
     let thumbDone = 0;
     if (imageItemsToThumbnail.length > 0) {
@@ -4868,10 +5056,9 @@ async function restoreFromSave(data, fileProvider) {
         thumbDone++;
         if (imageItemsToThumbnail.length > 0) {
             importProgressLabel.textContent = `Generating thumbnails… ${thumbDone} / ${imageItemsToThumbnail.length}`;
-            importProgressFill.style.width = Math.round((thumbDone / imageItemsToThumbnail.length) * 100) + "%";
+            importProgressFill.style.width = Math.round(thumbDone / imageItemsToThumbnail.length * 100) + "%";
         }
     });
-
     images.forEach(item => {
         revokeIfBlob(item.thumbURL);
         revokeIfBlob(item.audioURL);
@@ -4879,22 +5066,18 @@ async function restoreFromSave(data, fileProvider) {
     });
     clearMediaContainer(leftMedia);
     clearMediaContainer(rightMedia);
-
     images = newImages;
     imagesById.clear();
     newImagesById.forEach((value, key) => imagesById.set(key, value));
-
     const sort = data.sort || {};
-
-    characters = images.map(item => ({ id: item.id, name: item.name }));
-    const charactersById = new Map(characters.map(c => [c.id, c]));
-
+    characters = images.map(item => ({
+        id: item.id,
+        name: item.name
+    }));
+    const charactersById = new Map(characters.map(c => [ c.id, c ]));
     if (Array.isArray(sort.initialShuffledOrder)) {
         initialShuffledOrder = sort.initialShuffledOrder.slice();
-        totalComparisons = typeof sort.totalComparisons === "number"
-            ? sort.totalComparisons
-            : calculateMaximumComparisons(characters.length);
-
+        totalComparisons = typeof sort.totalComparisons === "number" ? sort.totalComparisons : calculateMaximumComparisons(characters.length);
         if (initialShuffledOrder.length >= 2) {
             replaySortFromLog(initialShuffledOrder, sort.choiceLog || "", charactersById);
         } else {
@@ -4902,125 +5085,103 @@ async function restoreFromSave(data, fileProvider) {
             currentMerge = null;
             history = [];
             choiceLog = [];
-            tiedWithNext = new Set();
+            tiedWithNext = new Set;
             comparisonsDone = 0;
         }
-
     } else {
-
-        groups = Array.isArray(sort.groups) ? sort.groups.map(g => [...g]) : [];
+        groups = Array.isArray(sort.groups) ? sort.groups.map(g => [ ...g ]) : [];
         currentMerge = sort.currentMerge ? {
-            left: [...sort.currentMerge.left],
-            right: [...sort.currentMerge.right],
+            left: [ ...sort.currentMerge.left ],
+            right: [ ...sort.currentMerge.right ],
             leftIndex: sort.currentMerge.leftIndex || 0,
             rightIndex: sort.currentMerge.rightIndex || 0,
-            result: Array.isArray(sort.currentMerge.result) ? [...sort.currentMerge.result] : []
+            result: Array.isArray(sort.currentMerge.result) ? [ ...sort.currentMerge.result ] : []
         } : null;
         totalComparisons = typeof sort.totalComparisons === "number" ? sort.totalComparisons : 0;
         comparisonsDone = typeof sort.comparisonsDone === "number" ? sort.comparisonsDone : 0;
         tiedWithNext = new Set(Array.isArray(sort.tiedWithNext) ? sort.tiedWithNext : []);
         history = Array.isArray(sort.history) ? sort.history.map(h => ({
-            groups: Array.isArray(h.groups) ? h.groups.map(g => [...g]) : [],
+            groups: Array.isArray(h.groups) ? h.groups.map(g => [ ...g ]) : [],
             currentMerge: h.currentMerge ? {
-                left: [...h.currentMerge.left],
-                right: [...h.currentMerge.right],
+                left: [ ...h.currentMerge.left ],
+                right: [ ...h.currentMerge.right ],
                 leftIndex: h.currentMerge.leftIndex || 0,
                 rightIndex: h.currentMerge.rightIndex || 0,
-                result: Array.isArray(h.currentMerge.result) ? [...h.currentMerge.result] : []
+                result: Array.isArray(h.currentMerge.result) ? [ ...h.currentMerge.result ] : []
             } : null,
             comparisonsDone: h.comparisonsDone || 0,
             tiedWithNext: new Set(Array.isArray(h.tiedWithNext) ? h.tiedWithNext : [])
         })) : [];
-
         initialShuffledOrder = groups.length ? groups.map(g => g[0].id) : characters.map(c => c.id);
         choiceLog = [];
     }
-
     resultsLayoutMode = data.resultsLayoutMode === "horizontal" ? "horizontal" : "vertical";
-
     updateCountLabel();
     refreshGridTotalHeight();
     renderVisibleCards();
-
-    const targetScreen = (data.screen === "sort" && characters.length >= 2) ? "sort" : "import";
-
+    const targetScreen = data.screen === "sort" && characters.length >= 2 ? "sort" : "import";
     if (targetScreen === "sort") {
         tieButton.style.display = "inline-block";
         undoButton.style.display = "inline-block";
         battleEl.style.display = "grid";
-
         showScreen("sort");
-
         if (sort.resultsVisible && groups.length === 1) {
             battleView.hidden = true;
             displayResults(groups[0]);
             resultsView.hidden = false;
-
         } else if (currentMerge) {
             resultsView.hidden = true;
             battleView.hidden = false;
             await displayCurrentComparison();
-
         } else {
-
             resultsView.hidden = true;
             battleView.hidden = false;
             nextStep();
         }
-
     } else {
         showScreen("import");
     }
 }
 
-/* les raccourcis clavier*/
-
 document.addEventListener("keydown", e => {
     if (currentScreenName !== "sort" || resultsView.hidden === false) return;
-
-    if (e.key === "ArrowLeft") { e.preventDefault(); choose("left"); }
-    else if (e.key === "ArrowRight") { e.preventDefault(); choose("right"); }
-    else if (e.key === "ArrowUp") { e.preventDefault(); choose("tie"); }
-    else if (e.key === "ArrowDown") { e.preventDefault(); undo(); }
+    if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        choose("left");
+    } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        choose("right");
+    } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        choose("tie");
+    } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        undo();
+    }
 });
 
-/* dark mode*/
-
 const btnDarkMode = document.getElementById("btnDarkMode");
+
 const btnDarkModeSort = document.getElementById("btnDarkModeSort");
 
 function updateDarkModeButtons(enabled) {
-
-    const text = enabled
-        ? "Light"
-        : "Dark";
-
+    const text = enabled ? "Light" : "Dark";
     if (btnDarkMode) {
         btnDarkMode.textContent = text;
     }
-
     if (btnDarkModeSort) {
         btnDarkModeSort.textContent = text;
     }
 }
 
 function applyDarkMode(enabled) {
-
     document.documentElement.classList.toggle("dark", enabled);
-
     updateDarkModeButtons(enabled);
-
-    localStorage.setItem(
-        "sorter-dark-mode",
-        enabled ? "1" : "0"
-    );
+    localStorage.setItem("sorter-dark-mode", enabled ? "1" : "0");
 }
 
 function toggleDarkMode() {
-
-    const enabled =
-        !document.documentElement.classList.contains("dark");
-
+    const enabled = !document.documentElement.classList.contains("dark");
     applyDarkMode(enabled);
 }
 
@@ -5033,9 +5194,7 @@ if (btnDarkModeSort) {
 }
 
 function initDarkMode() {
-
     const saved = localStorage.getItem("sorter-dark-mode");
-
     if (saved === "1") {
         applyDarkMode(true);
     } else {
@@ -5045,15 +5204,233 @@ function initDarkMode() {
 
 initDarkMode();
 
+const THEME_STORAGE_KEY = "sorter-maker-custom-theme";
 
-/* init*/
+const themeState = {
+    bg: null,
+    el: null
+};
+
+function clampPercent(n) {
+    return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+function clampHue(n) {
+    let h = Math.round(n) % 360;
+    if (h < 0) h += 360;
+    return h;
+}
+
+function parseColorToHsl(colorStr) {
+    let r, g, b;
+    const str = (colorStr || "").trim();
+    if (str.startsWith("#")) {
+        const hex = str.replace("#", "");
+        const full = hex.length === 3 ? hex.split("").map(c => c + c).join("") : hex;
+        r = parseInt(full.substring(0, 2), 16);
+        g = parseInt(full.substring(2, 4), 16);
+        b = parseInt(full.substring(4, 6), 16);
+    } else {
+        const m = str.match(/rgba?\(([^)]+)\)/i);
+        if (!m) return {
+            h: 0,
+            s: 0,
+            l: 100
+        };
+        const parts = m[1].split(",").map(p => parseFloat(p.trim()));
+        [r, g, b] = parts;
+    }
+    if (![ r, g, b ].every(Number.isFinite)) return {
+        h: 0,
+        s: 0,
+        l: 100
+    };
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0;
+    const l = (max + min) / 2;
+    if (max !== min) {
+        const d = max - min;
+        s = l > .5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r:
+            h = (g - b) / d + (g < b ? 6 : 0);
+            break;
+
+          case g:
+            h = (b - r) / d + 2;
+            break;
+
+          case b:
+            h = (r - g) / d + 4;
+            break;
+        }
+        h *= 60;
+    }
+    return {
+        h: Math.round(h),
+        s: Math.round(s * 100),
+        l: Math.round(l * 100)
+    };
+}
+
+function themeToCss(t) {
+    return `hsl(${t.h}, ${t.s}%, ${t.l}%)`;
+}
+
+function loadThemeState() {
+    try {
+        const raw = localStorage.getItem(THEME_STORAGE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.bg && parsed.el) return parsed;
+    } catch (err) {}
+    return null;
+}
+
+function saveThemeState() {
+    try {
+        localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(themeState));
+    } catch (err) {}
+}
+
+function applyThemeState() {
+    if (!themeState.bg || !themeState.el) {
+        document.documentElement.classList.remove("custom-theme");
+        return;
+    }
+    document.documentElement.style.setProperty("--custom-bg", themeToCss(themeState.bg));
+    document.documentElement.style.setProperty("--custom-element", themeToCss(themeState.el));
+    document.documentElement.classList.add("custom-theme");
+}
+
+const themeBgHue = document.getElementById("themeBgHue");
+const themeBgSat = document.getElementById("themeBgSat");
+const themeBgLight = document.getElementById("themeBgLight");
+const themeElHue = document.getElementById("themeElHue");
+const themeElSat = document.getElementById("themeElSat");
+const themeElLight = document.getElementById("themeElLight");
+
+const themeOutputs = {
+    bg: {
+        h: document.getElementById("themeBgHueOut"),
+        s: document.getElementById("themeBgSatOut"),
+        l: document.getElementById("themeBgLightOut")
+    },
+    el: {
+        h: document.getElementById("themeElHueOut"),
+        s: document.getElementById("themeElSatOut"),
+        l: document.getElementById("themeElLightOut")
+    }
+};
+
+const themePreviewBg = document.getElementById("themePreviewBg");
+const themePreviewEl = document.getElementById("themePreviewEl");
+
+function refreshThemeUI() {
+    themeBgHue.value = themeState.bg.h;
+    themeBgSat.value = themeState.bg.s;
+    themeBgLight.value = themeState.bg.l;
+    themeElHue.value = themeState.el.h;
+    themeElSat.value = themeState.el.s;
+    themeElLight.value = themeState.el.l;
+    themeOutputs.bg.h.textContent = themeState.bg.h + "°";
+    themeOutputs.bg.s.textContent = themeState.bg.s + "%";
+    themeOutputs.bg.l.textContent = themeState.bg.l + "%";
+    themeOutputs.el.h.textContent = themeState.el.h + "°";
+    themeOutputs.el.s.textContent = themeState.el.s + "%";
+    themeOutputs.el.l.textContent = themeState.el.l + "%";
+    themePreviewBg.style.background = themeToCss(themeState.bg);
+    themePreviewEl.style.background = themeToCss(themeState.el);
+}
+
+function bindThemeSlider(el, group, key) {
+    el.addEventListener("input", () => {
+        themeState[group][key] = key === "h" ? clampHue(Number(el.value)) : clampPercent(Number(el.value));
+        applyThemeState();
+        refreshThemeUI();
+        saveThemeState();
+    });
+}
+
+bindThemeSlider(themeBgHue, "bg", "h");
+bindThemeSlider(themeBgSat, "bg", "s");
+bindThemeSlider(themeBgLight, "bg", "l");
+bindThemeSlider(themeElHue, "el", "h");
+bindThemeSlider(themeElSat, "el", "s");
+bindThemeSlider(themeElLight, "el", "l");
+
+const themeModal = document.getElementById("themeModal");
+const btnThemeCustomize = document.getElementById("btnThemeCustomize");
+const btnThemeClose = document.getElementById("btnThemeClose");
+const btnThemeReset = document.getElementById("btnThemeReset");
+
+function ensureThemeStateInitialized() {
+    if (!themeState.bg) {
+        const computedBg = getComputedStyle(document.documentElement).getPropertyValue("--bg") || "#f4f4f1";
+        const hsl = parseColorToHsl(computedBg);
+        themeState.bg = {
+            h: hsl.h,
+            s: hsl.s,
+            l: hsl.l
+        };
+    }
+    if (!themeState.el) {
+        const computedEl = getComputedStyle(document.documentElement).getPropertyValue("--surface") || "#ffffff";
+        const hsl = parseColorToHsl(computedEl);
+        themeState.el = {
+            h: hsl.h,
+            s: hsl.s,
+            l: hsl.l
+        };
+    }
+}
+
+function openThemeModal() {
+    ensureThemeStateInitialized();
+    refreshThemeUI();
+    themeModal.hidden = false;
+}
+
+function closeThemeModal() {
+    themeModal.hidden = true;
+}
+
+if (btnThemeCustomize) btnThemeCustomize.addEventListener("click", openThemeModal);
+
+if (btnThemeClose) btnThemeClose.addEventListener("click", closeThemeModal);
+
+if (btnThemeReset) {
+    btnThemeReset.addEventListener("click", () => {
+        themeState.bg = null;
+        themeState.el = null;
+        applyThemeState();
+        saveThemeState();
+        ensureThemeStateInitialized();
+        refreshThemeUI();
+    });
+}
+
+(function initThemeCustomization() {
+    const stored = loadThemeState();
+    if (stored) {
+        themeState.bg = stored.bg;
+        themeState.el = stored.el;
+        applyThemeState();
+    }
+})();
 
 updateCountLabel();
-refreshGridTotalHeight();
-renderVisibleCards();
-applyResultsLayoutMode();
-showScreen("import");
 
+refreshGridTotalHeight();
+
+renderVisibleCards();
+
+applyResultsLayoutMode();
+
+showScreen("import");
 </script>
 
 </body>
