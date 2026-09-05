@@ -1907,17 +1907,63 @@ function withTimeout(promise, ms) {
     });
 }
 
-async function raceSources(sourceFns, timeoutMs) {
-    const attempts = sourceFns.map(fn => withTimeout(Promise.resolve().then(fn), timeoutMs).then(result => {
+async function raceSources(sourceFns, timeoutMs, label) {
+    const attempts = sourceFns.map((fn, i) => withTimeout(Promise.resolve().then(fn), timeoutMs).then(result => {
         if (result === null || result === undefined) throw new Error("empty result");
         if (Array.isArray(result) && result.length === 0) throw new Error("empty result");
         return result;
+    }).catch(err => {
+        console.warn(`[SORTER][${label || "source"} #${i}]`, err && err.message ? err.message : err);
+        throw err;
     }));
     try {
         return await Promise.any(attempts);
     } catch (err) {
+        console.warn(`[SORTER] All sources failed for ${label || "task"}.`);
         return null;
     }
+}
+
+let cachedPipedInstances = null;
+
+async function getPipedInstances() {
+    if (cachedPipedInstances) return cachedPipedInstances;
+    let dynamic = [];
+    try {
+        const res = await withTimeout(fetch("https://piped-instances.kavin.rocks/"), 6e3);
+        if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                dynamic = data.map(entry => entry && entry.api_url).filter(Boolean);
+            }
+        }
+    } catch (err) {
+        console.warn("[SORTER] Could not fetch dynamic Piped instance list.", err && err.message);
+    }
+    const merged = Array.from(new Set([ ...dynamic, ...PIPED_INSTANCES ]));
+    cachedPipedInstances = merged;
+    return merged;
+}
+
+let cachedInvidiousInstances = null;
+
+async function getInvidiousInstances() {
+    if (cachedInvidiousInstances) return cachedInvidiousInstances;
+    let dynamic = [];
+    try {
+        const res = await withTimeout(fetch("https://api.invidious.io/instances.json?sort_by=type,users"), 6e3);
+        if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                dynamic = data.filter(entry => Array.isArray(entry) && entry[1] && entry[1].type === "https" && entry[1].api !== false).map(entry => `https://${entry[0]}`);
+            }
+        }
+    } catch (err) {
+        console.warn("[SORTER] Could not fetch dynamic Invidious instance list.", err && err.message);
+    }
+    const merged = Array.from(new Set([ ...dynamic, ...INVIDIOUS_INSTANCES ]));
+    cachedInvidiousInstances = merged;
+    return merged;
 }
 
 function decodeHtmlEntities(str) {
@@ -2308,17 +2354,18 @@ async function fetchPlaylistViaProxyHtml(buildProxyUrl, playlistUrl) {
 
 async function fetchYoutubePlaylistVideos(playlistId) {
     const playlistUrl = `https://www.youtube.com/playlist?list=${encodeURIComponent(playlistId)}`;
+    const [ pipedInstances, invidiousInstances ] = await Promise.all([ getPipedInstances(), getInvidiousInstances() ]);
     const sources = [];
-    PIPED_INSTANCES.forEach(instance => {
+    pipedInstances.forEach(instance => {
         sources.push(() => fetchPlaylistViaPiped(instance, playlistId));
     });
-    INVIDIOUS_INSTANCES.forEach(instance => {
+    invidiousInstances.forEach(instance => {
         sources.push(() => fetchPlaylistViaInvidious(instance, playlistId));
     });
     OG_IMAGE_PROXIES.forEach(buildProxyUrl => {
         sources.push(() => fetchPlaylistViaProxyHtml(buildProxyUrl, playlistUrl));
     });
-    return await raceSources(sources, PLAYLIST_FETCH_TIMEOUT_MS);
+    return await raceSources(sources, PLAYLIST_FETCH_TIMEOUT_MS, "playlist");
 }
 
 async function fetchYoutubeVideoTitle(videoUrl, videoId) {
@@ -2339,7 +2386,8 @@ async function fetchYoutubeVideoTitle(videoUrl, videoId) {
         return data.title;
     });
     if (videoId) {
-        PIPED_INSTANCES.forEach(instance => {
+        const [ pipedInstances, invidiousInstances ] = await Promise.all([ getPipedInstances(), getInvidiousInstances() ]);
+        pipedInstances.forEach(instance => {
             sources.push(async () => {
                 const res = await fetch(`${instance}/streams/${encodeURIComponent(videoId)}`);
                 if (!res.ok) throw new Error("bad response");
@@ -2348,7 +2396,7 @@ async function fetchYoutubeVideoTitle(videoUrl, videoId) {
                 return data.title;
             });
         });
-        INVIDIOUS_INSTANCES.forEach(instance => {
+        invidiousInstances.forEach(instance => {
             sources.push(async () => {
                 const res = await fetch(`${instance}/api/v1/videos/${encodeURIComponent(videoId)}?fields=title`);
                 if (!res.ok) throw new Error("bad response");
@@ -2367,7 +2415,7 @@ async function fetchYoutubeVideoTitle(videoUrl, videoId) {
             return data.title;
         });
     });
-    const title = await raceSources(sources, TITLE_FETCH_TIMEOUT_MS);
+    const title = await raceSources(sources, TITLE_FETCH_TIMEOUT_MS, "title");
     return title ? decodeHtmlEntities(title) : null;
 }
 
@@ -2396,9 +2444,9 @@ async function importYoutubePlaylist(playlistId, startIndex, fallback) {
             updateCountLabel();
             refreshGridTotalHeight();
             renderVisibleCards();
-            alert("We're unable to retrieve this playlist at the moment (all the services used to play it are temporarily unavailable or overloaded). Only this video has been added. Please try again in a moment, or add the videos one by one.");
+            alert("Impossible de récupérer cette playlist pour le moment (tous les services utilisés pour la lire sont temporairement indisponibles ou surchargés). Seule cette vidéo a été ajoutée. Réessayez dans un instant, ou ouvrez la console du navigateur (F12) pour voir le détail des erreurs.");
         } else {
-            alert("We're unable to load this playlist at the moment (all the services used to play it are temporarily unavailable or overloaded). Please try again in a moment, or add the videos one by one.");
+            alert("Impossible de récupérer cette playlist pour le moment (tous les services utilisés pour la lire sont temporairement indisponibles ou surchargés). Réessayez dans un instant, ou ouvrez la console du navigateur (F12) pour voir le détail des erreurs.");
         }
         return;
     }
