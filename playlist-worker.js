@@ -13,7 +13,7 @@ const EMBED_CLIENT = {
 const USER_AGENT =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
 
-const MAX_PAGES = 200;
+const MAX_PAGES = 300;
 const VERIFY_CONCURRENCY = 5;
 const MAX_VERIFIED = 300;
 const CACHE_SECONDS = 300;
@@ -37,19 +37,6 @@ function response(data, status = 200) {
     });
 }
 
-function text(value) {
-    if (!value) return null;
-    if (typeof value.simpleText === "string") return value.simpleText;
-    if (Array.isArray(value.runs)) {
-        return value.runs.map(x => x.text || "").join("") || null;
-    }
-    return null;
-}
-
-function validId(id) {
-    return typeof id === "string" && /^[A-Za-z0-9_-]{11}$/.test(id);
-}
-
 async function youtube(endpoint, body, client = CLIENT) {
     const r = await fetch(
         `https://www.youtube.com/youtubei/v1/${endpoint}?key=${INNERTUBE_KEY}`,
@@ -61,7 +48,9 @@ async function youtube(endpoint, body, client = CLIENT) {
                 "Accept": "application/json",
                 "Accept-Language": "en-US,en;q=0.9",
                 "Origin": "https://www.youtube.com",
-                "Referer": "https://www.youtube.com/"
+                "Referer": "https://www.youtube.com/",
+                "X-YouTube-Client-Name": client === EMBED_CLIENT ? "56" : "1",
+                "X-YouTube-Client-Version": client.clientVersion
             },
             body: JSON.stringify({
                 ...body,
@@ -84,103 +73,29 @@ async function youtube(endpoint, body, client = CLIENT) {
     return r.json();
 }
 
-function playlistContents(data) {
-    const tabs =
-        data?.contents?.twoColumnBrowseResultsRenderer?.tabs;
-
-    if (!Array.isArray(tabs)) return null;
-
-    for (const tab of tabs) {
-        const sections =
-            tab?.tabRenderer?.content?.sectionListRenderer?.contents;
-
-        if (!Array.isArray(sections)) continue;
-
-        for (const section of sections) {
-            const items =
-                section?.itemSectionRenderer?.contents;
-
-            if (!Array.isArray(items)) continue;
-
-            for (const item of items) {
-                const contents =
-                    item?.playlistVideoListRenderer?.contents;
-
-                if (Array.isArray(contents)) {
-                    return contents;
-                }
-            }
-        }
-    }
-
-    return null;
-}
-
-function continuationContents(data) {
-    const actions = data?.onResponseReceivedActions;
-
-    if (!Array.isArray(actions)) return null;
-
-    for (const action of actions) {
-        const items =
-            action?.appendContinuationItemsAction?.continuationItems;
-
-        if (Array.isArray(items)) return items;
-    }
-
-    return null;
-}
-
-function extract(entries, seen) {
-    const videos = [];
-    let continuation = null;
-
-    for (const entry of entries || []) {
-        const renderer = entry?.playlistVideoRenderer;
-
-        if (renderer?.videoId && validId(renderer.videoId)) {
-            if (!seen.has(renderer.videoId)) {
-                seen.add(renderer.videoId);
-
-                videos.push({
-                    id: renderer.videoId,
-                    title: text(renderer.title)
-                });
-            }
-        }
-
-        const token =
-            entry?.continuationItemRenderer
-                ?.continuationEndpoint
-                ?.continuationCommand
-                ?.token;
-
-        if (token) continuation = token;
-    }
-
-    return { videos, continuation };
-}
-
-function rawIds(data, seen) {
-    const result = [];
+function extractPage(data, seen) {
     const raw = JSON.stringify(data);
-    const regex = /"videoId":"([A-Za-z0-9_-]{11})"/g;
+    const videos = [];
 
+    const idRegex = /"videoId":"([A-Za-z0-9_-]{11})"/g;
     let match;
 
-    while ((match = regex.exec(raw))) {
+    while ((match = idRegex.exec(raw))) {
         const id = match[1];
 
         if (!seen.has(id)) {
             seen.add(id);
-            result.push({
-                id,
-                title: null
-            });
+            videos.push({ id, title: null });
         }
     }
 
-    return result;
+    const tokenRegex = /"continuationCommand":\{"token":"([^"]+)"/;
+    const tokenMatch = raw.match(tokenRegex);
+
+    return {
+        videos,
+        continuation: tokenMatch ? tokenMatch[1] : null
+    };
 }
 
 async function getPlaylist(id) {
@@ -191,14 +106,8 @@ async function getPlaylist(id) {
         browseId: "VL" + id
     });
 
-    let contents = playlistContents(data);
-
-    if (!contents) {
-        return rawIds(data, seen);
-    }
-
     for (let page = 0; page < MAX_PAGES; page++) {
-        const result = extract(contents, seen);
+        const result = extractPage(data, seen);
 
         videos.push(...result.videos);
 
@@ -207,13 +116,6 @@ async function getPlaylist(id) {
         data = await youtube("browse", {
             continuation: result.continuation
         });
-
-        contents = continuationContents(data);
-
-        if (!contents) {
-            videos.push(...rawIds(data, seen));
-            break;
-        }
     }
 
     return videos;
