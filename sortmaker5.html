@@ -1886,6 +1886,47 @@ const REMOTE_PROBE_TIMEOUT_MS = 6e3;
 
 const OG_IMAGE_FETCH_TIMEOUT_MS = 6e3;
 
+const TITLE_FETCH_TIMEOUT_MS = 9e3;
+
+const PLAYLIST_FETCH_TIMEOUT_MS = 15e3;
+
+const PIPED_INSTANCES = [ "https://pipedapi.kavin.rocks", "https://api.piped.yt", "https://pipedapi.adminforge.de", "https://piped-api.lunar.icu", "https://pipedapi.leptons.xyz" ];
+
+const INVIDIOUS_INSTANCES = [ "https://yewtu.be", "https://invidious.nerdvpn.de", "https://invidious.jing.rocks", "https://iv.melmac.space", "https://invidious.protokolla.fi" ];
+
+function withTimeout(promise, ms) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("timeout")), ms);
+        Promise.resolve(promise).then(v => {
+            clearTimeout(timer);
+            resolve(v);
+        }, e => {
+            clearTimeout(timer);
+            reject(e);
+        });
+    });
+}
+
+async function raceSources(sourceFns, timeoutMs) {
+    const attempts = sourceFns.map(fn => withTimeout(Promise.resolve().then(fn), timeoutMs).then(result => {
+        if (result === null || result === undefined) throw new Error("empty result");
+        if (Array.isArray(result) && result.length === 0) throw new Error("empty result");
+        return result;
+    }));
+    try {
+        return await Promise.any(attempts);
+    } catch (err) {
+        return null;
+    }
+}
+
+function decodeHtmlEntities(str) {
+    if (!str) return str;
+    const el = document.createElement("textarea");
+    el.innerHTML = str;
+    return el.value;
+}
+
 const remoteMediaProbeCache = new Map;
 
 const REMOTE_PROBE_CONCURRENCY_PER_HOST = 4;
@@ -2004,9 +2045,9 @@ async function probeAsAudio(url) {
 
 const OG_IMAGE_PROXIES = [ u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u), u => "https://api.codetabs.com/v1/proxy/?quest=" + encodeURIComponent(u), u => "https://corsproxy.io/?url=" + encodeURIComponent(u), u => "https://thingproxy.freeboard.io/fetch/" + u ];
 
-async function fetchViaProxy(proxyUrl) {
+async function fetchViaProxy(proxyUrl, timeoutMs) {
     const controller = new AbortController;
-    const timer = setTimeout(() => controller.abort(), OG_IMAGE_FETCH_TIMEOUT_MS);
+    const timer = setTimeout(() => controller.abort(), timeoutMs || OG_IMAGE_FETCH_TIMEOUT_MS);
     try {
         const res = await fetch(proxyUrl, {
             signal: controller.signal
@@ -2194,6 +2235,7 @@ function extractPlaylistVideosFromHtml(html) {
         let title = titleMatch ? titleMatch[1] : null;
         if (title) {
             title = title.replace(/\\u0026/g, "&").replace(/\\"/g, '"').replace(/\\\//g, "/").replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+            title = decodeHtmlEntities(title);
         }
         out.push({
             id: id,
@@ -2203,28 +2245,134 @@ function extractPlaylistVideosFromHtml(html) {
     return out;
 }
 
-async function fetchYoutubeVideoTitle(videoUrl) {
-    const oembedUrl = "https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent(videoUrl);
-    try {
-        const res = await fetch(oembedUrl);
-        if (res.ok) {
-            const data = await res.json();
-            if (data && data.title) return data.title;
-        }
-    } catch (err) {}
-    for (const buildProxyUrl of OG_IMAGE_PROXIES) {
-        const text = await fetchViaProxy(buildProxyUrl(oembedUrl));
-        if (!text) continue;
-        try {
-            const data = JSON.parse(text);
-            if (data && data.title) return data.title;
-        } catch (err) {}
+async function fetchPlaylistViaPiped(instance, playlistId) {
+    const videos = [];
+    const seen = new Set;
+    let nextpage = null;
+    for (let page = 0; page < 20; page++) {
+        const base = `${instance}/playlists/${encodeURIComponent(playlistId)}`;
+        const fetchUrl = nextpage ? `${base}?nextpage=${encodeURIComponent(nextpage)}` : base;
+        const res = await fetch(fetchUrl);
+        if (!res.ok) throw new Error("bad response");
+        const data = await res.json();
+        const streams = Array.isArray(data.relatedStreams) ? data.relatedStreams : [];
+        streams.forEach(s => {
+            const idMatch = typeof s.url === "string" ? s.url.match(/[?&]v=([A-Za-z0-9_-]{11})/) : null;
+            const id = idMatch ? idMatch[1] : null;
+            if (id && !seen.has(id)) {
+                seen.add(id);
+                videos.push({
+                    id: id,
+                    title: s.title ? decodeHtmlEntities(s.title) : null
+                });
+            }
+        });
+        nextpage = data.nextpage || null;
+        if (!nextpage) break;
     }
-    return null;
+    if (!videos.length) throw new Error("empty playlist");
+    return videos;
+}
+
+async function fetchPlaylistViaInvidious(instance, playlistId) {
+    const videos = [];
+    const seen = new Set;
+    for (let page = 1; page <= 20; page++) {
+        const res = await fetch(`${instance}/api/v1/playlists/${encodeURIComponent(playlistId)}?page=${page}`);
+        if (!res.ok) throw new Error("bad response");
+        const data = await res.json();
+        const items = Array.isArray(data.videos) ? data.videos : [];
+        if (!items.length) break;
+        items.forEach(v => {
+            if (v.videoId && !seen.has(v.videoId)) {
+                seen.add(v.videoId);
+                videos.push({
+                    id: v.videoId,
+                    title: v.title ? decodeHtmlEntities(v.title) : null
+                });
+            }
+        });
+        if (items.length < 100) break;
+    }
+    if (!videos.length) throw new Error("empty playlist");
+    return videos;
+}
+
+async function fetchPlaylistViaProxyHtml(buildProxyUrl, playlistUrl) {
+    const html = await fetchViaProxy(buildProxyUrl(playlistUrl), PLAYLIST_FETCH_TIMEOUT_MS);
+    if (!html) throw new Error("no html");
+    const videos = extractPlaylistVideosFromHtml(html);
+    if (!videos.length) throw new Error("no videos found");
+    return videos;
+}
+
+async function fetchYoutubePlaylistVideos(playlistId) {
+    const playlistUrl = `https://www.youtube.com/playlist?list=${encodeURIComponent(playlistId)}`;
+    const sources = [];
+    PIPED_INSTANCES.forEach(instance => {
+        sources.push(() => fetchPlaylistViaPiped(instance, playlistId));
+    });
+    INVIDIOUS_INSTANCES.forEach(instance => {
+        sources.push(() => fetchPlaylistViaInvidious(instance, playlistId));
+    });
+    OG_IMAGE_PROXIES.forEach(buildProxyUrl => {
+        sources.push(() => fetchPlaylistViaProxyHtml(buildProxyUrl, playlistUrl));
+    });
+    return await raceSources(sources, PLAYLIST_FETCH_TIMEOUT_MS);
+}
+
+async function fetchYoutubeVideoTitle(videoUrl, videoId) {
+    const oembedUrl = "https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent(videoUrl);
+    const sources = [];
+    sources.push(async () => {
+        const res = await fetch(oembedUrl);
+        if (!res.ok) throw new Error("bad response");
+        const data = await res.json();
+        if (!data || !data.title) throw new Error("no title");
+        return data.title;
+    });
+    sources.push(async () => {
+        const res = await fetch("https://noembed.com/embed?url=" + encodeURIComponent(videoUrl));
+        if (!res.ok) throw new Error("bad response");
+        const data = await res.json();
+        if (!data || !data.title) throw new Error("no title");
+        return data.title;
+    });
+    if (videoId) {
+        PIPED_INSTANCES.forEach(instance => {
+            sources.push(async () => {
+                const res = await fetch(`${instance}/streams/${encodeURIComponent(videoId)}`);
+                if (!res.ok) throw new Error("bad response");
+                const data = await res.json();
+                if (!data || !data.title) throw new Error("no title");
+                return data.title;
+            });
+        });
+        INVIDIOUS_INSTANCES.forEach(instance => {
+            sources.push(async () => {
+                const res = await fetch(`${instance}/api/v1/videos/${encodeURIComponent(videoId)}?fields=title`);
+                if (!res.ok) throw new Error("bad response");
+                const data = await res.json();
+                if (!data || !data.title) throw new Error("no title");
+                return data.title;
+            });
+        });
+    }
+    OG_IMAGE_PROXIES.forEach(buildProxyUrl => {
+        sources.push(async () => {
+            const text = await fetchViaProxy(buildProxyUrl(oembedUrl));
+            if (!text) throw new Error("no text");
+            const data = JSON.parse(text);
+            if (!data || !data.title) throw new Error("no title");
+            return data.title;
+        });
+    });
+    const title = await raceSources(sources, TITLE_FETCH_TIMEOUT_MS);
+    return title ? decodeHtmlEntities(title) : null;
 }
 
 function applyAutoYoutubeTitle(item, videoUrl) {
-    fetchYoutubeVideoTitle(videoUrl).then(title => {
+    fetchYoutubeVideoTitle(videoUrl, item.youtubeId).then(title => {
         if (!title) return;
         const current = imagesById.get(item.id);
         if (!current || current.linkURL !== videoUrl) return;
@@ -2235,16 +2383,11 @@ function applyAutoYoutubeTitle(item, videoUrl) {
 
 async function importYoutubePlaylist(playlistId, startIndex, fallback) {
     fallback = fallback || {};
-    const playlistUrl = `https://www.youtube.com/playlist?list=${encodeURIComponent(playlistId)}`;
     importProgress.hidden = false;
     importProgressLabel.textContent = "Fetching playlist…";
     importProgressFill.style.width = "0%";
-    let html = null;
-    for (const buildProxyUrl of OG_IMAGE_PROXIES) {
-        html = await fetchViaProxy(buildProxyUrl(playlistUrl));
-        if (html) break;
-    }
-    if (!html) {
+    let videos = await fetchYoutubePlaylistVideos(playlistId);
+    if (!videos || videos.length === 0) {
         importProgress.hidden = true;
         if (fallback.videoId && isValidYoutubeId(fallback.videoId)) {
             const fallbackUrl = `https://www.youtube.com/watch?v=${fallback.videoId}`;
@@ -2253,25 +2396,9 @@ async function importYoutubePlaylist(playlistId, startIndex, fallback) {
             updateCountLabel();
             refreshGridTotalHeight();
             renderVisibleCards();
-            alert("Couldn't reach the playlist page to expand it (the free proxy services used to read it may be unreachable, this is common when testing a file:// page locally, since some proxies reject that origin). Added just this one video instead. Try again later, or open this file from a real web server (not file://) for full playlist expansion.");
+            alert("We're unable to retrieve this playlist at the moment (all the services used to play it are temporarily unavailable or overloaded). Only this video has been added. Please try again in a moment, or add the videos one by one.");
         } else {
-            alert("Unable to fetch this playlist right now, the free proxy services used to read it may be temporarily unavailable (or unreachable from a local file:// page). Try again in a moment, or add videos individually.");
-        }
-        return;
-    }
-    let videos = extractPlaylistVideosFromHtml(html);
-    if (videos.length === 0) {
-        importProgress.hidden = true;
-        if (fallback.videoId && isValidYoutubeId(fallback.videoId)) {
-            const fallbackUrl = `https://www.youtube.com/watch?v=${fallback.videoId}`;
-            const fallbackItem = createLinkItem(fallback.name || null, fallbackUrl);
-            if (!fallback.name) applyAutoYoutubeTitle(fallbackItem, fallbackUrl);
-            updateCountLabel();
-            refreshGridTotalHeight();
-            renderVisibleCards();
-            alert("No videos could be found on this playlist page. Added just the one video from your link instead.");
-        } else {
-            alert("No videos found in this playlist. It may be private, empty, or unavailable right now.");
+            alert("We're unable to load this playlist at the moment (all the services used to play it are temporarily unavailable or overloaded). Please try again in a moment, or add the videos one by one.");
         }
         return;
     }
@@ -2281,7 +2408,9 @@ async function importYoutubePlaylist(playlistId, startIndex, fallback) {
     let created = 0;
     videos.forEach(({id: id, title: title}) => {
         if (!isValidYoutubeId(id)) return;
-        createLinkItem(title || `Video ${startIndex + created}`, `https://www.youtube.com/watch?v=${id}`);
+        const videoUrl = `https://www.youtube.com/watch?v=${id}`;
+        const newItem = createLinkItem(title || null, videoUrl);
+        if (!title) applyAutoYoutubeTitle(newItem, videoUrl);
         created++;
         importProgressLabel.textContent = `Adding videos… ${created} / ${videos.length}`;
         importProgressFill.style.width = Math.round(created / videos.length * 100) + "%";
