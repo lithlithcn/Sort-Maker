@@ -5,6 +5,8 @@ const CLIENT = {
     clientVersion: "2.20260708.00.00"
 };
 
+const WORKER_BUILD = "2026-09-05-continuation-scan-v2";
+
 const CACHE_SECONDS = 300;
 
 function cors() {
@@ -105,192 +107,108 @@ function findVisitorData(data) {
     return data?.responseContext?.visitorData || null;
 }
 
-function findPlaylistRenderer(data) {
-    if (!data || typeof data !== "object") {
-        return null;
+function isVideoId(value) {
+    return typeof value === "string" && /^[A-Za-z0-9_-]{11}$/.test(value);
+}
+
+function extractTitleText(titleField) {
+    if (!titleField) return null;
+    if (typeof titleField.content === "string") return titleField.content;
+    if (typeof titleField.simpleText === "string") return titleField.simpleText;
+    if (Array.isArray(titleField.runs)) {
+        return titleField.runs.map(run => run?.text || "").join("");
     }
-
-    if (Array.isArray(data)) {
-        for (const item of data) {
-            const found = findPlaylistRenderer(item);
-            if (found) {
-                return found;
-            }
-        }
-
-        return null;
-    }
-
-    if (data.playlistVideoListRenderer) {
-        return data.playlistVideoListRenderer;
-    }
-
-    for (const value of Object.values(data)) {
-        if (value && typeof value === "object") {
-            const found = findPlaylistRenderer(value);
-
-            if (found) {
-                return found;
-            }
-        }
-    }
-
     return null;
 }
 
-function findContinuationInRenderer(renderer) {
-    if (!renderer || typeof renderer !== "object") {
+function extractVideoFromPlaylistVideoRenderer(renderer) {
+    if (!isVideoId(renderer?.videoId)) return null;
+    return {
+        id: renderer.videoId,
+        title: extractTitleText(renderer.title)
+    };
+}
+
+function extractVideoFromLockup(lockup) {
+    if (!lockup || typeof lockup !== "object") return null;
+    if (!isVideoId(lockup.contentId)) return null;
+    if (typeof lockup.contentType === "string" && /PLAYLIST|CHANNEL/.test(lockup.contentType)) {
         return null;
     }
-
-    const contents = Array.isArray(renderer.contents)
-        ? renderer.contents
-        : [];
-
-    for (let i = contents.length - 1; i >= 0; i--) {
-        const item = contents[i];
-
-        const token =
-            item?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ||
-            item?.continuationItemRenderer?.button?.buttonRenderer?.command?.continuationCommand?.token ||
-            item?.continuationItemRenderer?.command?.continuationCommand?.token ||
-            null;
-
-        if (token) {
-            return token;
-        }
-    }
-
-    const direct =
-        renderer?.continuations?.[0]?.nextContinuationData?.continuation ||
-        renderer?.continuations?.[0]?.reloadContinuationData?.continuation ||
-        null;
-
-    return direct;
-}
-
-function extractInitialPage(data) {
-    const renderer = findPlaylistRenderer(data);
-
-    if (!renderer) {
-        return {
-            videos: [],
-            continuation: null
-        };
-    }
-
-    const videos = [];
-    const contents = Array.isArray(renderer.contents)
-        ? renderer.contents
-        : [];
-
-    for (const item of contents) {
-        const video = item?.playlistVideoRenderer;
-
-        if (!video?.videoId) {
-            continue;
-        }
-
-        if (!/^[A-Za-z0-9_-]{11}$/.test(video.videoId)) {
-            continue;
-        }
-
-        const title =
-            video.title?.runs?.map(x => x?.text || "").join("") ||
-            video.title?.simpleText ||
-            null;
-
-        videos.push({
-            id: video.videoId,
-            title
-        });
-    }
-
+    const metadata = lockup.metadata?.lockupMetadataViewModel;
     return {
-        videos,
-        continuation: findContinuationInRenderer(renderer)
+        id: lockup.contentId,
+        title: extractTitleText(metadata?.title)
     };
 }
 
-function extractContinuationPage(data) {
-    const videos = [];
-    let continuation = null;
+function extractContinuationToken(node) {
+    return (
+        node?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ||
+        node?.continuationItemRenderer?.button?.buttonRenderer?.command?.continuationCommand?.token ||
+        node?.continuationItemRenderer?.command?.continuationCommand?.token ||
+        node?.continuationItemViewModel?.continuationEndpoint?.continuationCommand?.token ||
+        node?.continuationItemViewModel?.commandExtension?.continuationCommand?.token ||
+        node?.continuationItemViewModel?.command?.continuationCommand?.token ||
+        node?.continuationItemViewModel?.loggingDirectives?.continuationCommand?.token ||
+        node?.continuationItemViewModel?.commandContext?.onTap?.innertubeCommand?.continuationCommand?.token ||
+        node?.continuationEndpoint?.continuationCommand?.token ||
+        null
+    );
+}
 
-    const actions = Array.isArray(data?.onResponseReceivedActions)
-        ? data.onResponseReceivedActions
-        : [];
-
-    for (const action of actions) {
-        const append =
-            action?.appendContinuationItemsAction?.continuationItems ||
-            action?.reloadContinuationItemsCommand?.continuationItems ||
-            [];
-
-        for (const item of append) {
-            const video = item?.playlistVideoRenderer;
-
-            if (video?.videoId && /^[A-Za-z0-9_-]{11}$/.test(video.videoId)) {
-                const title =
-                    video.title?.runs?.map(x => x?.text || "").join("") ||
-                    video.title?.simpleText ||
-                    null;
-
-                videos.push({
-                    id: video.videoId,
-                    title
-                });
-            }
-
-            const token =
-                item?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ||
-                item?.continuationItemRenderer?.command?.continuationCommand?.token ||
-                null;
-
-            if (token) {
-                continuation = token;
-            }
-        }
+function collectVideosAndContinuation(node, out, seenNodes) {
+    if (!node || typeof node !== "object") {
+        return;
     }
 
-    if (!continuation) {
-        const continuationContents =
-            data?.continuationContents?.playlistVideoListContinuation;
+    if (seenNodes.has(node)) {
+        return;
+    }
+    seenNodes.add(node);
 
-        if (continuationContents) {
-            const contents = Array.isArray(continuationContents.contents)
-                ? continuationContents.contents
-                : [];
-
-            for (const item of contents) {
-                const video = item?.playlistVideoRenderer;
-
-                if (video?.videoId && /^[A-Za-z0-9_-]{11}$/.test(video.videoId)) {
-                    const title =
-                        video.title?.runs?.map(x => x?.text || "").join("") ||
-                        video.title?.simpleText ||
-                        null;
-
-                    videos.push({
-                        id: video.videoId,
-                        title
-                    });
-                }
-
-                const token =
-                    item?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ||
-                    null;
-
-                if (token) {
-                    continuation = token;
-                }
-            }
+    if (Array.isArray(node)) {
+        for (const item of node) {
+            collectVideosAndContinuation(item, out, seenNodes);
         }
+        return;
     }
 
-    return {
-        videos,
-        continuation
+    if (node.playlistVideoRenderer) {
+        const video = extractVideoFromPlaylistVideoRenderer(node.playlistVideoRenderer);
+        if (video) out.videos.push(video);
+    }
+
+    if (node.lockupViewModel) {
+        const video = extractVideoFromLockup(node.lockupViewModel);
+        if (video) out.videos.push(video);
+    }
+
+    const token = extractContinuationToken(node);
+    if (token) out.continuation = token;
+
+    if (Array.isArray(node.continuations) && node.continuations.length) {
+        const direct =
+            node.continuations[0]?.nextContinuationData?.continuation ||
+            node.continuations[0]?.reloadContinuationData?.continuation ||
+            null;
+        if (direct) out.continuation = direct;
+    }
+
+    for (const value of Object.values(node)) {
+        if (value && typeof value === "object") {
+            collectVideosAndContinuation(value, out, seenNodes);
+        }
+    }
+}
+
+function extractVideosAndContinuation(data) {
+    const out = {
+        videos: [],
+        continuation: null
     };
+    collectVideosAndContinuation(data, out, new Set());
+    return out;
 }
 
 function extractAlertText(alert) {
@@ -311,10 +229,12 @@ function diagnoseEmptyInitialResponse(data) {
         return `youtube_innertube_error_${code}: ${message}`;
     }
 
+    const benignAlertPhrases = ["unavailable videos are hidden"];
+
     if (Array.isArray(data?.alerts)) {
         for (const alert of data.alerts) {
             const text = extractAlertText(alert);
-            if (text) {
+            if (text && !benignAlertPhrases.some(phrase => text.toLowerCase().includes(phrase))) {
                 return `youtube_alert: ${text}`;
             }
         }
@@ -327,6 +247,37 @@ function diagnoseEmptyInitialResponse(data) {
 
     const topKeys = data && typeof data === "object" ? Object.keys(data).join(",") : "none";
     return `no_playlist_renderer_found (top_level_keys=${topKeys})`;
+}
+
+function findContinuationCandidates(node, results, seenNodes, path) {
+    if (results.length >= 8) return;
+    if (!node || typeof node !== "object") return;
+    if (seenNodes.has(node)) return;
+    seenNodes.add(node);
+
+    if (Array.isArray(node)) {
+        for (let i = 0; i < node.length && results.length < 8; i++) {
+            findContinuationCandidates(node[i], results, seenNodes, `${path}[${i}]`);
+        }
+        return;
+    }
+
+    for (const key of Object.keys(node)) {
+        if (/continuation/i.test(key)) {
+            results.push({
+                path: `${path}.${key}`,
+                sample: JSON.stringify(node[key]).slice(0, 800)
+            });
+        }
+    }
+
+    for (const key of Object.keys(node)) {
+        if (results.length >= 8) break;
+        const value = node[key];
+        if (value && typeof value === "object") {
+            findContinuationCandidates(value, results, seenNodes, `${path}.${key}`);
+        }
+    }
 }
 
 export default {
@@ -400,9 +351,7 @@ export default {
                 visitorData ||
                 null;
 
-            const page = continuation
-                ? extractContinuationPage(data)
-                : extractInitialPage(data);
+            const page = extractVideosAndContinuation(data);
 
             const uniqueVideos = [];
             const seen = new Set();
@@ -421,7 +370,13 @@ export default {
                     visitorData: currentVisitorData,
                     complete: true,
                     error: diagnoseEmptyInitialResponse(data),
-                    raw: debug ? JSON.stringify(data).slice(0, 6000) : undefined
+                    build: WORKER_BUILD,
+                    raw: debug ? JSON.stringify(data).slice(0, 6000) : undefined,
+                    continuationCandidates: debug ? (() => {
+                        const results = [];
+                        findContinuationCandidates(data, results, new Set(), "data");
+                        return results;
+                    })() : undefined
                 });
             }
 
@@ -431,7 +386,13 @@ export default {
                 visitorData: currentVisitorData,
                 complete: !page.continuation,
                 error: null,
-                raw: debug ? JSON.stringify(data).slice(0, 6000) : undefined
+                build: WORKER_BUILD,
+                raw: debug ? JSON.stringify(data).slice(0, 6000) : undefined,
+                continuationCandidates: debug ? (() => {
+                    const results = [];
+                    findContinuationCandidates(data, results, new Set(), "data");
+                    return results;
+                })() : undefined
             });
         } catch (error) {
             return response(
@@ -440,7 +401,8 @@ export default {
                     continuation: null,
                     visitorData: null,
                     complete: false,
-                    error: error?.message || "unknown_error"
+                    error: error?.message || "unknown_error",
+                    build: WORKER_BUILD
                 },
                 500
             );
