@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -342,7 +342,7 @@
     }
 
     .card.is-cropped .card-thumb::after {
-        content: "recadrée";
+        content: "cropped";
         position: absolute;
         bottom: 4px;
         right: 4px;
@@ -1888,11 +1888,9 @@ const OG_IMAGE_FETCH_TIMEOUT_MS = 6e3;
 
 const TITLE_FETCH_TIMEOUT_MS = 9e3;
 
-const PLAYLIST_FETCH_TIMEOUT_MS = 15e3;
+const PLAYLIST_FETCH_TIMEOUT_MS = 18e3;
 
-const PIPED_INSTANCES = [ "https://pipedapi.kavin.rocks", "https://api.piped.yt", "https://pipedapi.adminforge.de", "https://piped-api.lunar.icu", "https://pipedapi.leptons.xyz" ];
-
-const INVIDIOUS_INSTANCES = [ "https://yewtu.be", "https://invidious.nerdvpn.de", "https://invidious.jing.rocks", "https://iv.melmac.space", "https://invidious.protokolla.fi" ];
+const PLAYLIST_PROXIES = [ u => "https://r.jina.ai/" + u, u => "https://api.allorigins.win/get?url=" + encodeURIComponent(u), u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u), u => "https://api.codetabs.com/v1/proxy/?quest=" + encodeURIComponent(u) ];
 
 function withTimeout(promise, ms) {
     return new Promise((resolve, reject) => {
@@ -1922,48 +1920,6 @@ async function raceSources(sourceFns, timeoutMs, label) {
         console.warn(`[SORTER] All sources failed for ${label || "task"}.`);
         return null;
     }
-}
-
-let cachedPipedInstances = null;
-
-async function getPipedInstances() {
-    if (cachedPipedInstances) return cachedPipedInstances;
-    let dynamic = [];
-    try {
-        const res = await withTimeout(fetch("https://piped-instances.kavin.rocks/"), 6e3);
-        if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data)) {
-                dynamic = data.map(entry => entry && entry.api_url).filter(Boolean);
-            }
-        }
-    } catch (err) {
-        console.warn("[SORTER] Could not fetch dynamic Piped instance list.", err && err.message);
-    }
-    const merged = Array.from(new Set([ ...dynamic, ...PIPED_INSTANCES ]));
-    cachedPipedInstances = merged;
-    return merged;
-}
-
-let cachedInvidiousInstances = null;
-
-async function getInvidiousInstances() {
-    if (cachedInvidiousInstances) return cachedInvidiousInstances;
-    let dynamic = [];
-    try {
-        const res = await withTimeout(fetch("https://api.invidious.io/instances.json?sort_by=type,users"), 6e3);
-        if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data)) {
-                dynamic = data.filter(entry => Array.isArray(entry) && entry[1] && entry[1].type === "https" && entry[1].api !== false).map(entry => `https://${entry[0]}`);
-            }
-        }
-    } catch (err) {
-        console.warn("[SORTER] Could not fetch dynamic Invidious instance list.", err && err.message);
-    }
-    const merged = Array.from(new Set([ ...dynamic, ...INVIDIOUS_INSTANCES ]));
-    cachedInvidiousInstances = merged;
-    return merged;
 }
 
 function decodeHtmlEntities(str) {
@@ -2291,62 +2247,42 @@ function extractPlaylistVideosFromHtml(html) {
     return out;
 }
 
-async function fetchPlaylistViaPiped(instance, playlistId) {
-    const videos = [];
+function extractPlaylistVideosFromJinaText(text) {
     const seen = new Set;
-    let nextpage = null;
-    for (let page = 0; page < 20; page++) {
-        const base = `${instance}/playlists/${encodeURIComponent(playlistId)}`;
-        const fetchUrl = nextpage ? `${base}?nextpage=${encodeURIComponent(nextpage)}` : base;
-        const res = await fetch(fetchUrl);
-        if (!res.ok) throw new Error("bad response");
-        const data = await res.json();
-        const streams = Array.isArray(data.relatedStreams) ? data.relatedStreams : [];
-        streams.forEach(s => {
-            const idMatch = typeof s.url === "string" ? s.url.match(/[?&]v=([A-Za-z0-9_-]{11})/) : null;
-            const id = idMatch ? idMatch[1] : null;
-            if (id && !seen.has(id)) {
-                seen.add(id);
-                videos.push({
-                    id: id,
-                    title: s.title ? decodeHtmlEntities(s.title) : null
-                });
-            }
+    const out = [];
+    const regex = /\[([^\]]{1,150})\]\(https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})[^)]*\)/g;
+    let m;
+    while (m = regex.exec(text)) {
+        const id = m[2];
+        if (seen.has(id)) continue;
+        seen.add(id);
+        let title = m[1].trim();
+        if (title) title = decodeHtmlEntities(title);
+        out.push({
+            id: id,
+            title: title || null
         });
-        nextpage = data.nextpage || null;
-        if (!nextpage) break;
     }
-    if (!videos.length) throw new Error("empty playlist");
-    return videos;
+    return out;
 }
 
-async function fetchPlaylistViaInvidious(instance, playlistId) {
-    const videos = [];
-    const seen = new Set;
-    for (let page = 1; page <= 20; page++) {
-        const res = await fetch(`${instance}/api/v1/playlists/${encodeURIComponent(playlistId)}?page=${page}`);
-        if (!res.ok) throw new Error("bad response");
-        const data = await res.json();
-        const items = Array.isArray(data.videos) ? data.videos : [];
-        if (!items.length) break;
-        items.forEach(v => {
-            if (v.videoId && !seen.has(v.videoId)) {
-                seen.add(v.videoId);
-                videos.push({
-                    id: v.videoId,
-                    title: v.title ? decodeHtmlEntities(v.title) : null
-                });
-            }
-        });
-        if (items.length < 100) break;
-    }
-    if (!videos.length) throw new Error("empty playlist");
+async function fetchPlaylistViaJinaReader(playlistUrl) {
+    const res = await fetch("https://r.jina.ai/" + playlistUrl);
+    if (!res.ok) throw new Error("bad response");
+    const text = await res.text();
+    const videos = extractPlaylistVideosFromJinaText(text);
+    if (!videos.length) throw new Error("no videos found");
     return videos;
 }
 
 async function fetchPlaylistViaProxyHtml(buildProxyUrl, playlistUrl) {
-    const html = await fetchViaProxy(buildProxyUrl(playlistUrl), PLAYLIST_FETCH_TIMEOUT_MS);
-    if (!html) throw new Error("no html");
+    const raw = await fetchViaProxy(buildProxyUrl(playlistUrl), PLAYLIST_FETCH_TIMEOUT_MS);
+    if (!raw) throw new Error("no response");
+    let html = raw;
+    try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.contents === "string") html = parsed.contents;
+    } catch (err) {}
     const videos = extractPlaylistVideosFromHtml(html);
     if (!videos.length) throw new Error("no videos found");
     return videos;
@@ -2354,15 +2290,8 @@ async function fetchPlaylistViaProxyHtml(buildProxyUrl, playlistUrl) {
 
 async function fetchYoutubePlaylistVideos(playlistId) {
     const playlistUrl = `https://www.youtube.com/playlist?list=${encodeURIComponent(playlistId)}`;
-    const [ pipedInstances, invidiousInstances ] = await Promise.all([ getPipedInstances(), getInvidiousInstances() ]);
-    const sources = [];
-    pipedInstances.forEach(instance => {
-        sources.push(() => fetchPlaylistViaPiped(instance, playlistId));
-    });
-    invidiousInstances.forEach(instance => {
-        sources.push(() => fetchPlaylistViaInvidious(instance, playlistId));
-    });
-    OG_IMAGE_PROXIES.forEach(buildProxyUrl => {
+    const sources = [ () => fetchPlaylistViaJinaReader(playlistUrl) ];
+    PLAYLIST_PROXIES.forEach(buildProxyUrl => {
         sources.push(() => fetchPlaylistViaProxyHtml(buildProxyUrl, playlistUrl));
     });
     return await raceSources(sources, PLAYLIST_FETCH_TIMEOUT_MS, "playlist");
@@ -2385,32 +2314,21 @@ async function fetchYoutubeVideoTitle(videoUrl, videoId) {
         if (!data || !data.title) throw new Error("no title");
         return data.title;
     });
-    if (videoId) {
-        const [ pipedInstances, invidiousInstances ] = await Promise.all([ getPipedInstances(), getInvidiousInstances() ]);
-        pipedInstances.forEach(instance => {
-            sources.push(async () => {
-                const res = await fetch(`${instance}/streams/${encodeURIComponent(videoId)}`);
-                if (!res.ok) throw new Error("bad response");
-                const data = await res.json();
-                if (!data || !data.title) throw new Error("no title");
-                return data.title;
-            });
-        });
-        invidiousInstances.forEach(instance => {
-            sources.push(async () => {
-                const res = await fetch(`${instance}/api/v1/videos/${encodeURIComponent(videoId)}?fields=title`);
-                if (!res.ok) throw new Error("bad response");
-                const data = await res.json();
-                if (!data || !data.title) throw new Error("no title");
-                return data.title;
-            });
-        });
-    }
-    OG_IMAGE_PROXIES.forEach(buildProxyUrl => {
+    PLAYLIST_PROXIES.forEach(buildProxyUrl => {
         sources.push(async () => {
-            const text = await fetchViaProxy(buildProxyUrl(oembedUrl));
-            if (!text) throw new Error("no text");
-            const data = JSON.parse(text);
+            const raw = await fetchViaProxy(buildProxyUrl(oembedUrl));
+            if (!raw) throw new Error("no text");
+            let data = null;
+            try {
+                data = JSON.parse(raw);
+            } catch (err) {}
+            if (data && typeof data.contents === "string") {
+                try {
+                    data = JSON.parse(data.contents);
+                } catch (err) {
+                    data = null;
+                }
+            }
             if (!data || !data.title) throw new Error("no title");
             return data.title;
         });
@@ -2444,9 +2362,9 @@ async function importYoutubePlaylist(playlistId, startIndex, fallback) {
             updateCountLabel();
             refreshGridTotalHeight();
             renderVisibleCards();
-            alert("Impossible de récupérer cette playlist pour le moment (tous les services utilisés pour la lire sont temporairement indisponibles ou surchargés). Seule cette vidéo a été ajoutée. Réessayez dans un instant, ou ouvrez la console du navigateur (F12) pour voir le détail des erreurs.");
+            alert("Couldn't fetch this playlist right now (all the services used to read it are temporarily unavailable or overloaded). Only this one video was added. Try again in a moment, or open the browser console (F12) to see the detailed errors.");
         } else {
-            alert("Impossible de récupérer cette playlist pour le moment (tous les services utilisés pour la lire sont temporairement indisponibles ou surchargés). Réessayez dans un instant, ou ouvrez la console du navigateur (F12) pour voir le détail des erreurs.");
+            alert("Couldn't fetch this playlist right now (all the services used to read it are temporarily unavailable or overloaded). Try again in a moment, or open the browser console (F12) to see the detailed errors.");
         }
         return;
     }
@@ -2559,7 +2477,7 @@ function createLinkItem(name, url) {
     const directMediaType = youtubeId ? null : detectDirectMediaType(url);
     return createBaseItem({
         type: "link",
-        name: name && name.trim() ? name.trim() : youtubeId ? "Vidéo YouTube" : nameFromUrl(url),
+        name: name && name.trim() ? name.trim() : youtubeId ? "YouTube Video" : nameFromUrl(url),
         linkURL: url,
         youtubeId: youtubeId,
         directMediaType: directMediaType,
@@ -3156,7 +3074,7 @@ function createAudioPlayerBar(item) {
                 await audioEl.play();
                 playBtn.textContent = "⏸";
             } catch (err) {
-                console.error("[SORTER] Lecture audio impossible :", err);
+                console.error("[SORTER] Audio playback failed:", err);
             }
         } else {
             audioEl.pause();
@@ -3891,7 +3809,7 @@ async function renderBattleMedia(mediaEl, item) {
             img.src = rendered.url;
             img.dataset.blobUrl = rendered.url;
         } catch (err) {
-            console.error("[SORTER] Impossible d'afficher l'image :", item.name, err);
+            console.error("[SORTER] Could not display the image:", item.name, err);
         }
     } else if (item.type === "gif") {
         const img = document.createElement("img");
@@ -4719,7 +4637,7 @@ async function exportResultsAsPng() {
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(downloadUrl), 2e3);
     } catch (err) {
-        console.error("[SORTER] Erreur lors de l'export PNG des résultats :", err);
+        console.error("[SORTER] Error while exporting the results as PNG:", err);
         alert("Unable to export the Results as a PNG image.\n\nDetail: " + (err && err.message ? err.message : err));
     } finally {
         listEl.scrollLeft = prevScrollLeft;
@@ -5027,7 +4945,7 @@ async function doSaveState() {
     try {
         await writeSaveFile(null);
     } catch (err) {
-        console.error("[SORTER] Erreur lors de la sauvegarde :", err);
+        console.error("[SORTER] Error while saving:", err);
         alert("Saving failed. The current state of the app has not been changed.\n\nDetail: " + (err && err.message ? err.message : err));
     }
 }
@@ -5141,7 +5059,7 @@ btnSaveModalConfirm.addEventListener("click", async () => {
             alert(`Save complete. ${compressFailures} image(s) could not be compressed and were kept at their original size in the save (this never blocks the export).`);
         }
     } catch (err) {
-        console.error("[SORTER] Erreur lors de la sauvegarde :", err);
+        console.error("[SORTER] Error while saving:", err);
         alert("Saving failed. The current state of the app has not been changed.\n\nDetail: " + (err && err.message ? err.message : err));
     } finally {
         btnSaveModalConfirm.disabled = false;
@@ -5227,7 +5145,7 @@ inputLoadSave.addEventListener("change", async e => {
         }
         await restoreFromSave(data, fileProvider);
     } catch (err) {
-        console.error("[SORTER] Erreur lors du chargement de la sauvegarde :", err);
+        console.error("[SORTER] Error while loading the save file:", err);
         alert("Unable to load this file.\n\n" + (err && err.message ? err.message : "Invalid or corrupted file.") + "\n\nThe current status of the application has not changed.");
     } finally {
         importProgress.hidden = true;
