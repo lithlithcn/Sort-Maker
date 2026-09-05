@@ -1,4 +1,4 @@
-const INNERTUBE_KEY = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8";
+const INNERTUBE_KEY = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y_9_11qcW8";
 
 const CLIENT = {
     clientName: "WEB",
@@ -13,7 +13,7 @@ const EMBED_CLIENT = {
 const USER_AGENT =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
 
-const MAX_PAGES = 300;
+const MAX_PAGES = 500;
 const VERIFY_CONCURRENCY = 5;
 const MAX_VERIFIED = 300;
 const CACHE_SECONDS = 300;
@@ -38,6 +38,24 @@ function response(data, status = 200) {
 }
 
 async function youtube(endpoint, body, client = CLIENT, visitorData = null) {
+    const contextClient = {
+        clientName: client.clientName,
+        clientVersion: client.clientVersion,
+        hl: "en",
+        gl: "US"
+    };
+
+    if (visitorData) {
+        contextClient.visitorData = visitorData;
+    }
+
+    const payload = {
+        context: {
+            client: contextClient
+        },
+        ...body
+    };
+
     const r = await fetch(
         `https://www.youtube.com/youtubei/v1/${endpoint}?key=${INNERTUBE_KEY}`,
         {
@@ -50,77 +68,154 @@ async function youtube(endpoint, body, client = CLIENT, visitorData = null) {
                 "Origin": "https://www.youtube.com",
                 "Referer": "https://www.youtube.com/"
             },
-            body: JSON.stringify({
-                ...body,
-                context: {
-                    client: {
-                        clientName: client.clientName,
-                        clientVersion: client.clientVersion,
-                        hl: "en",
-                        gl: "US",
-                        ...(visitorData ? { visitorData } : {})
-                    }
-                }
-            })
+            body: JSON.stringify(payload)
         }
     );
+
+    const text = await r.text();
 
     if (!r.ok) {
         throw new Error(`youtube_${endpoint}_${r.status}`);
     }
 
-    return r.json();
+    try {
+        return JSON.parse(text);
+    } catch {
+        throw new Error(`youtube_${endpoint}_invalid_json`);
+    }
 }
 
 function extractVisitorData(data) {
-    return data?.responseContext?.visitorData || null;
+    return (
+        data?.responseContext?.visitorData ||
+        data?.responseContext?.serviceTrackingParams
+            ?.find?.(item => item?.service === "GFEEDBACK")
+            ?.params?.find?.(item => item?.key === "visitorData")
+            ?.value ||
+        null
+    );
 }
 
-function extractPage(data, seen) {
-    const raw = JSON.stringify(data);
-    const videos = [];
+function collectPlaylistVideos(node, output, seen) {
+    if (!node || typeof node !== "object") {
+        return;
+    }
 
-    const idRegex = /"videoId":"([A-Za-z0-9_-]{11})"/g;
-    let match;
+    if (Array.isArray(node)) {
+        for (const item of node) {
+            collectPlaylistVideos(item, output, seen);
+        }
+        return;
+    }
 
-    while ((match = idRegex.exec(raw))) {
-        const id = match[1];
+    if (node.playlistVideoRenderer) {
+        const renderer = node.playlistVideoRenderer;
+        const id = renderer.videoId;
 
-        if (!seen.has(id)) {
+        if (
+            typeof id === "string" &&
+            /^[A-Za-z0-9_-]{11}$/.test(id) &&
+            !seen.has(id)
+        ) {
             seen.add(id);
-            videos.push({ id, title: null });
+
+            output.push({
+                id,
+                title:
+                    renderer.title?.runs?.map(item => item?.text || "").join("") ||
+                    renderer.title?.simpleText ||
+                    null
+            });
         }
     }
 
-    const tokenRegex = /"continuationCommand":\{"token":"([^"]+)"/;
-    const tokenMatch = raw.match(tokenRegex);
+    for (const value of Object.values(node)) {
+        if (value && typeof value === "object") {
+            collectPlaylistVideos(value, output, seen);
+        }
+    }
+}
+
+function collectContinuationTokens(node, tokens, seenTokens) {
+    if (!node || typeof node !== "object") {
+        return;
+    }
+
+    if (Array.isArray(node)) {
+        for (const item of node) {
+            collectContinuationTokens(item, tokens, seenTokens);
+        }
+        return;
+    }
+
+    const directToken =
+        node?.continuationCommand?.token ||
+        node?.continuationEndpoint?.continuationCommand?.token ||
+        node?.continuationEndpoint?.commandMetadata?.webCommandMetadata?.url?.match(
+            /[?&]continuation=([^&]+)/
+        )?.[1] ||
+        null;
+
+    if (
+        typeof directToken === "string" &&
+        directToken.length > 0 &&
+        !seenTokens.has(directToken)
+    ) {
+        seenTokens.add(directToken);
+        tokens.push(directToken);
+    }
+
+    for (const value of Object.values(node)) {
+        if (value && typeof value === "object") {
+            collectContinuationTokens(value, tokens, seenTokens);
+        }
+    }
+}
+
+function extractPage(data, seenVideos, seenTokens) {
+    const videos = [];
+    const tokens = [];
+
+    collectPlaylistVideos(data, videos, seenVideos);
+    collectContinuationTokens(data, tokens, seenTokens);
 
     return {
         videos,
-        continuation: tokenMatch ? tokenMatch[1] : null
+        continuation: tokens.length > 0 ? tokens[tokens.length - 1] : null
     };
 }
 
 async function getPlaylist(id) {
     const videos = [];
-    const seen = new Set();
+    const seenVideos = new Set();
+    const seenTokens = new Set();
+
+    let visitorData = null;
 
     let data = await youtube("browse", {
         browseId: "VL" + id
     });
 
-    let visitorData = extractVisitorData(data);
+    visitorData = extractVisitorData(data);
 
     for (let page = 0; page < MAX_PAGES; page++) {
-        const result = extractPage(data, seen);
+        const result = extractPage(
+            data,
+            seenVideos,
+            seenTokens
+        );
 
         videos.push(...result.videos);
 
-        if (!result.continuation) break;
+        if (!result.continuation) {
+            break;
+        }
 
         data = await youtube(
             "browse",
-            { continuation: result.continuation },
+            {
+                continuation: result.continuation
+            },
             CLIENT,
             visitorData
         );
@@ -149,37 +244,47 @@ async function player(id, client) {
 }
 
 function playable(data) {
-    if (!data) return false;
-
-    const p = data.playabilityStatus || {};
-    const status = p.status;
-
-    if (status !== "OK") return false;
-    if (p.playableInEmbed === false) return false;
-    if (p.embedPreview === false) return false;
-    if (p.embeddable === false) return false;
-
-    if (!data.videoDetails) return false;
-
-    const streaming = data.streamingData;
-
-    if (!streaming) return false;
-
-    const formats =
-        Array.isArray(streaming.formats)
-            ? streaming.formats.length
-            : 0;
-
-    const adaptive =
-        Array.isArray(streaming.adaptiveFormats)
-            ? streaming.adaptiveFormats.length
-            : 0;
-
-    if (formats === 0 && adaptive === 0) {
+    if (!data) {
         return false;
     }
 
-    return true;
+    const status = data.playabilityStatus || {};
+
+    if (status.status !== "OK") {
+        return false;
+    }
+
+    if (status.playableInEmbed === false) {
+        return false;
+    }
+
+    if (status.embedPreview === false) {
+        return false;
+    }
+
+    if (status.embeddable === false) {
+        return false;
+    }
+
+    if (!data.videoDetails) {
+        return false;
+    }
+
+    const streaming = data.streamingData;
+
+    if (!streaming) {
+        return false;
+    }
+
+    const formats = Array.isArray(streaming.formats)
+        ? streaming.formats.length
+        : 0;
+
+    const adaptiveFormats = Array.isArray(streaming.adaptiveFormats)
+        ? streaming.adaptiveFormats.length
+        : 0;
+
+    return formats > 0 || adaptiveFormats > 0;
 }
 
 async function verify(video) {
@@ -199,7 +304,10 @@ async function verify(video) {
 
         return {
             id: video.id,
-            title: video.title || embedded?.videoDetails?.title || null
+            title:
+                video.title ||
+                embedded?.videoDetails?.title ||
+                null
         };
     } catch {
         return null;
@@ -216,7 +324,9 @@ async function verifyAll(videos) {
         while (true) {
             const current = index++;
 
-            if (current >= toVerify.length) return;
+            if (current >= toVerify.length) {
+                return;
+            }
 
             const verified = await verify(toVerify[current]);
 
@@ -229,7 +339,10 @@ async function verifyAll(videos) {
     await Promise.all(
         Array.from(
             {
-                length: Math.min(VERIFY_CONCURRENCY, toVerify.length)
+                length: Math.min(
+                    VERIFY_CONCURRENCY,
+                    toVerify.length
+                )
             },
             worker
         )
@@ -257,34 +370,54 @@ export default {
         }
 
         if (request.method !== "GET") {
-            return response({
-                videos: [],
-                error: "method_not_allowed"
-            }, 405);
+            return response(
+                {
+                    videos: [],
+                    totalFound: 0,
+                    totalReturned: 0,
+                    verified: false,
+                    error: "method_not_allowed"
+                },
+                405
+            );
         }
 
         const url = new URL(request.url);
 
         if (url.pathname !== "/playlist") {
-            return response({
-                videos: [],
-                error: "not_found"
-            }, 404);
+            return response(
+                {
+                    videos: [],
+                    totalFound: 0,
+                    totalReturned: 0,
+                    verified: false,
+                    error: "not_found"
+                },
+                404
+            );
         }
 
         const id = url.searchParams.get("id");
 
         if (!id || !/^[A-Za-z0-9_-]{10,64}$/.test(id)) {
-            return response({
-                videos: [],
-                error: "invalid_playlist_id"
-            }, 400);
+            return response(
+                {
+                    videos: [],
+                    totalFound: 0,
+                    totalReturned: 0,
+                    verified: false,
+                    error: "invalid_playlist_id"
+                },
+                400
+            );
         }
 
-        const shouldVerify = url.searchParams.get("verify") === "1";
+        const shouldVerify =
+            url.searchParams.get("verify") === "1";
 
         try {
             const videos = await getPlaylist(id);
+
             const finalVideos = shouldVerify
                 ? await verifyAll(videos)
                 : videos;
@@ -297,13 +430,18 @@ export default {
                 error: null
             });
         } catch (error) {
-            return response({
-                videos: [],
-                totalFound: 0,
-                totalReturned: 0,
-                verified: shouldVerify,
-                error: error?.message || "unknown_error"
-            }, 500);
+            return response(
+                {
+                    videos: [],
+                    totalFound: 0,
+                    totalReturned: 0,
+                    verified: shouldVerify,
+                    error:
+                        error?.message ||
+                        "unknown_error"
+                },
+                500
+            );
         }
     }
 };
