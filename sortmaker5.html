@@ -1474,7 +1474,7 @@ html.custom-theme {
         <button id="btnAddLink" type="button">Add a link (YouTube...)</button>
         <button id="btnExportLinkFile" type="button">Export Link File (.txt)</button>
         <button id="btnImportLinkFile" type="button">Import Link File (.txt)</button>
-        <button id="btnYoutubeApiKey" class="btn-mini" type="button">YouTube API key</button>
+        <button id="btnYoutubeApiKey" class="btn-mini" type="button">Playlist import settings</button>
         <input type="file" id="inputFiles" accept="image/*" multiple hidden>
         <input type="file" id="inputFolder" webkitdirectory multiple hidden>
         <input type="file" id="inputAudioFiles" accept="audio/*" multiple hidden>
@@ -1656,12 +1656,17 @@ html.custom-theme {
 
 <div id="youtubeApiKeyModal" class="modal" hidden>
     <div class="modal-box link-modal-box">
-        <h2>YouTube API key (optional)</h2>
+        <h2>Playlist import settings</h2>
 
-        <p class="hint" style="margin-top:0;">Adding a free YouTube Data API key makes playlist import fully reliable (no more scraping/proxy guesswork). Without a key, playlist import falls back to a best-effort method that may occasionally fail.</p>
+        <p class="hint" style="margin-top:0;">By default, playlist import uses a small server-side proxy (no key needed for visitors). You can set your own proxy URL below, and/or a personal YouTube API key as an extra fallback.</p>
 
         <div class="link-form-row">
-            <label for="youtubeApiKeyInput">API key</label>
+            <label for="playlistWorkerUrlInput">Playlist proxy URL (optional)</label>
+            <input type="text" id="playlistWorkerUrlInput" placeholder="https://your-worker.workers.dev">
+        </div>
+
+        <div class="link-form-row">
+            <label for="youtubeApiKeyInput">YouTube API key (optional fallback)</label>
             <input type="text" id="youtubeApiKeyInput" placeholder="AIzaSy...">
         </div>
 
@@ -1671,7 +1676,7 @@ html.custom-theme {
         </p>
 
         <div class="modal-footer">
-            <button id="btnYoutubeApiKeyClear" class="btn-danger">Remove key</button>
+            <button id="btnYoutubeApiKeyClear" class="btn-danger">Remove both</button>
             <button id="btnYoutubeApiKeyCancel">Cancel</button>
             <button id="btnYoutubeApiKeySave" class="primary">Save</button>
         </div>
@@ -1916,7 +1921,72 @@ const TITLE_FETCH_TIMEOUT_MS = 9e3;
 
 const PLAYLIST_FETCH_TIMEOUT_MS = 18e3;
 
-const PLAYLIST_PROXIES = [ u => "https://r.jina.ai/" + u, u => "https://api.allorigins.win/get?url=" + encodeURIComponent(u), u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u), u => "https://api.codetabs.com/v1/proxy/?quest=" + encodeURIComponent(u) ];
+const PLAYLIST_PROXIES = [ u => "https://r.jina.ai/" + u, u => "https://api.allorigins.win/get?url=" + encodeURIComponent(u), u => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u), u => "https://api.codetabs.com/v1/proxy/?quest=" + encodeURIComponent(u), u => "https://corsproxy.io/?url=" + encodeURIComponent(u), u => "https://thingproxy.freeboard.io/fetch/" + u ];
+
+const DEFAULT_PLAYLIST_WORKER_URL = "";
+
+const PLAYLIST_WORKER_STORAGE = "sorter-playlist-worker-url";
+
+function getPlaylistWorkerUrl() {
+    let stored = "";
+    try {
+        stored = localStorage.getItem(PLAYLIST_WORKER_STORAGE) || "";
+    } catch (err) {}
+    return (stored || DEFAULT_PLAYLIST_WORKER_URL).trim();
+}
+
+function setPlaylistWorkerUrl(url) {
+    try {
+        if (url) {
+            localStorage.setItem(PLAYLIST_WORKER_STORAGE, url);
+        } else {
+            localStorage.removeItem(PLAYLIST_WORKER_STORAGE);
+        }
+    } catch (err) {}
+}
+
+async function fetchPlaylistViaWorker(workerUrl, playlistId) {
+    const controller = new AbortController;
+    const timer = setTimeout(() => controller.abort(), PLAYLIST_FETCH_TIMEOUT_MS);
+    try {
+        const base = workerUrl.replace(/\/$/, "");
+        const res = await fetch(`${base}/playlist?id=${encodeURIComponent(playlistId)}`, {
+            signal: controller.signal
+        });
+        if (!res.ok) throw new Error("worker error " + res.status);
+        const data = await res.json();
+        if (data && data.error && (!data.videos || !data.videos.length)) throw new Error(data.error);
+        const videos = Array.isArray(data.videos) ? data.videos.filter(v => v && v.id) : [];
+        if (!videos.length) throw new Error("empty playlist");
+        return videos;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+const FALLBACK_INVIDIOUS_INSTANCES = [ "https://yewtu.be", "https://invidious.nerdvpn.de", "https://inv.nadeko.net", "https://iv.ggtyler.dev", "https://invidious.protokolla.fi", "https://invidious.jing.rocks" ];
+
+let invidiousInstancesPromise = null;
+
+async function getInvidiousInstances() {
+    if (invidiousInstancesPromise) return invidiousInstancesPromise;
+    invidiousInstancesPromise = (async () => {
+        try {
+            const res = await fetch("https://api.invidious.io/instances.json?pretty=0&sort_by=type,users");
+            if (!res.ok) throw new Error("bad response");
+            const data = await res.json();
+            const fetched = data.filter(entry => Array.isArray(entry) && entry[1] && entry[1].type === "https" && entry[1].api !== false && entry[1].uri).map(entry => entry[1].uri.replace(/\/$/, ""));
+            const merged = fetched.length ? fetched.slice(0, 10) : [];
+            FALLBACK_INVIDIOUS_INSTANCES.forEach(instance => {
+                if (!merged.includes(instance)) merged.push(instance);
+            });
+            return merged;
+        } catch (err) {
+            return FALLBACK_INVIDIOUS_INSTANCES.slice();
+        }
+    })();
+    return invidiousInstancesPromise;
+}
 
 function withTimeout(promise, ms) {
     return new Promise((resolve, reject) => {
@@ -2314,6 +2384,55 @@ async function fetchPlaylistViaProxyHtml(buildProxyUrl, playlistUrl) {
     return videos;
 }
 
+async function fetchPlaylistViaInvidious(instanceBase, playlistId) {
+    const videos = [];
+    const seen = new Set;
+    for (let page = 1; page <= 20; page++) {
+        const controller = new AbortController;
+        const timer = setTimeout(() => controller.abort(), PLAYLIST_FETCH_TIMEOUT_MS);
+        let data;
+        try {
+            const res = await fetch(`${instanceBase}/api/v1/playlists/${encodeURIComponent(playlistId)}?page=${page}`, {
+                signal: controller.signal
+            });
+            if (!res.ok) throw new Error("bad response " + res.status);
+            data = await res.json();
+        } finally {
+            clearTimeout(timer);
+        }
+        const items = Array.isArray(data.videos) ? data.videos : [];
+        if (!items.length) break;
+        items.forEach(v => {
+            if (v.videoId && !seen.has(v.videoId)) {
+                seen.add(v.videoId);
+                videos.push({
+                    id: v.videoId,
+                    title: v.title || null
+                });
+            }
+        });
+        if (items.length < 100) break;
+    }
+    if (!videos.length) throw new Error("empty playlist");
+    return videos;
+}
+
+async function fetchVideoTitleViaInvidious(instanceBase, videoId) {
+    const controller = new AbortController;
+    const timer = setTimeout(() => controller.abort(), TITLE_FETCH_TIMEOUT_MS);
+    try {
+        const res = await fetch(`${instanceBase}/api/v1/videos/${encodeURIComponent(videoId)}?fields=title`, {
+            signal: controller.signal
+        });
+        if (!res.ok) throw new Error("bad response " + res.status);
+        const data = await res.json();
+        if (!data || !data.title) throw new Error("no title");
+        return data.title;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
 async function fetchPlaylistViaOfficialApi(playlistId, apiKey) {
     const videos = [];
     const seen = new Set;
@@ -2323,11 +2442,19 @@ async function fetchPlaylistViaOfficialApi(playlistId, apiKey) {
         const res = await fetch(url);
         if (!res.ok) {
             let message = `YouTube API error (${res.status})`;
+            let reason = "";
             try {
                 const errData = await res.json();
-                if (errData && errData.error && errData.error.message) message = errData.error.message;
+                if (errData && errData.error) {
+                    if (errData.error.message) message = errData.error.message;
+                    if (Array.isArray(errData.error.errors) && errData.error.errors[0] && errData.error.errors[0].reason) {
+                        reason = errData.error.errors[0].reason;
+                    }
+                }
             } catch (err) {}
-            throw new Error(message);
+            const apiError = new Error(message);
+            apiError.reason = reason;
+            throw apiError;
         }
         const data = await res.json();
         const items = Array.isArray(data.items) ? data.items : [];
@@ -2345,30 +2472,95 @@ async function fetchPlaylistViaOfficialApi(playlistId, apiKey) {
         pageToken = data.nextPageToken || "";
         if (!pageToken) break;
     }
-    if (!videos.length) throw new Error("empty playlist");
+    if (!videos.length) {
+        const emptyError = new Error("This playlist has no videos, or it is private/unlisted and not accessible.");
+        emptyError.reason = "playlistNotFound";
+        throw emptyError;
+    }
     return videos;
 }
 
-async function fetchYoutubePlaylistVideos(playlistId) {
-    const apiKey = getYoutubeApiKey();
-    if (apiKey) {
-        try {
-            return await withTimeout(fetchPlaylistViaOfficialApi(playlistId, apiKey), PLAYLIST_FETCH_TIMEOUT_MS);
-        } catch (err) {
-            console.warn("[SORTER][playlist official API]", err && err.message ? err.message : err);
-        }
+function describeYoutubeApiKeyError(reason, message) {
+    if (reason === "quotaExceeded" || reason === "dailyLimitExceeded" || reason === "rateLimitExceeded") {
+        return "Your free daily quota for this API key is used up. It resets automatically at midnight Pacific Time, or you can create a second key as backup.";
     }
+    if (reason === "keyInvalid" || reason === "badRequest") {
+        return "This API key isn't valid. Re-copy it from Google Cloud Console and paste it again.";
+    }
+    if (reason === "accessNotConfigured" || reason === "forbidden" || /has not been used|is disabled/i.test(message || "")) {
+        return "The \"YouTube Data API v3\" isn't enabled on this key's Google Cloud project. Open the project in Cloud Console, search for \"YouTube Data API v3\", and click Enable.";
+    }
+    if (reason === "ipRefererBlocked" || reason === "refererNotAllowed" || /referer/i.test(message || "")) {
+        return "This key's website restriction doesn't match this page's address. In Cloud Console, edit the key's \"Application restrictions → Websites\" and add https://lithlithcn.github.io/* (or remove the restriction).";
+    }
+    if (reason === "playlistNotFound") {
+        return "This playlist doesn't exist, or it's private/unlisted, or its videos were all deleted.";
+    }
+    return "Check the key's settings in Google Cloud Console (API enabled, website restriction, quota).";
+}
+
+async function fetchYoutubePlaylistVideosViaFallbacks(playlistId) {
     const playlistUrl = `https://www.youtube.com/playlist?list=${encodeURIComponent(playlistId)}`;
-    const sources = [ () => fetchPlaylistViaJinaReader(playlistUrl) ];
+    const instances = await getInvidiousInstances();
+    const sources = instances.map(instanceBase => () => fetchPlaylistViaInvidious(instanceBase, playlistId));
+    sources.push(() => fetchPlaylistViaJinaReader(playlistUrl));
     PLAYLIST_PROXIES.forEach(buildProxyUrl => {
         sources.push(() => fetchPlaylistViaProxyHtml(buildProxyUrl, playlistUrl));
     });
     return await raceSources(sources, PLAYLIST_FETCH_TIMEOUT_MS, "playlist");
 }
 
+async function fetchYoutubePlaylistVideos(playlistId) {
+    const workerUrl = getPlaylistWorkerUrl();
+    if (workerUrl) {
+        try {
+            const videos = await fetchPlaylistViaWorker(workerUrl, playlistId);
+            return {
+                videos: videos,
+                apiKeyError: null
+            };
+        } catch (err) {
+            console.warn("[SORTER][playlist worker]", err && err.message ? err.message : err);
+        }
+    }
+    const apiKey = getYoutubeApiKey();
+    if (apiKey) {
+        try {
+            const videos = await withTimeout(fetchPlaylistViaOfficialApi(playlistId, apiKey), PLAYLIST_FETCH_TIMEOUT_MS);
+            return {
+                videos: videos,
+                apiKeyError: null
+            };
+        } catch (err) {
+            const message = err && err.message ? err.message : String(err);
+            const reason = err && err.reason ? err.reason : "";
+            console.warn("[SORTER][playlist official API]", message);
+            const fallbackVideos = await fetchYoutubePlaylistVideosViaFallbacks(playlistId);
+            return {
+                videos: fallbackVideos,
+                apiKeyError: {
+                    message: message,
+                    reason: reason
+                }
+            };
+        }
+    }
+    const videos = await fetchYoutubePlaylistVideosViaFallbacks(playlistId);
+    return {
+        videos: videos,
+        apiKeyError: null
+    };
+}
+
 async function fetchYoutubeVideoTitle(videoUrl, videoId) {
     const oembedUrl = "https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent(videoUrl);
     const sources = [];
+    if (isValidYoutubeId(videoId)) {
+        const instances = await getInvidiousInstances();
+        instances.forEach(instanceBase => {
+            sources.push(() => fetchVideoTitleViaInvidious(instanceBase, videoId));
+        });
+    }
     sources.push(async () => {
         const res = await fetch(oembedUrl);
         if (!res.ok) throw new Error("bad response");
@@ -2421,9 +2613,17 @@ async function importYoutubePlaylist(playlistId, startIndex, fallback) {
     importProgress.hidden = false;
     importProgressLabel.textContent = "Fetching playlist…";
     importProgressFill.style.width = "0%";
-    let videos = await fetchYoutubePlaylistVideos(playlistId);
+    const result = await fetchYoutubePlaylistVideos(playlistId);
+    let videos = result.videos;
+    const apiKeyError = result.apiKeyError;
     if (!videos || videos.length === 0) {
         importProgress.hidden = true;
+        let reason;
+        if (apiKeyError) {
+            reason = `Your YouTube API key failed: "${apiKeyError.message}". ${describeYoutubeApiKeyError(apiKeyError.reason, apiKeyError.message)}`;
+        } else {
+            reason = "The playlist proxy isn't set up yet and the free fallback methods this uses are currently unreliable. Click \"YouTube API key\" to configure a playlist proxy URL or a personal API key.";
+        }
         if (fallback.videoId && isValidYoutubeId(fallback.videoId)) {
             const fallbackUrl = `https://www.youtube.com/watch?v=${fallback.videoId}`;
             const fallbackItem = createLinkItem(fallback.name || null, fallbackUrl);
@@ -2431,9 +2631,9 @@ async function importYoutubePlaylist(playlistId, startIndex, fallback) {
             updateCountLabel();
             refreshGridTotalHeight();
             renderVisibleCards();
-            alert("Couldn't fetch this playlist right now. YouTube blocks the free proxy services this uses, which makes them unreliable. Only this one video was added. For a fully reliable fix, click \"YouTube API key\" and add a free key (see the help link in that panel). Try again in a moment, or open the browser console (F12) to see the detailed errors.");
+            alert(`Couldn't fetch this playlist right now. ${reason} Only this one video was added. Try again in a moment, or open the browser console (F12) to see the detailed errors.`);
         } else {
-            alert("Couldn't fetch this playlist right now. YouTube blocks the free proxy services this uses, which makes them unreliable. For a fully reliable fix, click \"YouTube API key\" and add a free key (see the help link in that panel). Try again in a moment, or open the browser console (F12) to see the detailed errors.");
+            alert(`Couldn't fetch this playlist right now. ${reason} Try again in a moment, or open the browser console (F12) to see the detailed errors.`);
         }
         return;
     }
@@ -2832,10 +3032,13 @@ const youtubeApiKeyModal = document.getElementById("youtubeApiKeyModal");
 
 const youtubeApiKeyInput = document.getElementById("youtubeApiKeyInput");
 
+const playlistWorkerUrlInput = document.getElementById("playlistWorkerUrlInput");
+
 function openYoutubeApiKeyModal() {
     youtubeApiKeyInput.value = getYoutubeApiKey();
+    playlistWorkerUrlInput.value = getPlaylistWorkerUrl();
     youtubeApiKeyModal.hidden = false;
-    youtubeApiKeyInput.focus();
+    playlistWorkerUrlInput.focus();
 }
 
 function closeYoutubeApiKeyModal() {
@@ -2854,6 +3057,7 @@ const btnYoutubeApiKeySave = document.getElementById("btnYoutubeApiKeySave");
 
 if (btnYoutubeApiKeySave) btnYoutubeApiKeySave.addEventListener("click", () => {
     setYoutubeApiKey(youtubeApiKeyInput.value.trim());
+    setPlaylistWorkerUrl(playlistWorkerUrlInput.value.trim());
     closeYoutubeApiKeyModal();
 });
 
@@ -2861,7 +3065,9 @@ const btnYoutubeApiKeyClear = document.getElementById("btnYoutubeApiKeyClear");
 
 if (btnYoutubeApiKeyClear) btnYoutubeApiKeyClear.addEventListener("click", () => {
     setYoutubeApiKey("");
+    setPlaylistWorkerUrl("");
     youtubeApiKeyInput.value = "";
+    playlistWorkerUrlInput.value = "";
 });
 
 const linkModal = document.getElementById("linkModal");
