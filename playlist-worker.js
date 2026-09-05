@@ -293,6 +293,42 @@ function extractContinuationPage(data) {
     };
 }
 
+function extractAlertText(alert) {
+    const renderer = alert?.alertRenderer || alert?.alertWithButtonRenderer;
+    if (!renderer) return null;
+    return (
+        renderer.text?.simpleText ||
+        (Array.isArray(renderer.text?.runs)
+            ? renderer.text.runs.map(r => r?.text || "").join("")
+            : null)
+    );
+}
+
+function diagnoseEmptyInitialResponse(data) {
+    if (data && data.error && typeof data.error === "object") {
+        const code = data.error.status || data.error.code || "UNKNOWN";
+        const message = data.error.message || "no message provided";
+        return `youtube_innertube_error_${code}: ${message}`;
+    }
+
+    if (Array.isArray(data?.alerts)) {
+        for (const alert of data.alerts) {
+            const text = extractAlertText(alert);
+            if (text) {
+                return `youtube_alert: ${text}`;
+            }
+        }
+    }
+
+    if (data?.contents?.twoColumnBrowseResultsRenderer) {
+        const topKeys = Object.keys(data.contents.twoColumnBrowseResultsRenderer).join(",");
+        return `playlist_renderer_not_found_in_browse_results (keys=${topKeys})`;
+    }
+
+    const topKeys = data && typeof data === "object" ? Object.keys(data).join(",") : "none";
+    return `no_playlist_renderer_found (top_level_keys=${topKeys})`;
+}
+
 export default {
     async fetch(request) {
         if (request.method === "OPTIONS") {
@@ -328,6 +364,7 @@ export default {
         const id = url.searchParams.get("id");
         const continuation = url.searchParams.get("continuation");
         const visitorData = url.searchParams.get("visitorData");
+        const debug = url.searchParams.get("debug") === "1";
 
         if (!id || !/^[A-Za-z0-9_-]{10,64}$/.test(id)) {
             return response(
@@ -377,12 +414,24 @@ export default {
                 }
             }
 
+            if (!continuation && !uniqueVideos.length && !page.continuation) {
+                return response({
+                    videos: [],
+                    continuation: null,
+                    visitorData: currentVisitorData,
+                    complete: true,
+                    error: diagnoseEmptyInitialResponse(data),
+                    raw: debug ? JSON.stringify(data).slice(0, 6000) : undefined
+                });
+            }
+
             return response({
                 videos: uniqueVideos,
                 continuation: page.continuation,
                 visitorData: currentVisitorData,
                 complete: !page.continuation,
-                error: null
+                error: null,
+                raw: debug ? JSON.stringify(data).slice(0, 6000) : undefined
             });
         } catch (error) {
             return response(
