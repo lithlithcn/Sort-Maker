@@ -26,7 +26,11 @@ function response(data, status = 200) {
     });
 }
 
-async function youtube(body, visitorData = null) {
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function youtubeOnce(body, visitorData) {
     const client = {
         clientName: CLIENT.clientName,
         clientVersion: CLIENT.clientVersion,
@@ -64,7 +68,9 @@ async function youtube(body, visitorData = null) {
     const text = await request.text();
 
     if (!request.ok) {
-        throw new Error(`youtube_browse_${request.status}`);
+        const error = new Error(`youtube_browse_${request.status}`);
+        error.status = request.status;
+        throw error;
     }
 
     try {
@@ -72,6 +78,27 @@ async function youtube(body, visitorData = null) {
     } catch {
         throw new Error("youtube_invalid_json");
     }
+}
+
+async function youtube(body, visitorData = null) {
+    const retryableStatuses = new Set([403, 429, 500, 502, 503, 504]);
+    const maxAttempts = 3;
+    let lastError = null;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            return await youtubeOnce(body, visitorData);
+        } catch (error) {
+            lastError = error;
+            const status = error && error.status;
+            if (!retryableStatuses.has(status) || attempt === maxAttempts) {
+                throw error;
+            }
+            await delay(attempt * 400);
+        }
+    }
+
+    throw lastError;
 }
 
 function findVisitorData(data) {
